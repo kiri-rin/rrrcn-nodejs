@@ -11,6 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/earthengine": "^0.1.332"
+    "@google/earthengine": "^0.1.332",
+    "csv": "^6.2.5",
+    "csv-generate": "^4.2.1",
+    "csv-parse": "^5.3.3",
+    "csv-stringify": "^6.2.3",
+    "prettier": "^2.8.0"
   }
 }

@@ -1,15 +1,29 @@
+import {
+  exportFeatureCollectionsToCsv,
+  importPointsFromCsv,
+} from "./services/data/points";
+import allScripts from "./services/alalytics/index";
+import { evaluateScriptResultsToFeaturesArray } from "./services/data/ee-image";
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
-const allScripts = require("./services/alalytics");
-const {
-  importPointsFromCsv,
-  exportFeatureCollectionsToCsv,
-} = require("./services/data/points");
+
 const fs = require("fs/promises");
 const util = require("util");
+const { importShapesToFeatureCollection } = require("./services/data/shapes");
 const { parse } = require("csv-parse/sync");
+declare global {
+  let ee: any;
+}
+
+//@ts-ignore
 globalThis.ee = ee;
-const analysis = ["elevation", "geomorph"];
+
+const analysis: (keyof typeof allScripts)[] = [
+  "global_habitat",
+  "elevation",
+  "era5_monthly",
+  "geomorph",
+];
 const main = async () => {
   const saker_dates_raw = await fs.readFile(
     "./src/static/saker-productive-dates.csv"
@@ -21,12 +35,17 @@ const main = async () => {
     long_key: "longitude",
     id_key: "Id",
   });
+  const shapes = await importShapesToFeatureCollection(
+    "./src/static/saker-buf-shape.zip"
+  );
   for (let script of analysis) {
-    const features = allScripts[script](points);
+    const features = await allScripts[script](points);
     await fs.mkdir(`./.local/outputs`, { recursive: true });
     await fs.writeFile(
-      `./.local/outputs/${script}.csv`,
-      exportFeatureCollectionsToCsv(features)
+      `./.local/outputs/${script}_shapes.csv`,
+      exportFeatureCollectionsToCsv(
+        await evaluateScriptResultsToFeaturesArray(features)
+      )
     );
   }
 };
@@ -37,7 +56,7 @@ ee.data.authenticateViaPrivateKey(
       await main();
     });
   },
-  (r) => {
+  (r: any) => {
     console.log(r);
   }
 );

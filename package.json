@@ -2,9 +2,9 @@
   "name": "rrcn-ee-nodejs",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "scripts": {
-    "start": "node src/index",
+    "start": "tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,6 +16,12 @@
     "csv-generate": "^4.2.1",
     "csv-parse": "^5.3.3",
     "csv-stringify": "^6.2.3",
-    "prettier": "^2.8.0"
+    "prettier": "^2.8.0",
+    "shpjs": "^4.0.4"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^18.11.12",
+    "typescript": "^4.9.4"
   }
 }

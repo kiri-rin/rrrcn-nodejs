@@ -16,6 +16,7 @@
     "csv-generate": "^4.2.1",
     "csv-parse": "^5.3.3",
     "csv-stringify": "^6.2.3",
+    "date-fns": "^2.29.3",
     "prettier": "^2.8.0",
     "shpjs": "^4.0.4"
   },

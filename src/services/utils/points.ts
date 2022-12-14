@@ -1,6 +1,6 @@
 import { EEFeature, EEFeatureCollection } from "../../types";
 
-const { stringify } = require("csv-stringify/sync");
+const { stringify } = require("csv-stringify");
 export type JSCSVTable = { [rowName: string]: any }[];
 
 export function importPointsFromCsv({
@@ -23,13 +23,16 @@ export function importPointsFromCsv({
     )
   );
 }
-export function exportFeatureCollectionsToCsv(collection: EEFeatureCollection) {
+export async function exportFeatureCollectionsToCsv(
+  collection: EEFeatureCollection
+): Promise<string> {
   const pointsIndices = new Map();
   let keysIndices = new Map(
     ["id", "longitude", "latitude"].map((it, index) => [it, index])
   );
-  const table = [];
+  const table: any[] = [];
   for (let feature of collection) {
+    // console.log(feature);
     const pointRow = pointsIndices.get(feature.properties.id);
     if (pointRow === undefined) {
       const row: any[] = [];
@@ -47,7 +50,18 @@ export function exportFeatureCollectionsToCsv(collection: EEFeatureCollection) {
     []
   );
   table.unshift(keysArray);
-  return stringify(table);
+  console.log("READY TO STRINGIFY");
+  return await new Promise((resolve, reject) => {
+    //@ts-ignore
+    stringify(table, (error, res) => {
+      if (error) {
+        reject(error);
+      } else {
+        console.log("READY TO WRITE");
+        resolve(res);
+      }
+    });
+  });
 }
 const fulfillRowWithPoint = (
   row: any[],

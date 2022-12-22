@@ -1,10 +1,12 @@
 import { EEFeatureCollection, EEImage } from "../../types";
 import { AnalyticsScriptResult } from "../alalytics";
-import { setTimeout } from "timers";
+const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
 export async function evaluateScriptResultsToFeaturesArray(
   scriptResults: AnalyticsScriptResult
 ) {
+  const success = [];
+  const errors = [];
   return (
     (
       await Promise.allSettled(
@@ -21,44 +23,34 @@ export async function evaluateScriptResultsToFeaturesArray(
     .map((it) => it.value)
     .flat();
 }
-export async function evaluateScriptResultsToFeaturesArrayByOne(
-  scriptResults: AnalyticsScriptResult
-) {
-  const res = [];
-  for (let [key, it] of Object.entries(scriptResults)) {
-    console.log("Processing", key);
 
-    res.push(
-      await getFeatures(it).then((it) => {
-        console.log("Success", key);
-        return it;
-      })
-    );
-    console.log("YES", key);
-  }
-  return res.flat();
-}
 export async function getFeatures(featureCollection: EEFeatureCollection) {
   return evaluatePromisify(featureCollection).then((it: any) => it.features);
 }
-export async function evaluatePromisify(image: EEImage, shouldRetry = 5) {
+export async function evaluatePromisify(image: EEImage, shouldRetry = 10) {
   return new Promise((resolve, reject) => {
     try {
       image.evaluate(async (res: string, error: string) => {
         if (error) {
           console.log(error);
-          if (error.includes("ECONNRESET") && shouldRetry) {
+          if (
+            (error.includes("ECONNRESET") ||
+              error.includes("socket hang up") ||
+              error.includes("ECONNREFUSED")) &&
+            shouldRetry
+          ) {
+            await setTimeoutPromise(5000);
             console.log("RETRYING");
-            const res = await evaluatePromisify(
-              image,
-              shouldRetry > 0 ? shouldRetry - 1 : 0
-            );
-            resolve(res);
+
+            evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
+              .then((_res) => resolve(res))
+              .catch((e) => reject(e));
           } else {
             reject(error);
           }
+        } else {
+          resolve(res);
         }
-        resolve(res);
       });
     } catch (e) {
       console.log("CONNECTION", e);

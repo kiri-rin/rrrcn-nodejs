@@ -26,6 +26,7 @@ export function importPointsFromCsv({
 export async function exportFeatureCollectionsToCsv(
   collection: EEFeatureCollection
 ): Promise<string> {
+  console.log("READY TO PROCESS TABLE");
   const pointsIndices = new Map();
   let keysIndices = new Map(
     ["id", "longitude", "latitude"].map((it, index) => [it, index])

@@ -6,6 +6,9 @@ import { era5MounthlyScript } from "./era5_monthly";
 import { dynamicWorldScript } from "./dynamic-world";
 import { ndviEviScript } from "./ndvi";
 import { DatesConfig } from "../utils/dates";
+import { dynamicWorldMeansScript } from "./dynamic-world-means";
+import { globalWindAtlasScript } from "./global-wind-atlas";
+import { worldClimBioScript } from "./world_clim_bio";
 export type AnalyticsScriptResult = {
   [param: string]: typeof ee.ComputedObject;
 };
@@ -21,6 +24,9 @@ const scripts = {
   era5_monthly: era5MounthlyScript,
   global_habitat: globalHabitatScript,
   dynamic_world: dynamicWorldScript,
+  dynamic_world_means: dynamicWorldMeansScript,
+  global_wind_atlas: globalWindAtlasScript,
+  world_clim_bio: worldClimBioScript,
   ndvi: ((regions, dates: DatesConfig) =>
     ndviEviScript(regions, dates, ["NDVI"])) as AnalyticsScript,
   evi: ((regions, dates: DatesConfig) =>

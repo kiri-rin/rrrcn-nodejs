@@ -36,24 +36,18 @@ export const dynamicWorldScript = (
         .filterBounds(regions)
         .select("label");
 
-      res[`${target}_${key}`] = ee
-        .Image(
-          ee.Algorithms.If(
-            period_available.size().gt(0),
-            period_available
-              .reduce(ee.Reducer.mode())
-              .eq(target_index)
-              .selfMask()
-              .multiply(areaPerPixel)
-              .divide(1e6),
-            ee.Image().set("empty", 1)
-          )
+      res[`${target}_${key}`] = ee.Image(
+        ee.Algorithms.If(
+          period_available.size().gt(0),
+          period_available
+            .reduce(ee.Reducer.mode())
+            .eq(target_index)
+            .selfMask()
+            .multiply(areaPerPixel)
+            .divide(1e6),
+          ee.Image(-1).rename([`${target}_${key}`])
         )
-        .reduceRegions(
-          regions,
-          ee.Reducer.sum().setOutputs([`${target}_${key}`]),
-          100
-        );
+      );
     });
   }
   return res;

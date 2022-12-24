@@ -30,16 +30,14 @@ export const globalWindAtlasScript = (regions: EEFeatureCollection) => {
     power_density_10: ee.Image(
       "projects/sat-io/open-datasets/global_wind_atlas/power-density/gwa3_250_power-density_10m"
     ),
+    RIX: ee.Image(
+      "projects/sat-io/open-datasets/global_wind_atlas/ruggedness-index"
+    ),
   };
-  const res: AnalyticsScriptResult = {};
-  Object.entries(data).forEach(([key, image]) => {
-    res[key] = image.reduceRegions(
-      regions,
-      ee.Reducer.first().setOutputs([key])
-    );
+  Object.keys(data).forEach((key) => {
+    //@ts-ignore
+    data[key] = data[key].select([0], [key]);
   });
-  res["RIX"] = ee
-    .Image("projects/sat-io/open-datasets/global_wind_atlas/ruggedness-index")
-    .reduceRegions(regions, ee.Reducer.first().setOutputs(["RIX"]));
-  return res;
+
+  return data;
 };

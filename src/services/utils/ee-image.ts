@@ -1,5 +1,6 @@
 import { EEFeatureCollection, EEImage } from "../../types";
-import { AnalyticsScriptResult } from "../alalytics";
+import { AnalyticsScriptResult } from "../ee-data";
+import { clearTimeout, setTimeout } from "timers";
 const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
 export async function evaluateScriptResultsToFeaturesArray(
@@ -12,9 +13,9 @@ export async function evaluateScriptResultsToFeaturesArray(
       await Promise.allSettled(
         Object.entries(scriptResults).map(([key, it]) => {
           console.log("Processing", key);
-          return getFeatures(it).then((it) => {
+          return getFeatures(it).then((_it) => {
             console.log("Success", key);
-            return it;
+            return _it;
           });
         })
       )
@@ -30,6 +31,14 @@ export async function getFeatures(featureCollection: EEFeatureCollection) {
 export async function evaluatePromisify(image: EEImage, shouldRetry = 10) {
   return new Promise((resolve, reject) => {
     try {
+      let isRetrying = false;
+      const timeout = setTimeout(() => {
+        console.log("RETRYING BY TIMEOUT");
+        isRetrying = true;
+        evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
+          .then((_res) => resolve(_res))
+          .catch((e) => reject(e));
+      }, 20000);
       image.evaluate(async (res: string, error: string) => {
         if (error) {
           console.log(error);
@@ -37,18 +46,21 @@ export async function evaluatePromisify(image: EEImage, shouldRetry = 10) {
             (error.includes("ECONNRESET") ||
               error.includes("socket hang up") ||
               error.includes("ECONNREFUSED")) &&
-            shouldRetry
+            shouldRetry &&
+            !isRetrying
           ) {
             await setTimeoutPromise(5000);
             console.log("RETRYING");
 
             evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
-              .then((_res) => resolve(res))
+              .then((_res) => resolve(_res))
               .catch((e) => reject(e));
           } else {
-            reject(error);
+            clearTimeout(timeout);
+            !isRetrying && reject(error);
           }
         } else {
+          clearTimeout(timeout);
           resolve(res);
         }
       });

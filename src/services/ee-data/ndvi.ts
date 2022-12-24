@@ -16,13 +16,9 @@ export const ndviEviScript = (
       .filterBounds(regions)
       .select(bands)
       .map((it: EEImage) => it.divide(10000));
-    res[`${bands.join("_")}_${key}`] = period_available
-      .reduce(ee.Reducer.mean())
-      .reduceRegions(
-        regions,
-        ee.Reducer.sum().setOutputs(bands.map((it) => `${it}_${key}`)),
-        100
-      );
+    res[`${bands.join("_")}_${key}`] = period_available.reduce(
+      ee.Reducer.mean()
+    );
   });
 
   return res;

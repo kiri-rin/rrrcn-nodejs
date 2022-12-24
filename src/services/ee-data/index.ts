@@ -1,5 +1,5 @@
 import { elevationScript } from "./elevation";
-import { EEFeatureCollection } from "../../types";
+import { EEFeatureCollection, EEImage } from "../../types";
 import { geomorphScript } from "./geomorph";
 import { globalHabitatScript } from "./global_habitat";
 import { era5MounthlyScript } from "./era5_monthly";
@@ -9,8 +9,9 @@ import { DatesConfig } from "../utils/dates";
 import { dynamicWorldMeansScript } from "./dynamic-world-means";
 import { globalWindAtlasScript } from "./global-wind-atlas";
 import { worldClimBioScript } from "./world_clim_bio";
+import { dynamicWorldModeScript } from "./dynamic-world-mode";
 export type AnalyticsScriptResult = {
-  [param: string]: typeof ee.ComputedObject;
+  [param: string]: EEImage;
 };
 export type AnalyticsScript = (
   regions: EEFeatureCollection,
@@ -25,6 +26,7 @@ const scripts = {
   global_habitat: globalHabitatScript,
   dynamic_world: dynamicWorldScript,
   dynamic_world_means: dynamicWorldMeansScript,
+  dynamic_world_mode: dynamicWorldModeScript,
   global_wind_atlas: globalWindAtlasScript,
   world_clim_bio: worldClimBioScript,
   ndvi: ((regions, dates: DatesConfig) =>

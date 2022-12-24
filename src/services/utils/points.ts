@@ -8,17 +8,27 @@ export function importPointsFromCsv({
   lat_key,
   long_key,
   id_key,
+  inheritProps,
 }: {
   csv: JSCSVTable;
   lat_key: string;
   long_key: string;
   id_key: string;
+  inheritProps?: string[];
 }) {
   return ee.FeatureCollection(
     csv.map((row) =>
       ee.Feature(
         ee.Geometry.Point([Number(row[long_key]), Number(row[lat_key])]),
-        { id: row[id_key], longitude: row[long_key], latitude: row[lat_key] }
+        {
+          id: row[id_key],
+          longitude: row[long_key],
+          latitude: row[lat_key],
+          ...inheritProps?.reduce((acc, key) => {
+            acc[key] = Number(row[key]);
+            return acc;
+          }, {} as any),
+        }
       )
     )
   );

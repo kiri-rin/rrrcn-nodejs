@@ -1,4 +1,4 @@
-import { scriptKey } from "./services/alalytics";
+import { scriptKey } from "./services/ee-data";
 import {
   dateIntervalsToConfig,
   DatesConfig,
@@ -7,11 +7,25 @@ import {
 
 export type analyticsConfigType = {
   pointsCsvPath: string;
-  buffer: number;
-  scripts: scriptKey[];
+
+  scripts:
+    | Partial<{
+        [key in scriptKey]: {
+          dates?: DatesConfig;
+          buffer?: number;
+          outputs?: string;
+          scale?: number;
+        };
+      }>
+    | scriptKey[];
+  buffer?: number;
   dates: DatesConfig;
   outputs: string;
-};
+  scale?: number;
+} & (
+  | { regionOfInterestCsvPath: string; randomForest: true }
+  | { randomForest?: false }
+);
 // export const analyticsConfig: analyticsConfigType = {
 //   pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
 //   buffer: 2000,
@@ -44,10 +58,56 @@ export type analyticsConfigType = {
 //   },
 //   outputs: "saker-sterv",
 // };
+// export const analyticsConfig: analyticsConfigType = {
+//   pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
+//   buffer: 0,
+//   scripts: ["global_wind_atlas", "world_clim_bio"],
+//   dates: {},
+//   outputs: "saker-sterv",
+// };
+//
+// export const analyticsConfig: analyticsConfigType | analyticsConfigType[] = [
+//   2017, 2018, 2019, 2020, 2021, 2022,
+// ].map((year) => ({
+//   pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
+//   buffer: 2000,
+//   scripts: ["dynamic_world"],
+//   dates: dateIntervalsToConfig(
+//     getDateIntervals([[year, year]], [[3, 7]], [[1, "end"]])
+//   ),
+//   outputs: `saker-sterv-dw/${year}`,
+// }));
 export const analyticsConfig: analyticsConfigType = {
-  pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
+  pointsCsvPath: "./src/static/NEOPHRON.csv",
   buffer: 0,
-  scripts: ["global_wind_atlas", "world_clim_bio"],
-  dates: {},
-  outputs: "saker-sterv",
+  scripts: {
+    elevation: {},
+    geomorph: {},
+    global_wind_atlas: {},
+    global_habitat: {},
+    world_clim_bio: {},
+    ndvi: {
+      scale: 100,
+      dates: {
+        summer_2022: getDateIntervals([[2022, 2022]], [[3, 7]], [[1, "end"]]),
+      },
+    },
+    evi: {
+      scale: 100,
+      dates: {
+        summer_2022: getDateIntervals([[2022, 2022]], [[3, 7]], [[1, "end"]]),
+      },
+    },
+    // dynamic_world_mode: {
+    //   scale: 100,
+    //
+    //   dates: dateIntervalsToConfig(
+    //     getDateIntervals([[2017, 2017]], [[6, 6]], [[1, "end"]])
+    //   ),
+    // },
+  },
+  dates: dateIntervalsToConfig([]),
+  outputs: `saker-sterv-RF_NEOPHRON`,
+  // randomForest: true,
+  // regionOfInterestCsvPath: "./src/static/region-of-interest.csv",
 };

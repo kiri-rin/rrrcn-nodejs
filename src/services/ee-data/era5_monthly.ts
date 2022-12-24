@@ -45,8 +45,7 @@ export const era5MounthlyScript: AnalyticsScript = (regions) => {
             ee.String("total_precipitation_").cat(image.id()),
             ee.String("windspeed_").cat(image.id()),
             ee.String("winddir_").cat(image.id()),
-          ])
-          .reduceRegions(regions, ee.Reducer.first());
+          ]);
       });
     results[`${year}`] = filtered.flatten();
   }

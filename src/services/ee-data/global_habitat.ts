@@ -48,12 +48,9 @@ export const globalHabitatScript: AnalyticsScript = async (regions) => {
       "projects/sat-io/open-datasets/global_habitat_heterogeneity/variance_1km"
     ),
   };
-  const res: AnalyticsScriptResult = {};
-  Object.entries(data).forEach(([key, image]) => {
-    res[key] = image.reduceRegions(
-      regions,
-      ee.Reducer.first().setOutputs([key])
-    );
+  Object.keys(data).forEach((key) => {
+    //@ts-ignore
+    data[key] = data[key].select([0], ["geomorph" + key]);
   });
-  return res;
+  return data;
 };

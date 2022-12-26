@@ -28,7 +28,11 @@ export async function evaluateScriptResultsToFeaturesArray(
 export async function getFeatures(featureCollection: EEFeatureCollection) {
   return evaluatePromisify(featureCollection).then((it: any) => it.features);
 }
-export async function evaluatePromisify(image: EEImage, shouldRetry = 10) {
+export async function evaluatePromisify(
+  image: EEImage,
+  shouldRetry = 10,
+  _timeout = 20000
+) {
   return new Promise((resolve, reject) => {
     try {
       let isRetrying = false;
@@ -38,7 +42,7 @@ export async function evaluatePromisify(image: EEImage, shouldRetry = 10) {
         evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
           .then((_res) => resolve(_res))
           .catch((e) => reject(e));
-      }, 20000);
+      }, _timeout);
       image.evaluate(async (res: string, error: string) => {
         if (error) {
           console.log(error);

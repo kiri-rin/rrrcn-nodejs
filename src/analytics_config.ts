@@ -98,16 +98,15 @@ export const analyticsConfig: analyticsConfigType = {
         summer_2022: getDateIntervals([[2022, 2022]], [[3, 7]], [[1, "end"]]),
       },
     },
-    // dynamic_world_mode: {
-    //   scale: 100,
-    //
-    //   dates: dateIntervalsToConfig(
-    //     getDateIntervals([[2017, 2017]], [[6, 6]], [[1, "end"]])
-    //   ),
+    // world_cover: {
+    //   scale: 10,
     // },
+    world_cover_convolve: {
+      scale: 10,
+    },
   },
   dates: dateIntervalsToConfig([]),
-  outputs: `saker-sterv-RF_NEOPHRON`,
-  // randomForest: true,
-  // regionOfInterestCsvPath: "./src/static/region-of-interest.csv",
+  outputs: `saker-sterv-RF_NEOPHRPON_WC_CONV`,
+  randomForest: true,
+  regionOfInterestCsvPath: "./src/static/region-of-interest.csv",
 };

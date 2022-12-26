@@ -1,6 +1,6 @@
 import { EEFeature, EEFeatureCollection, EEImage } from "../types";
 import { analyticsConfigType } from "../analytics_config";
-import fs, { writeFile } from "fs/promises";
+import fs, { mkdir, writeFile } from "fs/promises";
 import { importPointsFromCsv, JSCSVTable } from "../services/utils/points";
 import { parse } from "csv-parse/sync";
 import allScripts, { scriptKey } from "../services/ee-data";
@@ -77,7 +77,25 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const classified_prob = paramsImage
     .select(bands)
     .classify(classifier_prob)
-    .multiply(100);
+    .multiply(100)
+    .round();
+
+  // const sampleClassifierSize = await evaluatePromisify(
+  //   ee.List(
+  //     new Array(101)
+  //       .fill(0)
+  //       .map((it, index) =>
+  //         classified_prob
+  //           .updateMask(classified_prob.eq(index))
+  //           .sample({ scale: 1000 })
+  //           .size()
+  //       )
+  //   ),
+  //   10,
+  //   500000
+  // );
+  // console.log({ sampleClassifierSize });
+
   const json: any = await evaluatePromisify(classifier_prob.explain());
   json.thumbUrl = await new Promise((resolve) =>
     classified_prob.getThumbURL(
@@ -109,9 +127,43 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       }
     );
   });
+  // const vector = classified_prob.sample({
+  //   projection: ee.Projection("EPSG:4326"),
+  //   region: regionOfInterest,
+  //   scale: 1000,
+  //   factor: 1,
+  //
+  //   geometries: true,
+  // });
+  // json.downloadJSONUrl = await new Promise((resolve) => {
+  //   vector.getDownloadURL(
+  //     "JSON",
+  //     ["classification"],
+  //     "EXPORTED",
+  //     (res: any, error: any) => {
+  //       console.log({ res, error });
+  //       console.log(res, " URL");
+  //       resolve(res);
+  //     }
+  //   );
+  // });
+  // json.downloadKMLUrl = await new Promise((resolve) => {
+  //   vector.getDownloadURL(
+  //     "KML",
+  //     ["classification"],
+  //     "EXPORTED",
+  //     (res: any, error: any) => {
+  //       console.log({ res, error });
+  //       console.log(res, " URL");
+  //       resolve(res);
+  //     }
+  //   );
+  // });
+
+  await mkdir(`./.local/outputs/${outputs}`, { recursive: true });
   await writeFile(
-    `./.local/outputs/${outputs}/trained_falco.json`,
-    JSON.stringify(json)
+    `./.local/outputs/${outputs}/trained.json`,
+    JSON.stringify(json, null, 4)
   );
 
   return;

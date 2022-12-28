@@ -1,12 +1,15 @@
 import { EEFeatureCollection, EEImage, EEImageCollection } from "../../types";
 import { exportFeatureCollectionsToCsv } from "./points";
-import { evaluateScriptResultsToFeaturesArray } from "./ee-image";
+import {
+  evaluatePromisify,
+  evaluateScriptResultsToFeaturesArray,
+} from "./ee-image";
 import { type } from "os";
 import { AnalyticsScriptResult } from "../ee-data";
 const fsCommon = require("fs");
 const path = require("path");
 const fs = require("fs/promises");
-export const reduceImageRegions = (
+export const reduceImageRegions = async (
   regions: EEFeatureCollection,
   image: EEImage,
   scale?: number,
@@ -14,17 +17,17 @@ export const reduceImageRegions = (
 ) => {
   let reducer = ee.Reducer.sum();
 
-  const bands = image.bandNames().getInfo(); //TODO MOVE TO SERVER  SIDE CALC
-  if (bands.length === keys?.length) {
-    reducer = reducer.setOutputs(keys);
-  } else {
-    if (bands.length === 1) {
-      reducer = reducer.setOutputs(bands);
-    }
-  }
+  const bands = image.bandNames();
+  //TODO MOVE TO SERVER  SIDE CALC
+  reducer = ee.Algorithms.If(
+    bands.size().eq(keys?.length),
+    reducer.setOutputs(keys),
+    ee.Algorithms.If(bands.size().eq(1), reducer.setOutputs(bands), reducer)
+  );
+
   return image.reduceRegions(regions, reducer, scale || 1);
 };
-export const reduceRegionsFromImageOrCollection = (
+export const reduceRegionsFromImageOrCollection = async (
   regions: EEFeatureCollection,
   imageOrCollection: EEImage | EEImageCollection,
   scale?: number,

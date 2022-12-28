@@ -1,4 +1,4 @@
-Name,Id,Latitude,Longitude,Year,Spec,Type,Status,Condition,Auto_id
+Name,id,Latitude,Longitude,Year,Spec,Type,Status,Condition,Auto_id
 2018D-FC1,141659,51.555517,94.649265,2018,Buteo hemilasius,box,Occup,worth,1
 2018D-FC10,141704,51.417019,94.663357,2018,Falco cherrug,box,Occup,worth,2
 2018D-FC11,141705,51.228489,94.924258,2018,Falco tinnunculus,box,Occup,worth,3

@@ -1,4 +1,8 @@
-import { AnalyticsScript, AnalyticsScriptResult } from "./index";
+import {
+  AnalyticsScript,
+  AnalyticsScriptParams,
+  AnalyticsScriptResult,
+} from "./index";
 import {
   dateIntervalsToConfig,
   DatesConfig,
@@ -20,10 +24,13 @@ var targets = [
   "Snow_and_ice",
 ];
 
-export const dynamicWorldMeansScript = (
-  regions: EEFeatureCollection,
-  datesConfig: DatesConfig
-): AnalyticsScriptResult => {
+export const dynamicWorldMeansScript = ({
+  regions,
+  datesConfig,
+}: {
+  regions: EEFeatureCollection;
+  datesConfig: DatesConfig;
+}): AnalyticsScriptResult => {
   const areaPerPixel = ee.Image.pixelArea();
 
   const collection = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1");
@@ -49,17 +56,12 @@ export const dynamicWorldMeansScript = (
                   .selfMask()
                   .multiply(areaPerPixel)
                   .divide(1e6),
-                ee.Image().set("empty", 1)
+                ee.Image(-1)
               )
             );
           })
         )
-        .reduce(ee.Reducer.mean())
-        .reduceRegions(
-          regions,
-          ee.Reducer.sum().setOutputs([`${target}_${key}`]),
-          100
-        );
+        .reduce(ee.Reducer.mean());
     });
   }
   return res;

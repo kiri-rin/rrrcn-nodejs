@@ -1,7 +1,10 @@
 import { EEFeatureCollection } from "../../types";
-import { AnalyticsScriptResult } from "./index";
+import { AnalyticsScriptParams, AnalyticsScriptResult } from "./index";
 
-export const globalWindAtlasScript = (regions: EEFeatureCollection) => {
+export const globalWindAtlasScript = ({
+  regions,
+  bands,
+}: AnalyticsScriptParams) => {
   const data = {
     air_density_50: ee.Image(
       "projects/sat-io/open-datasets/global_wind_atlas/air-density/gwa3_250_air-density_50m"
@@ -35,8 +38,13 @@ export const globalWindAtlasScript = (regions: EEFeatureCollection) => {
     ),
   };
   Object.keys(data).forEach((key) => {
-    //@ts-ignore
-    data[key] = data[key].select([0], [key]);
+    if (!bands || bands.includes(key)) {
+      //@ts-ignore
+      data[key] = data[key].select([0], [key]);
+    } else {
+      //@ts-ignore
+      delete data[key];
+    }
   });
 
   return data;

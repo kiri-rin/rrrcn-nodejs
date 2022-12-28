@@ -12,11 +12,9 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   if (!analyticsConfig.randomForest) return;
   const {
     scripts,
-    randomForest,
     pointsCsvPath,
-    dates,
-    buffer,
-    outputs,
+    dates: defaultDates,
+    outputs: defaultOutputs,
     regionOfInterestCsvPath,
   } = analyticsConfig;
 
@@ -43,17 +41,21 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     ]),
   ]);
 
-  const scriptsKeys: scriptKey[] = Array.isArray(scripts)
-    ? scripts
-    : (Object.keys(scripts) as scriptKey[]);
-  for (let script of scriptsKeys) {
-    let scriptDates = Array.isArray(scripts)
-      ? dates
-      : scripts[script]?.dates || dates;
+  const scriptObjects = scripts.map((it) =>
+    typeof it === "string" ? { key: it } : it
+  );
+  for (let { key: script, dates, bands } of scriptObjects) {
+    let scriptDates = dates === undefined ? defaultDates : dates;
 
     console.log(script);
     parametersImageArray.push(
-      ...Object.values(await allScripts[script](regionOfInterest, scriptDates))
+      ...Object.values(
+        await allScripts[script as scriptKey]({
+          regions: regionOfInterest,
+          datesConfig: scriptDates,
+          bands,
+        })
+      )
     );
   }
 
@@ -67,6 +69,8 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     properties: ["Presence"],
     scale: 100,
   });
+  console.log(await evaluatePromisify(training.size()));
+
   const classifier_prob = ee.Classifier.smileRandomForest(20)
     .setOutputMode("PROBABILITY")
     .train({
@@ -160,9 +164,9 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   //   );
   // });
 
-  await mkdir(`./.local/outputs/${outputs}`, { recursive: true });
+  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
   await writeFile(
-    `./.local/outputs/${outputs}/trained.json`,
+    `./.local/outputs/${defaultOutputs}/trained.json`,
     JSON.stringify(json, null, 4)
   );
 

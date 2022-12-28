@@ -1,7 +1,7 @@
 import { EEFeatureCollection } from "../../types";
 import { mergeDateIntervalsFilters } from "../utils/ee-image-collection";
 import { DatesConfig } from "../utils/dates";
-import { AnalyticsScriptResult } from "./index";
+import { AnalyticsScriptParams, AnalyticsScriptResult } from "./index";
 import fs from "fs/promises";
 import { JSCSVTable } from "../utils/points";
 import { parse } from "csv-parse/sync";
@@ -19,7 +19,7 @@ const targetsKeys = {
   Mangroves: 95,
   Moss_and_lichen: 100,
 };
-export const worldCoverScript = async (regions: EEFeatureCollection) => {
+export const worldCoverScript = async ({ regions }: AnalyticsScriptParams) => {
   const res: AnalyticsScriptResult = {};
 
   const collection = ee.ImageCollection("ESA/WorldCover/v100");

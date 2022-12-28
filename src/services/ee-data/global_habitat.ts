@@ -1,6 +1,10 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "./index";
+import { EEFeatureCollection } from "../../types";
 
-export const globalHabitatScript: AnalyticsScript = async (regions) => {
+export const globalHabitatScript: AnalyticsScript = async ({
+  regions,
+  bands,
+}) => {
   const data = {
     cov: ee.Image(
       "projects/sat-io/open-datasets/global_habitat_heterogeneity/coefficient_of_variation_1km"
@@ -50,7 +54,13 @@ export const globalHabitatScript: AnalyticsScript = async (regions) => {
   };
   Object.keys(data).forEach((key) => {
     //@ts-ignore
-    data[key] = data[key].select([0], ["geomorph" + key]);
+    if (!bands || bands.includes(key)) {
+      //@ts-ignore
+      data[key] = data[key].select([0], [key]);
+    } else {
+      //@ts-ignore
+      delete data[key];
+    }
   });
   return data;
 };

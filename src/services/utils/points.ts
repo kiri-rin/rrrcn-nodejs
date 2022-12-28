@@ -16,22 +16,24 @@ export function importPointsFromCsv({
   id_key: string;
   inheritProps?: string[];
 }) {
-  return ee.FeatureCollection(
-    csv.map((row) =>
-      ee.Feature(
-        ee.Geometry.Point([Number(row[long_key]), Number(row[lat_key])]),
-        {
-          id: row[id_key],
-          longitude: row[long_key],
-          latitude: row[lat_key],
-          ...inheritProps?.reduce((acc, key) => {
-            acc[key] = Number(row[key]);
-            return acc;
-          }, {} as any),
-        }
+  return ee
+    .FeatureCollection(
+      csv.map((row) =>
+        ee.Feature(
+          ee.Geometry.Point([Number(row[long_key]), Number(row[lat_key])]),
+          {
+            id: row[id_key],
+            longitude: row[long_key],
+            latitude: row[lat_key],
+            ...inheritProps?.reduce((acc, key) => {
+              acc[key] = Number(row[key]);
+              return acc;
+            }, {} as any),
+          }
+        )
       )
     )
-  );
+    .distinct(["latitude", "longitude"]);
 }
 export async function exportFeatureCollectionsToCsv(
   collection: EEFeatureCollection

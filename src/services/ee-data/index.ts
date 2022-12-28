@@ -15,10 +15,13 @@ import { worldCoverConvolveScript } from "./world-cover-convolve";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };
+export type AnalyticsScriptParams = {
+  regions: EEFeatureCollection;
+  datesConfig?: DatesConfig;
+  bands?: string[];
+};
 export type AnalyticsScript = (
-  regions: EEFeatureCollection,
-  datesConfig?: DatesConfig,
-  ...args: any
+  params: AnalyticsScriptParams
 ) => AnalyticsScriptResult;
 const scripts = {
   elevation: elevationScript,
@@ -33,10 +36,20 @@ const scripts = {
   world_clim_bio: worldClimBioScript,
   world_cover: worldCoverScript,
   world_cover_convolve: worldCoverConvolveScript,
-  ndvi: ((regions, dates: DatesConfig) =>
-    ndviEviScript(regions, dates, ["NDVI"])) as AnalyticsScript,
-  evi: ((regions, dates: DatesConfig) =>
-    ndviEviScript(regions, dates, ["EVI"])) as AnalyticsScript,
+  ndvi: (({
+    regions,
+    datesConfig,
+  }: AnalyticsScriptParams & { datesConfig: DatesConfig }) =>
+    ndviEviScript({
+      regions,
+      datesConfig,
+      bands: ["NDVI"],
+    })) as AnalyticsScript,
+  evi: (({
+    regions,
+    datesConfig,
+  }: AnalyticsScriptParams & { datesConfig: DatesConfig }) =>
+    ndviEviScript({ regions, datesConfig, bands: ["EVI"] })) as AnalyticsScript,
 };
 export type scriptKey = keyof typeof scripts;
 

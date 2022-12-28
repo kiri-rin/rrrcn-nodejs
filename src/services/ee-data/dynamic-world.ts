@@ -1,4 +1,8 @@
-import { AnalyticsScript, AnalyticsScriptResult } from "./index";
+import {
+  AnalyticsScript,
+  AnalyticsScriptParams,
+  AnalyticsScriptResult,
+} from "./index";
 import {
   dateIntervalsToConfig,
   DatesConfig,
@@ -20,10 +24,13 @@ var targets = [
   "Snow_and_ice",
 ];
 
-export const dynamicWorldScript = (
-  regions: EEFeatureCollection,
-  datesConfig: DatesConfig
-): AnalyticsScriptResult => {
+export const dynamicWorldScript = ({
+  regions,
+  datesConfig,
+}: {
+  regions: EEFeatureCollection;
+  datesConfig: DatesConfig;
+}): AnalyticsScriptResult => {
   const areaPerPixel = ee.Image.pixelArea();
 
   const collection = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1");

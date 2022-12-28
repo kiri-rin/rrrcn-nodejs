@@ -1,12 +1,16 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "./index";
-import { EEImage } from "../../types";
+import { EEFeatureCollection, EEImage } from "../../types";
 
 const DATASET_ID = "ECMWF/ERA5_LAND/MONTHLY";
 const years = Array(13)
   .fill(0)
   .map((it, index) => index + 2010);
 const monthsRange = [6, 7];
-export const era5MounthlyScript: AnalyticsScript = (regions) => {
+export const era5MounthlyScript: AnalyticsScript = ({
+  regions,
+}: {
+  regions: EEFeatureCollection;
+}) => {
   const collection = ee.ImageCollection(DATASET_ID).filterBounds(regions);
   const results: AnalyticsScriptResult = {};
   for (let year of years) {
@@ -47,7 +51,7 @@ export const era5MounthlyScript: AnalyticsScript = (regions) => {
             ee.String("winddir_").cat(image.id()),
           ]);
       });
-    results[`${year}`] = filtered.flatten();
+    results[`${year}`] = filtered;
   }
   return results;
 };

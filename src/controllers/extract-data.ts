@@ -11,8 +11,14 @@ import fsCommon from "fs";
 import path from "path";
 import { parse } from "csv-parse/sync";
 export const main = async (analyticsConfig: analyticsConfigType) => {
-  const { dates, scripts, pointsCsvPath, buffer, outputs, scale } =
-    analyticsConfig;
+  const {
+    dates: defaultDates,
+    scripts,
+    pointsCsvPath,
+    buffer: defaultBuffer,
+    outputs: defaultOutput,
+    scale: defaultScale,
+  } = analyticsConfig;
 
   const pointsRaw = await fs.readFile(pointsCsvPath);
   const pointsParsed = parse(pointsRaw, { delimiter: ",", columns: true });
@@ -23,28 +29,32 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
     id_key: "id",
   });
 
-  const scriptsKeys: scriptKey[] = Array.isArray(scripts)
-    ? scripts
-    : (Object.keys(scripts) as scriptKey[]);
-  for (let script of scriptsKeys) {
-    let scriptDates = Array.isArray(scripts)
-      ? dates
-      : scripts[script]?.dates || dates;
-    let scriptBuffer = Array.isArray(scripts)
-      ? buffer
-      : scripts[script]?.buffer || buffer;
-    let scriptOutput = Array.isArray(scripts)
-      ? outputs
-      : scripts[script]?.outputs || outputs;
-    let scriptScale = Array.isArray(scripts)
-      ? scale
-      : scripts[script]?.scale || scale;
+  const scriptObjects = scripts.map((it) =>
+    typeof it === "string" ? { key: it } : it
+  );
+  for (let {
+    key: script,
+    dates,
+    buffer,
+    bands,
+    scale,
+    outputs,
+    filename,
+  } of scriptObjects) {
+    let scriptDates = dates === undefined ? defaultDates : dates;
+    let scriptBuffer = buffer === undefined ? defaultBuffer : buffer;
+    let scriptOutput = outputs === undefined ? defaultOutput : outputs;
+    let scriptScale = scale === undefined ? defaultScale : scale;
     const regions = scriptBuffer
       ? points.map((it: EEFeature) => it.buffer(scriptBuffer))
       : (points as EEFeatureCollection);
-    const scriptResults = await allScripts[script](regions, scriptDates);
+    const scriptResults = await allScripts[script as keyof typeof allScripts]({
+      regions,
+      datesConfig: scriptDates,
+      bands,
+    });
     for (let [key, imageOrCollection] of Object.entries(scriptResults)) {
-      scriptResults[key] = reduceRegionsFromImageOrCollection(
+      scriptResults[key] = await reduceRegionsFromImageOrCollection(
         regions,
         imageOrCollection,
         scriptScale,
@@ -54,7 +64,7 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
 
     await writeScriptFeaturesResult(
       scriptResults,
-      `${scriptOutput}/${script}.csv`
+      `${scriptOutput}/${filename || script}.csv`
     );
   }
 };

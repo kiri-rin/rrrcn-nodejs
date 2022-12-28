@@ -3,15 +3,19 @@ import { EEFeatureCollection, EEImage } from "../../types";
 import { DatesConfig } from "../utils/dates";
 import { mergeDateIntervalsFilters } from "../utils/ee-image-collection";
 
-export const ndviEviScript = (
-  regions: EEFeatureCollection,
-  dateIntervals: DatesConfig,
-  bands: string[] = ["NDVI", "EVI"]
-) => {
+export const ndviEviScript = ({
+  regions,
+  datesConfig,
+  bands = ["NDVI", "EVI"],
+}: {
+  regions: EEFeatureCollection;
+  datesConfig: DatesConfig;
+  bands?: string[];
+}) => {
   const collection = ee.ImageCollection("MODIS/006/MOD13A1");
   const res: AnalyticsScriptResult = {};
 
-  Object.entries(dateIntervals).forEach(([key, intervals], index) => {
+  Object.entries(datesConfig).forEach(([key, intervals], index) => {
     const period_available = mergeDateIntervalsFilters(collection, intervals)
       .filterBounds(regions)
       .select(bands)

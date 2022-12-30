@@ -15,12 +15,12 @@ export const geomorphScript = ({ regions, bands }: AnalyticsScriptParams) => {
       .reduce(ee.Reducer.firstNonNull().setOutputs([band]))
       .select([0], [band]);
   }
-  if (bandsArray.includes("geom")) {
+  if (!bands || bandsArray.includes("geom")) {
     res.geom = ee
       .Image("projects/rrrcn2022/assets/geomorph-geom")
       .select([0], ["geom"]);
   }
-  if (bandsArray.includes("aspect")) {
+  if (!bands || bandsArray.includes("aspect")) {
     res.aspect = ee.Terrain.aspect(
       ee.Image(NASADEM_DATASET_ID).select(["elevation"])
     ).select("aspect");

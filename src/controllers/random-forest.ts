@@ -1,11 +1,16 @@
 import { EEFeature, EEFeatureCollection, EEImage } from "../types";
 import { analyticsConfigType } from "../analytics_config";
-import fs, { mkdir, writeFile } from "fs/promises";
+import fsPromises, { mkdir, writeFile } from "fs/promises";
+import fs from "fs";
 import { importPointsFromCsv, JSCSVTable } from "../services/utils/points";
 import { parse } from "csv-parse/sync";
 import allScripts, { scriptKey } from "../services/ee-data";
 import { it } from "node:test";
 import { evaluatePromisify } from "../services/utils/ee-image";
+import { printRandomForestCharts } from "../services/random-forest/charts";
+import http from "https";
+import { getAcc } from "../services/random-forest/validation";
+import { drawMarkerChart } from "../services/charts"; // or 'https' for https:// URLs
 
 export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const parametersImageArray = [];
@@ -17,17 +22,20 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     outputs: defaultOutputs,
     regionOfInterestCsvPath,
   } = analyticsConfig;
-
-  const pointsRaw = await fs.readFile(pointsCsvPath);
+  const outputDir = `./.local/outputs/${defaultOutputs}/`;
+  const pointsRaw = await fsPromises.readFile(pointsCsvPath);
   const pointsParsed = parse(pointsRaw, { delimiter: ",", columns: true });
-  const points = importPointsFromCsv({
+  let raw_points = importPointsFromCsv({
     csv: pointsParsed,
     lat_key: "Latitude",
     long_key: "Longitude",
     id_key: "id",
     inheritProps: ["Presence"],
   });
-  const regionPointsRaw = await fs.readFile(regionOfInterestCsvPath);
+  raw_points = raw_points.randomColumn("random");
+  var validationPoints = raw_points.filter(ee.Filter.lt("random", 0.2));
+  var points = raw_points.filter(ee.Filter.gte("random", 0.2));
+  const regionPointsRaw = await fsPromises.readFile(regionOfInterestCsvPath);
   const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
     delimiter: ",",
     columns: true,
@@ -83,22 +91,15 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     .classify(classifier_prob)
     .multiply(100)
     .round();
+  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
 
-  // const sampleClassifierSize = await evaluatePromisify(
-  //   ee.List(
-  //     new Array(101)
-  //       .fill(0)
-  //       .map((it, index) =>
-  //         classified_prob
-  //           .updateMask(classified_prob.eq(index))
-  //           .sample({ scale: 1000 })
-  //           .size()
-  //       )
-  //   ),
-  //   10,
-  //   500000
-  // );
-  // console.log({ sampleClassifierSize });
+  await printRandomForestCharts({
+    classifiedImage: classified_prob,
+    trainingData: points,
+    validationData: validationPoints,
+    regionOfInterest,
+    output: `./.local/outputs/${defaultOutputs}`,
+  });
 
   const json: any = await evaluatePromisify(classifier_prob.explain());
   json.thumbUrl = await new Promise((resolve) =>
@@ -131,26 +132,27 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       }
     );
   });
-  // const vector = classified_prob.sample({
-  //   projection: ee.Projection("EPSG:4326"),
-  //   region: regionOfInterest,
-  //   scale: 1000,
-  //   factor: 1,
-  //
-  //   geometries: true,
-  // });
-  // json.downloadJSONUrl = await new Promise((resolve) => {
-  //   vector.getDownloadURL(
-  //     "JSON",
-  //     ["classification"],
-  //     "EXPORTED",
-  //     (res: any, error: any) => {
-  //       console.log({ res, error });
-  //       console.log(res, " URL");
-  //       resolve(res);
-  //     }
-  //   );
-  // });
+  // await Promise.all([
+  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
+  // ]);
+  const vector = classified_prob.sample({
+    region: regionOfInterest,
+    scale: 1000,
+    geometries: true,
+  });
+  json.downloadJSONUrl = await new Promise((resolve) => {
+    vector.getDownloadURL(
+      "JSON",
+      ["classification", ".geo"],
+      "EXPORTED",
+      (res: any, error: any) => {
+        console.log({ res, error });
+        console.log(res, " URL");
+        resolve(res);
+      }
+    );
+  });
   // json.downloadKMLUrl = await new Promise((resolve) => {
   //   vector.getDownloadURL(
   //     "KML",
@@ -164,11 +166,22 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   //   );
   // });
 
-  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
-  await writeFile(
-    `./.local/outputs/${defaultOutputs}/trained.json`,
-    JSON.stringify(json, null, 4)
-  );
+  await writeFile(`${outputDir}trained.json`, JSON.stringify(json, null, 4));
 
   return;
 };
+export const downloadFile = (url: string, path: string) =>
+  new Promise((resolve, reject) => {
+    console.log("DOWNLOADING ", url);
+    const file = fs.createWriteStream(path);
+    const request = http.get(url, function (response) {
+      response.pipe(file);
+
+      // after download completed close filestream
+      file.on("finish", () => {
+        file.close();
+        resolve(true);
+        console.log("Download Completed");
+      });
+    });
+  });

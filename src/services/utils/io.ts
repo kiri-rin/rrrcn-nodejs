@@ -13,9 +13,10 @@ export const reduceImageRegions = async (
   regions: EEFeatureCollection,
   image: EEImage,
   scale?: number,
-  keys?: string[]
+  keys?: string[],
+  mode: "SUM" | "MEAN" = "SUM"
 ) => {
-  let reducer = ee.Reducer.sum();
+  let reducer = mode === "MEAN" ? ee.Reducer.mean() : ee.Reducer.sum();
 
   const bands = image.bandNames();
   //TODO MOVE TO SERVER  SIDE CALC
@@ -31,16 +32,17 @@ export const reduceRegionsFromImageOrCollection = async (
   regions: EEFeatureCollection,
   imageOrCollection: EEImage | EEImageCollection,
   scale?: number,
-  keys?: string[]
+  keys?: string[],
+  mode: "SUM" | "MEAN" = "SUM"
 ) => {
   if (typeof imageOrCollection.map === "function") {
     return imageOrCollection
       .map((image: EEImage) => {
-        return reduceImageRegions(regions, image, scale, keys);
+        return reduceImageRegions(regions, image, scale, keys, mode);
       })
       .flatten();
   } else {
-    return reduceImageRegions(regions, imageOrCollection, scale, keys);
+    return reduceImageRegions(regions, imageOrCollection, scale, keys, mode);
   }
 };
 export const writeScriptFeaturesResult = async (

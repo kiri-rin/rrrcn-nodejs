@@ -7,7 +7,7 @@ import {
   drawRegressionChart,
   saveChart,
 } from "../charts";
-import { getAcc } from "./validation";
+import { getAcc, getAUCROC } from "./validation";
 
 type RandomForestChartsMeta = {
   classifiedImage: EEImage;
@@ -53,22 +53,30 @@ export const printRandomForestCharts = async ({
   var sampleValidation = await evaluatePromisify(
     predictedValidation.select(["Presence", "classification"])
   );
+  console.log(
+    //@ts-ignore
+    sampleValidation.features.length,
+    await evaluatePromisify(predictedValidation.size()),
+    await evaluatePromisify(validationData.size()),
+    "VALIDATION SIZE"
+  );
   // console.log(sampleTraining);
   // Create chart, print it
-  const res = {
-    sampleTraining,
-    histogramData,
-  };
+
   const histogram = await drawHistogramChart(
     //@ts-ignore
     histogramData.map(({ classification }, index) => [index, classification])
   );
-  const ROC = await evaluatePromisify(getAcc(classifiedImage, validationData));
+  let ROC = getAcc(classifiedImage, validationData, 1);
+  const AUC = await evaluatePromisify(getAUCROC(ROC));
+  ROC = await evaluatePromisify(ROC);
+  await writeFile(output + "/ROC.json", JSON.stringify(ROC));
   const ROCChart = await drawMarkerChart(
     //@ts-ignore
     ROC.features //@ts-ignore
       .map(({ properties: { TPR, TNR, FPR } }) => [FPR, TPR])
-      .reverse()
+      .reverse(),
+    "AUC_ROC" + "\nAUC: " + AUC
   );
   await saveChart(ROCChart, output + "/roc.jpg");
   await saveChart(histogram, output + "/histogram.jpg");
@@ -92,6 +100,4 @@ export const printRandomForestCharts = async ({
   );
   await saveChart(regression, output + "/regression.jpg");
   await saveChart(regressionValidation, output + "/regression_valid.jpg");
-
-  await writeFile("test.json", JSON.stringify(res));
 };

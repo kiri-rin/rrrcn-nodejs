@@ -9,8 +9,6 @@ import { it } from "node:test";
 import { evaluatePromisify } from "../services/utils/ee-image";
 import { printRandomForestCharts } from "../services/random-forest/charts";
 import http from "https";
-import { getAcc } from "../services/random-forest/validation";
-import { drawMarkerChart } from "../services/charts"; // or 'https' for https:// URLs
 
 export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const parametersImageArray = [];
@@ -20,7 +18,12 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     pointsCsvPath,
     dates: defaultDates,
     outputs: defaultOutputs,
-    regionOfInterestCsvPath,
+    randomForest: {
+      regionOfInterestCsvPath,
+      validationSplit,
+      outputMode,
+      validationPointsCsvPath,
+    },
   } = analyticsConfig;
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
   const pointsRaw = await fsPromises.readFile(pointsCsvPath);
@@ -32,15 +35,27 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     id_key: "id",
     inheritProps: ["Presence"],
   });
-  raw_points = raw_points.randomColumn("random");
-  var validationPoints = raw_points.filter(ee.Filter.lt("random", 0.2));
-  var points = raw_points.filter(ee.Filter.gte("random", 0.2));
+  let externalValidationPoints;
+  if (validationPointsCsvPath) {
+    const val_pointsRaw = await fsPromises.readFile(validationPointsCsvPath);
+    const val_pointsParsed = parse(val_pointsRaw, {
+      delimiter: ",",
+      columns: true,
+    });
+    externalValidationPoints = importPointsFromCsv({
+      csv: val_pointsParsed,
+      lat_key: "Latitude",
+      long_key: "Longitude",
+      id_key: "id",
+      inheritProps: ["Presence"],
+    });
+  }
+
   const regionPointsRaw = await fsPromises.readFile(regionOfInterestCsvPath);
   const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
     delimiter: ",",
     columns: true,
   });
-
   const regionOfInterest = ee.Geometry.Polygon([
     regionPointsParsed.map((row) => [
       Number(row.Longitude),
@@ -48,6 +63,20 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       Number(row.Latitude),
     ]),
   ]);
+
+  raw_points = raw_points.randomColumn("random", 2);
+  const abs_raw_points = raw_points.filter(ee.Filter.eq("Presence", 0));
+  const pres_raw_points = raw_points.filter(ee.Filter.eq("Presence", 1));
+  var validationPoints = externalValidationPoints
+    ? externalValidationPoints.merge(
+        abs_raw_points.filter(ee.Filter.lt("random", validationSplit))
+      )
+    : raw_points.filter(ee.Filter.lt("random", validationSplit));
+  var points = externalValidationPoints
+    ? pres_raw_points.merge(
+        abs_raw_points.filter(ee.Filter.gt("random", validationSplit))
+      )
+    : raw_points.filter(ee.Filter.gte("random", validationSplit));
 
   const scriptObjects = scripts.map((it) =>
     typeof it === "string" ? { key: it } : it
@@ -80,7 +109,7 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   console.log(await evaluatePromisify(training.size()));
 
   const classifier_prob = ee.Classifier.smileRandomForest(20)
-    .setOutputMode("PROBABILITY")
+    .setOutputMode(outputMode)
     .train({
       features: training,
       classProperty: "Presence",
@@ -132,27 +161,27 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       }
     );
   });
-  // await Promise.all([
-  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
-  // ]);
+  await Promise.all([
+    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+    downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
+  ]);
   const vector = classified_prob.sample({
     region: regionOfInterest,
     scale: 1000,
     geometries: true,
   });
-  json.downloadJSONUrl = await new Promise((resolve) => {
-    vector.getDownloadURL(
-      "JSON",
-      ["classification", ".geo"],
-      "EXPORTED",
-      (res: any, error: any) => {
-        console.log({ res, error });
-        console.log(res, " URL");
-        resolve(res);
-      }
-    );
-  });
+  // json.downloadJSONUrl = await new Promise((resolve) => {
+  //   vector.getDownloadURL(
+  //     "JSON",
+  //     ["classification", ".geo"],
+  //     "EXPORTED",
+  //     (res: any, error: any) => {
+  //       console.log({ res, error });
+  //       console.log(res, " URL");
+  //       resolve(res);
+  //     }
+  //   );
+  // });
   // json.downloadKMLUrl = await new Promise((resolve) => {
   //   vector.getDownloadURL(
   //     "KML",

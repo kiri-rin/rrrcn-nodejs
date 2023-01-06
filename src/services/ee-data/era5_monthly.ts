@@ -1,63 +1,67 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "./index";
 import { EEFeatureCollection, EEImage } from "../../types";
+import { afterEach } from "node:test";
 
 const DATASET_ID = "ECMWF/ERA5_LAND/MONTHLY";
 const years = Array(13)
   .fill(0)
   .map((it, index) => index + 2010);
 const monthsRange = [6, 7];
+const recalc_bands: any = {
+  windspeed: ["u_component_of_wind_10m", "v_component_of_wind_10m"],
+  winddir: ["u_component_of_wind_10m", "v_component_of_wind_10m"],
+};
 export const era5MounthlyScript: AnalyticsScript = ({
   regions,
-}: {
-  regions: EEFeatureCollection;
+  bands = ["temperature_2m", "total_precipitation", "windspeed", "winddir"],
+  datesConfig,
 }) => {
   const collection = ee.ImageCollection(DATASET_ID).filterBounds(regions);
   const results: AnalyticsScriptResult = {};
-  for (let year of years) {
-    const date = new Date(year, monthsRange[0], 1, 0, 0, 0, 0);
-    const endDate = new Date(year, monthsRange[1], 1, 0, 0, 0, 0);
+  for (let [key, dateIntervals] of Object.entries(datesConfig || {})) {
+    for (let [start, end] of dateIntervals) {
+      const filtered = collection
+        .filterDate(ee.Date(start), ee.Date(end))
+        .select(bands?.flatMap((band) => recalc_bands[band] || [band]))
+        .map(function (image: EEImage) {
+          for (let band of bands) {
+            if (band?.includes("temperature")) {
+              image = image.addBands({
+                srcImg: recalculateTempToCelsius(image.select(band)),
+                overwrite: true,
+              });
+            }
+          }
+          if (bands?.includes("total_precipitation")) {
+            image = image.addBands({
+              srcImg: recalculatePrecipitationToTotal(image),
+              overwrite: true,
+            });
+          }
+          if (bands?.includes("windspeed")) {
+            image = image.addBands(calculateWindSpeed(image));
+          }
+          if (bands?.includes("winddir")) {
+            image = image.addBands(calculateWindDir(image));
+          }
 
-    const filtered = collection
-      .filterDate(ee.Date(date), ee.Date(endDate))
-      .select([
-        "temperature_2m",
-        "total_precipitation",
-        "u_component_of_wind_10m",
-        "v_component_of_wind_10m",
-      ])
-      .map(function (image: EEImage) {
-        const temperature = recalculateTempToCelsius(image);
-        const precipitations = recalculatePrecipitationToTotal(image);
-        const windspeed = calculateWindSpeed(image);
-        const winddir = calculateWindDir(image);
-        image = image.addBands({
-          srcImg: temperature
-            .addBands(precipitations)
-            .addBands(winddir)
-            .addBands(windspeed),
-          overwrite: true,
+          return ee.Image(
+            image
+              .select(bands)
+              .rename(
+                bands.map((band) => ee.String(`${band}_`).cat(image.id()))
+              )
+          );
         });
-        return image
-          .select([
-            "temperature_2m",
-            "total_precipitation",
-            "windspeed",
-            "winddir",
-          ])
-          .rename([
-            ee.String("temperature_2m_").cat(image.id()),
-            ee.String("total_precipitation_").cat(image.id()),
-            ee.String("windspeed_").cat(image.id()),
-            ee.String("winddir_").cat(image.id()),
-          ]);
-      });
-    results[`${year}`] = filtered;
+      results[`${key}`] = filtered.reduce(ee.Reducer.mode());
+    }
   }
+
   return results;
 };
 
 const recalculateTempToCelsius = (image: EEImage) => {
-  return image.select("temperature_2m").subtract(273.15);
+  return image.subtract(273.15);
 };
 const recalculatePrecipitationToTotal = (image: EEImage) => {
   //https://confluence.ecmwf.int/pages/viewpage.action?pageId=197702790

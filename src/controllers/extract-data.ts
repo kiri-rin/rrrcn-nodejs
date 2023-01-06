@@ -18,6 +18,7 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
     buffer: defaultBuffer,
     outputs: defaultOutput,
     scale: defaultScale,
+    mode: defaultMode,
   } = analyticsConfig;
 
   const pointsRaw = await fs.readFile(pointsCsvPath);
@@ -40,11 +41,13 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
     scale,
     outputs,
     filename,
+    mode,
   } of scriptObjects) {
     let scriptDates = dates === undefined ? defaultDates : dates;
     let scriptBuffer = buffer === undefined ? defaultBuffer : buffer;
     let scriptOutput = outputs === undefined ? defaultOutput : outputs;
     let scriptScale = scale === undefined ? defaultScale : scale;
+    let scriptMode = mode || defaultMode || "SUM";
     const regions = scriptBuffer
       ? points.map((it: EEFeature) => it.buffer(scriptBuffer))
       : (points as EEFeatureCollection);
@@ -58,7 +61,8 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
         regions,
         imageOrCollection,
         scriptScale,
-        [key]
+        [key],
+        scriptMode
       );
     }
 

@@ -10,8 +10,16 @@ export type ScriptConfig = {
   dates?: DatesConfig;
   buffer?: number;
   outputs?: string;
+  mode?: "MEAN" | "SUM";
+
   scale?: number;
   bands?: string[];
+};
+export type randomForestConfig = {
+  regionOfInterestCsvPath: string;
+  validationPointsCsvPath?: string;
+  validationSplit: number;
+  outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";
 };
 export type analyticsConfigType = {
   pointsCsvPath: string;
@@ -20,11 +28,11 @@ export type analyticsConfigType = {
   buffer?: number;
   dates: DatesConfig;
   outputs: string;
+  mode?: "MEAN" | "SUM";
+
   scale?: number;
-} & (
-  | { regionOfInterestCsvPath: string; randomForest: true }
-  | { randomForest?: false }
-);
+  randomForest?: randomForestConfig;
+};
 const ndviEviDates = {
   aprils_2005_2010: getDateIntervals([[2005, 2010]], [[3, 3]], [[1, "end"]]),
   marches_2005_2010: getDateIntervals([[2005, 2010]], [[4, 4]], [[1, "end"]]),
@@ -38,24 +46,47 @@ const ndviEviDates = {
   augusts_2017_2022: getDateIntervals([[2017, 2022]], [[7, 7]], [[1, "end"]]),
 };
 
-// export const analyticsConfig: analyticsConfigType = {
-//   pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
-//   buffer: 2000,
-//   scripts: ["ndvi", "evi"],
-//   dates: {
-//     aprils_2005_2010: getDateIntervals([[2005, 2010]], [[3, 3]], [[1, "end"]]),
-//     marches_2005_2010: getDateIntervals([[2005, 2010]], [[4, 4]], [[1, "end"]]),
-//     junes_2005_2010: getDateIntervals([[2005, 2010]], [[5, 5]], [[1, "end"]]),
-//     julies_2005_2010: getDateIntervals([[2005, 2010]], [[6, 6]], [[1, "end"]]),
-//     augusts_2005_2010: getDateIntervals([[2005, 2010]], [[7, 7]], [[1, "end"]]),
-//     aprils_2017_2022: getDateIntervals([[2017, 2022]], [[3, 3]], [[1, "end"]]),
-//     marches_2017_2022: getDateIntervals([[2017, 2022]], [[4, 4]], [[1, "end"]]),
-//     junes_2017_2022: getDateIntervals([[2017, 2022]], [[5, 5]], [[1, "end"]]),
-//     julies_2017_2022: getDateIntervals([[2017, 2022]], [[6, 6]], [[1, "end"]]),
-//     augusts_2017_2022: getDateIntervals([[2017, 2022]], [[7, 7]], [[1, "end"]]),
-//   },
-//   outputs: "saker-sterv",
-// };
+export const analyticsConfig: analyticsConfigType = {
+  pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
+  dates: dateIntervalsToConfig(getDateIntervals([], [], [])),
+  mode: "MEAN",
+  buffer: 2000,
+  // scripts: [
+  //   { key: "ndvi", scale: 100 },
+  //   { key: "evi", scale: 100 },
+  // ],
+  scripts: Array(18)
+    .fill(0)
+    .map((it, index) => index + 2005)
+    .flatMap((year: any) => {
+      const dates = dateIntervalsToConfig(
+        getDateIntervals([[year, year]], [[3, 7]], [[1, "end"]])
+      );
+      return [
+        {
+          key: "era5_monthly",
+          filename: `${year}_era5_2000`,
+          dates,
+          scale: 100,
+          bands: ["temperature_2m", "skin_temperature", "total_precipitation"],
+        },
+        // { key: "evi", filename: `${year}_evi_2000.csv`, dates, scale: 100 },
+      ];
+    }, {}),
+  // dates: {
+  //   aprils_2005_2010: getDateIntervals([[2005, 2010]], [[3, 3]], [[1, "end"]]),
+  //   marches_2005_2010: getDateIntervals([[2005, 2010]], [[4, 4]], [[1, "end"]]),
+  //   junes_2005_2010: getDateIntervals([[2005, 2010]], [[5, 5]], [[1, "end"]]),
+  //   julies_2005_2010: getDateIntervals([[2005, 2010]], [[6, 6]], [[1, "end"]]),
+  //   augusts_2005_2010: getDateIntervals([[2005, 2010]], [[7, 7]], [[1, "end"]]),
+  //   aprils_2017_2022: getDateIntervals([[2017, 2022]], [[3, 3]], [[1, "end"]]),
+  //   marches_2017_2022: getDateIntervals([[2017, 2022]], [[4, 4]], [[1, "end"]]),
+  //   junes_2017_2022: getDateIntervals([[2017, 2022]], [[5, 5]], [[1, "end"]]),
+  //   julies_2017_2022: getDateIntervals([[2017, 2022]], [[6, 6]], [[1, "end"]]),
+  //   augusts_2017_2022: getDateIntervals([[2017, 2022]], [[7, 7]], [[1, "end"]]),
+  // },
+  outputs: "saker-sterv_evi_ndvi_5years_2000_2005-2009",
+};
 // export const analyticsConfig: analyticsConfigType = {
 //   pointsCsvPath: "./src/static/Saker-Sterv2010-2022.csv",
 //   buffer: 2000,
@@ -158,74 +189,81 @@ const ndviEviDates = {
 //     ]),
 //   outputs: "artificialnests",
 // };
-export const analyticsConfig: analyticsConfigType = {
-  // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
-  // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
-  pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/FALCO.csv",
-  buffer: 0,
-  scripts: [
-    { key: "elevation" },
-    {
-      key: "geomorph",
-      bands: ["cti", "slope", "aspect", "vrm", "tpi", "spi", "geom"],
-    },
-    {
-      key: "global_wind_atlas",
-      bands: ["wind_speed_50", "power_density_10", "RIX"],
-    },
-    {
-      key: "global_habitat",
-      bands: ["cov", "corr", "entropy", "homogeneity", "pielou", "range"],
-    },
-    {
-      key: "world_clim_bio",
-      bands: [
-        "bio02",
-        "bio03",
-        "bio06",
-        "bio07",
-        "bio08",
-        "bio14",
-        "bio15",
-        "bio19",
-      ],
-    },
-    {
-      key: "ndvi",
-      scale: 100,
-      dates: {
-        summer_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
-      },
-    },
-    {
-      key: "evi",
-      scale: 100,
-      dates: {
-        summer_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
-      },
-    },
-    { key: "world_cover", scale: 10 },
-    {
-      key: "world_cover_convolve",
-      scale: 10,
-      bands: [
-        "Tree_cover",
-        "Shrubland",
-        "Grassland",
-        "Cropland",
-        "Bare_sparse_vegetation",
-      ],
-    },
-    // world_cover_convolve: {
-    //   scale: 10,
-    // },
-  ],
-
-  dates: dateIntervalsToConfig([]),
-  outputs: `saker-tuva-RF_FALCO_TEST_VALID`,
-  randomForest: true,
-  // regionOfInterestCsvPath:
-  //   "./src/static/Random_forest/Saker_Sterv2010-2022/region-of-interest.csv",
-  regionOfInterestCsvPath:
-    "./src/static/Random_forest/Saker_Sterv2010-2022/region-of-interest.csv",
-};
+// export const analyticsConfig: analyticsConfigType = {
+//   buffer: 0,
+//   scripts: [
+//     { key: "elevation" },
+//     {
+//       key: "geomorph",
+//       bands: ["cti", "slope", "aspect", "vrm", "tpi", "spi", "geom"],
+//     },
+//     {
+//       key: "global_wind_atlas",
+//       bands: ["wind_speed_50", "power_density_10", "RIX"],
+//     },
+//     {
+//       key: "global_habitat",
+//       bands: ["cov", "corr", "entropy", "homogeneity", "pielou", "range"],
+//     },
+//     {
+//       key: "world_clim_bio",
+//       bands: [
+//         "bio02",
+//         "bio03",
+//         "bio06",
+//         "bio07",
+//         "bio08",
+//         "bio14",
+//         "bio15",
+//         "bio19",
+//       ],
+//     },
+//     {
+//       key: "ndvi",
+//       scale: 100,
+//       dates: {
+//         summer_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
+//       },
+//     },
+//     {
+//       key: "evi",
+//       scale: 100,
+//       dates: {
+//         summer_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
+//       },
+//     },
+//     { key: "world_cover", scale: 10 },
+//     {
+//       key: "world_cover_convolve",
+//       scale: 10,
+//       bands: [
+//         "Tree_cover",
+//         "Shrubland",
+//         "Grassland",
+//         "Cropland",
+//         "Bare_sparse_vegetation",
+//       ],
+//     },
+//     // world_cover_convolve: {
+//     //   scale: 10,
+//     // },
+//   ],
+//
+//   dates: dateIntervalsToConfig([]),
+//   // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
+//   pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
+//   // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/FALCO.csv",
+//   outputs: `NEOPHRON_RF_PROB_BW`,
+//   randomForest: {
+//     validationPointsCsvPath:
+//       "./src/static/Random_forest/Saker_Sterv2010-2022/birds-kz-valid.csv",
+//     regionOfInterestCsvPath:
+//       "./src/static/Random_forest/Saker_Sterv2010-2022/region-of-interest.csv",
+//     validationSplit: 0.2,
+//     outputMode: "PROBABILITY",
+//     // regionOfInterestCsvPath:
+//     //   "./src/static/Random_forest/Saker_Sterv2010-2022/region-of-interest.csv",
+//   },
+// };
+// regionOfInterestCsvPath:
+//   "./src/static/Random_forest/Saker_Sterv2010-2022/region-of-interest.csv",

@@ -11,25 +11,25 @@ export function getAcc(img: EEImage, TP: any, scale: number = 100) {
   var seq = ee.List.sequence({ start: 0, end: 100, count: 25 });
   return ee.FeatureCollection(
     seq.map(function (cutoff: number) {
-      var Pres = Pr_Prob_Vals.filterMetadata("Presence", "equals", 1);
+      var Pres = Pr_Prob_Vals.filter(ee.Filter.eq("Presence", 1));
       // true-positive and true-positive rate, sensitivity
       var TP = ee.Number(
-        Pres.filterMetadata("classification", "greater_than", cutoff).size()
+        Pres.filter(ee.Filter.gte("classification", cutoff)).size()
       );
       var TPR = TP.divide(Pres.size());
-      var Abs = Pr_Prob_Vals.filterMetadata("Presence", "equals", 0);
+      var Abs = Pr_Prob_Vals.filter(ee.Filter.eq("Presence", 0));
       // false-negative
       var FN = ee.Number(
-        Pres.filterMetadata("classification", "less_than", cutoff).size()
+        Pres.filter(ee.Filter.lt("classification", cutoff)).size()
       );
       // true-negative and true-negative rate, specificity
       var TN = ee.Number(
-        Abs.filterMetadata("classification", "less_than", cutoff).size()
+        Abs.filter(ee.Filter.lt("classification", cutoff)).size()
       );
       var TNR = TN.divide(Abs.size());
       // false-positive and false-positive rate
       var FP = ee.Number(
-        Abs.filterMetadata("classification", "greater_than", cutoff).size()
+        Abs.filter(ee.Filter.gte("classification", cutoff)).size()
       );
       var FPR = FP.divide(Abs.size());
       // precision
@@ -53,7 +53,7 @@ export function getAcc(img: EEImage, TP: any, scale: number = 100) {
 }
 
 // Calculate AUC of the Receiver Operator Characteristic
-function getAUCROC(x: EEImage) {
+export function getAUCROC(x: EEFeatureCollection) {
   var X = ee.Array(x.aggregate_array("FPR"));
   var Y = ee.Array(x.aggregate_array("TPR"));
   var X1 = X.slice(0, 1).subtract(X.slice(0, 0, -1));

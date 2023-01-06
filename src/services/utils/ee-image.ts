@@ -31,7 +31,7 @@ export async function getFeatures(featureCollection: EEFeatureCollection) {
 export async function evaluatePromisify(
   image: EEImage,
   shouldRetry = 10,
-  _timeout = 20000
+  _timeout = 200000
 ) {
   return new Promise((resolve, reject) => {
     try {

@@ -86,9 +86,11 @@ export const drawRegressionChart = (data: any) => {
   chart.draw();
   return chart;
 };
-export const drawMarkerChart = async (data: any) => {
+export const drawMarkerChart = async (data: any, title: string) => {
+  console.log(data);
   var chart = anychart.area(data);
   var series = chart.spline(data);
+  chart.title(title);
   data.map((point: any) => {
     const seriest = chart.spline([point]).markers(true);
     seriest.markers().type("circle");

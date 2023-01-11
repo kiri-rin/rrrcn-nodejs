@@ -21,7 +21,7 @@ export const reduceImageRegions = async (
   const bands = image.bandNames();
   //TODO MOVE TO SERVER  SIDE CALC
   reducer = ee.Algorithms.If(
-    bands.size().eq(keys?.length),
+    bands.size().eq(keys?.length || 0),
     reducer.setOutputs(keys),
     ee.Algorithms.If(bands.size().eq(1), reducer.setOutputs(bands), reducer)
   );
@@ -51,10 +51,10 @@ export const writeScriptFeaturesResult = async (
 ) => {
   //@ts-ignore
   const dirName = path.dirname(fileName);
-  await fs.mkdir(`./.local/outputs/${dirName}`, {
+  await fs.mkdir(`${dirName}`, {
     recursive: true,
   });
-  const stream = fsCommon.createWriteStream(`./.local/outputs/${fileName}`);
+  const stream = fsCommon.createWriteStream(`${fileName}`);
   console.log({ features });
   const res = await exportFeatureCollectionsToCsv(
     await evaluateScriptResultsToFeaturesArray(features)

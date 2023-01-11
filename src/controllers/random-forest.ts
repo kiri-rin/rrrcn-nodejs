@@ -1,5 +1,10 @@
 import { EEFeature, EEFeatureCollection, EEImage } from "../types";
-import { analyticsConfigType } from "../analytics_config";
+import {
+  analyticsConfig,
+  analyticsConfigType,
+  randomForestConfig,
+  ScriptConfig,
+} from "../analytics_config";
 import fsPromises, { mkdir, writeFile } from "fs/promises";
 import fs from "fs";
 import { importPointsFromCsv, JSCSVTable } from "../services/utils/points";
@@ -9,9 +14,101 @@ import { it } from "node:test";
 import { evaluatePromisify } from "../services/utils/ee-image";
 import { printRandomForestCharts } from "../services/random-forest/charts";
 import http from "https";
+import {
+  reduceRegionsFromImageOrCollection,
+  writeScriptFeaturesResult,
+} from "../services/utils/io";
+import { DatesConfig } from "../services/utils/dates";
+export const getPoints = async (path: string) => {
+  const pointsFile = await fsPromises.readFile(path);
+  const pointsParsed = parse(pointsFile, { delimiter: ",", columns: true });
+  return importPointsFromCsv({
+    csv: pointsParsed,
+    lat_key: "Latitude",
+    long_key: "Longitude",
+    id_key: "id",
+    inheritProps: ["Presence"],
+  });
+};
+export const getRegionOfInterest = async (path: string) => {
+  const regionPointsRaw = await fsPromises.readFile(path);
+  const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
+    delimiter: ",",
+    columns: true,
+  });
+  return ee.Geometry.Polygon([
+    regionPointsParsed.map((row) => [
+      Number(row.Longitude),
 
-export const randomForest = async (analyticsConfig: analyticsConfigType) => {
+      Number(row.Latitude),
+    ]),
+  ]);
+};
+export const setDefaultsToScriptsConfig = (
+  analyticsConfig: analyticsConfigType
+) => {
+  const scriptObjects = analyticsConfig.scripts.map((it) => {
+    const obj = typeof it === "string" ? { key: it } : it;
+    if (obj.dates === undefined) {
+      obj.dates = analyticsConfig.dates;
+    }
+    return obj as Required<ScriptConfig>;
+  });
+  return scriptObjects;
+};
+export const getRFClassifier = async ({
+  points,
+  scripts,
+  regionOfInterest,
+  outputMode,
+}: {
+  points: EEFeatureCollection;
+  scripts: Required<ScriptConfig>[];
+  regionOfInterest: EEImage;
+  outputMode: randomForestConfig["outputMode"];
+}) => {
   const parametersImageArray = [];
+
+  for (let { key: script, dates, bands } of scripts) {
+    console.log(script);
+    parametersImageArray.push(
+      ...Object.values(
+        await allScripts[script as scriptKey]({
+          regions: regionOfInterest,
+          datesConfig: dates as DatesConfig,
+          bands,
+        })
+      )
+    );
+  }
+  const paramsImage = parametersImageArray.reduce((acc, it, index) => {
+    return index ? acc.addBands(it) : acc;
+  }, parametersImageArray[0]);
+  const bands = paramsImage.bandNames();
+
+  const training = paramsImage.select(bands).sampleRegions({
+    collection: points,
+    properties: ["Presence"],
+    scale: 100,
+  });
+  // console.log(await evaluatePromisify(training.size()));
+
+  const classifier = ee.Classifier.smileRandomForest(20)
+    .setOutputMode(outputMode)
+    .train({
+      features: training,
+      classProperty: "Presence",
+      inputProperties: bands,
+    });
+
+  const classified_image = paramsImage
+    .select(bands)
+    .classify(classifier)
+    .multiply(100)
+    .round();
+  return { classified_image, classifier };
+};
+export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   if (!analyticsConfig.randomForest) return;
   const {
     scripts,
@@ -26,45 +123,13 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     },
   } = analyticsConfig;
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
-  const pointsRaw = await fsPromises.readFile(pointsCsvPath);
-  const pointsParsed = parse(pointsRaw, { delimiter: ",", columns: true });
-  let raw_points = importPointsFromCsv({
-    csv: pointsParsed,
-    lat_key: "Latitude",
-    long_key: "Longitude",
-    id_key: "id",
-    inheritProps: ["Presence"],
-  });
+  let raw_points = await getPoints(pointsCsvPath);
+  const regionOfInterest = await getRegionOfInterest(regionOfInterestCsvPath);
+  raw_points = raw_points.randomColumn("random");
   let externalValidationPoints;
   if (validationPointsCsvPath) {
-    const val_pointsRaw = await fsPromises.readFile(validationPointsCsvPath);
-    const val_pointsParsed = parse(val_pointsRaw, {
-      delimiter: ",",
-      columns: true,
-    });
-    externalValidationPoints = importPointsFromCsv({
-      csv: val_pointsParsed,
-      lat_key: "Latitude",
-      long_key: "Longitude",
-      id_key: "id",
-      inheritProps: ["Presence"],
-    });
+    externalValidationPoints = await getPoints(validationPointsCsvPath);
   }
-
-  const regionPointsRaw = await fsPromises.readFile(regionOfInterestCsvPath);
-  const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
-    delimiter: ",",
-    columns: true,
-  });
-  const regionOfInterest = ee.Geometry.Polygon([
-    regionPointsParsed.map((row) => [
-      Number(row.Longitude),
-
-      Number(row.Latitude),
-    ]),
-  ]);
-
-  raw_points = raw_points.randomColumn("random", 2);
   const abs_raw_points = raw_points.filter(ee.Filter.eq("Presence", 0));
   const pres_raw_points = raw_points.filter(ee.Filter.eq("Presence", 1));
   var validationPoints = externalValidationPoints
@@ -78,63 +143,35 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       )
     : raw_points.filter(ee.Filter.gte("random", validationSplit));
 
-  const scriptObjects = scripts.map((it) =>
-    typeof it === "string" ? { key: it } : it
-  );
-  for (let { key: script, dates, bands } of scriptObjects) {
-    let scriptDates = dates === undefined ? defaultDates : dates;
-
-    console.log(script);
-    parametersImageArray.push(
-      ...Object.values(
-        await allScripts[script as scriptKey]({
-          regions: regionOfInterest,
-          datesConfig: scriptDates,
-          bands,
-        })
-      )
-    );
-  }
-
-  const paramsImage = parametersImageArray.reduce((acc, it, index) => {
-    return index ? acc.addBands(it) : acc;
-  }, parametersImageArray[0]);
-  const bands = paramsImage.bandNames();
-
-  const training = paramsImage.select(bands).sampleRegions({
-    collection: points,
-    properties: ["Presence"],
-    scale: 100,
+  const scriptObjects = setDefaultsToScriptsConfig(analyticsConfig);
+  const { classified_image, classifier } = await getRFClassifier({
+    points,
+    outputMode,
+    scripts: scriptObjects,
+    regionOfInterest,
   });
-  console.log(await evaluatePromisify(training.size()));
 
-  const classifier_prob = ee.Classifier.smileRandomForest(20)
-    .setOutputMode(outputMode)
-    .train({
-      features: training,
-      classProperty: "Presence",
-      inputProperties: bands,
-    });
-  const classified_prob = paramsImage
-    .select(bands)
-    .classify(classifier_prob)
-    .multiply(100)
-    .round();
   await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
-
+  const json: any = await evaluatePromisify(classifier.explain());
   await printRandomForestCharts({
-    classifiedImage: classified_prob,
+    classifiedImage: classifier,
+    explainedClassifier: json,
     trainingData: points,
     validationData: validationPoints,
     regionOfInterest,
     output: `./.local/outputs/${defaultOutputs}`,
   });
-
-  const json: any = await evaluatePromisify(classifier_prob.explain());
+  // const allData = await reduceRegionsFromImageOrCollection(
+  //   points,
+  //   paramsImage,
+  //   100,
+  //   []
+  // );
+  // await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
   json.thumbUrl = await new Promise((resolve) =>
-    classified_prob.getThumbURL(
+    classified_image.getThumbURL(
       {
-        image: classified_prob,
+        image: classified_image,
         min: 0,
         region: regionOfInterest,
         max: 100,
@@ -148,9 +185,9 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     )
   );
   json.downloadUrl = await new Promise((resolve) => {
-    classified_prob.getDownloadURL(
+    classified_image.getDownloadURL(
       {
-        image: classified_prob,
+        image: classified_image,
         maxPixels: 1e20,
         scale: 500,
         region: regionOfInterest,
@@ -161,11 +198,11 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       }
     );
   });
-  await Promise.all([
-    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-    downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
-  ]);
-  const vector = classified_prob.sample({
+  // await Promise.all([
+  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
+  // ]);
+  const vector = classified_image.sample({
     region: regionOfInterest,
     scale: 1000,
     geometries: true,

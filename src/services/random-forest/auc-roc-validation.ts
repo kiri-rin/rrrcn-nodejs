@@ -1,13 +1,8 @@
 //https://smithsonian.github.io/SDMinGEE/#accuracy-assessment-1
 import { EEFeatureCollection, EEImage } from "../../types";
 
-export function getAcc(img: EEImage, TP: any, scale: number = 100) {
-  var Pr_Prob_Vals = img.sampleRegions({
-    collection: TP,
-    properties: ["Presence"],
-    scale,
-    tileScale: 16,
-  });
+export function getAcc(predictedPoints: EEFeatureCollection) {
+  var Pr_Prob_Vals = predictedPoints;
   var seq = ee.List.sequence({ start: 0, end: 100, count: 25 });
   return ee.FeatureCollection(
     seq.map(function (cutoff: number) {
@@ -61,7 +56,7 @@ export function getAUCROC(x: EEFeatureCollection) {
   return X1.multiply(Y1).multiply(0.5).reduce("sum", [0]).abs().toList().get(0);
 }
 
-function AUCROCaccuracy(image: EEImage, TData: EEFeatureCollection) {
-  var Acc = getAcc(image, TData);
+function AUCROCaccuracy(predictedPoints: EEFeatureCollection) {
+  var Acc = getAcc(predictedPoints);
   return getAUCROC(Acc);
 }

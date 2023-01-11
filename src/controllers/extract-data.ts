@@ -68,7 +68,7 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
 
     await writeScriptFeaturesResult(
       scriptResults,
-      `${scriptOutput}/${filename || script}.csv`
+      `./.local/outputs/${scriptOutput}/${filename || script}.csv`
     );
   }
 };

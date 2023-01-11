@@ -7,18 +7,21 @@ import {
   drawRegressionChart,
   saveChart,
 } from "../charts";
-import { getAcc, getAUCROC } from "./validation";
+import { getAcc, getAUCROC } from "./auc-roc-validation";
+import { validateClassifier } from "./all-validations";
 
 type RandomForestChartsMeta = {
   classifiedImage: EEImage;
   trainingData: EEFeatureCollection;
   validationData: EEFeatureCollection;
+  explainedClassifier: any;
   regionOfInterest: any;
   output: string;
 };
 export const printRandomForestCharts = async ({
   classifiedImage,
   trainingData,
+  explainedClassifier,
   validationData,
   regionOfInterest,
   output,
@@ -40,10 +43,12 @@ export const printRandomForestCharts = async ({
   var predictedTraining = classifiedImage.sampleRegions({
     collection: trainingData,
     geometries: true,
+    scale: 100,
   });
   var predictedValidation = classifiedImage.sampleRegions({
     collection: validationData,
     geometries: true,
+    scale: 100,
   });
 
   // Separate the observed (REDOX_CM) and predicted (regression) properties
@@ -53,21 +58,18 @@ export const printRandomForestCharts = async ({
   var sampleValidation = await evaluatePromisify(
     predictedValidation.select(["Presence", "classification"])
   );
-  console.log(
-    //@ts-ignore
-    sampleValidation.features.length,
-    await evaluatePromisify(predictedValidation.size()),
-    await evaluatePromisify(validationData.size()),
-    "VALIDATION SIZE"
-  );
-  // console.log(sampleTraining);
-  // Create chart, print it
 
   const histogram = await drawHistogramChart(
     //@ts-ignore
     histogramData.map(({ classification }, index) => [index, classification])
   );
-  let ROC = getAcc(classifiedImage, validationData, 1);
+  const paramsHistogram = await drawHistogramChart(
+    //@ts-ignore
+    Object.entries(explainedClassifier.importance)
+  );
+  paramsHistogram.xAxis().labels().height(20);
+  paramsHistogram.xAxis().labels().rotation(90);
+  let ROC = getAcc(predictedValidation);
   const AUC = await evaluatePromisify(getAUCROC(ROC));
   ROC = await evaluatePromisify(ROC);
   await writeFile(output + "/ROC.json", JSON.stringify(ROC));
@@ -99,5 +101,6 @@ export const printRandomForestCharts = async ({
     )
   );
   await saveChart(regression, output + "/regression.jpg");
+  await saveChart(paramsHistogram, output + "/paramsHistogram.jpg");
   await saveChart(regressionValidation, output + "/regression_valid.jpg");
 };

@@ -127,13 +127,18 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       regionOfInterestCsvPath,
       validationSplit,
       outputMode,
+      bufferPerAreaPoint,
+      classificationSplit,
       validationPointsCsvPath,
+      validationSeed,
     },
   } = analyticsConfig;
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
+  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
+
   let raw_points = await getPoints(pointsCsvPath);
   const regionOfInterest = await getRegionOfInterest(regionOfInterestCsvPath);
-  raw_points = raw_points.randomColumn("random", 55);
+  raw_points = raw_points.randomColumn("random", validationSeed);
   let externalValidationPoints;
   if (validationPointsCsvPath) {
     externalValidationPoints = await getPoints(validationPointsCsvPath);
@@ -166,8 +171,52 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     outputMode,
     paramsImage,
   });
+  const toDownload = [];
+  if (outputMode !== "CLASSIFICATION") {
+    const classified_image_classes = classified_image.gte(
+      classificationSplit || 50
+    );
 
-  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
+    const thumbUrl: string = await getThumbUrl(
+      classified_image_classes.multiply(100),
+      regionOfInterest
+    );
+    const tiffUrl: string = await getTiffUrl(
+      classified_image_classes,
+      regionOfInterest
+    );
+    toDownload.push(
+      downloadFile(
+        thumbUrl,
+        `${outputDir}classification_classes_${classificationSplit}.png`
+      ),
+      downloadFile(
+        tiffUrl,
+        `${outputDir}classification_classes_${classificationSplit}.zip`
+      )
+    );
+    if (bufferPerAreaPoint) {
+      const buffered_classes = classified_image_classes
+        .convolve(ee.Kernel.circle(bufferPerAreaPoint, "meters", false, 1))
+        .gt(0);
+      const _thumbUrl = await getThumbUrl(
+        buffered_classes.multiply(100),
+        regionOfInterest
+      );
+      const _tiffUrl = await getTiffUrl(buffered_classes, regionOfInterest);
+      toDownload.push(
+        downloadFile(
+          _thumbUrl,
+          `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.png`
+        ),
+        downloadFile(
+          _tiffUrl,
+          `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.zip`
+        )
+      );
+    }
+  }
+
   const json: any = await evaluatePromisify(classifier.explain());
   await printRandomForestCharts({
     classifiedImage: classified_image,
@@ -184,40 +233,13 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     []
   );
   await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
-  json.thumbUrl = await new Promise((resolve) =>
-    classified_image.getThumbURL(
-      {
-        image: classified_image,
-        min: 0,
-        region: regionOfInterest,
-        max: 100,
-        dimensions: 1000,
-        palette: ["FFFFFF", "C6AC94", "8D8846", "395315", "031A00"],
-      },
-      (res: any) => {
-        console.log(res, " URL");
-        resolve(res);
-      }
-    )
+  json.thumbUrl = await getThumbUrl(classified_image, regionOfInterest);
+  json.downloadUrl = await getTiffUrl(classified_image, regionOfInterest);
+  toDownload.push(
+    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+    downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
   );
-  json.downloadUrl = await new Promise((resolve) => {
-    classified_image.getDownloadURL(
-      {
-        image: classified_image,
-        maxPixels: 1e20,
-        scale: 500,
-        region: regionOfInterest,
-      },
-      (res: any) => {
-        console.log(res, " URL");
-        resolve(res);
-      }
-    );
-  });
-  // await Promise.all([
-  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`),
-  // ]);
+  await Promise.all(toDownload);
   const vector = classified_image.sample({
     region: regionOfInterest,
     scale: 1000,
@@ -252,7 +274,7 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
 
   return;
 };
-export const downloadFile = (url: string, path: string) =>
+export const downloadFile = async (url: string, path: string) =>
   new Promise((resolve, reject) => {
     console.log("DOWNLOADING ", url);
     const file = fs.createWriteStream(path);
@@ -266,4 +288,42 @@ export const downloadFile = (url: string, path: string) =>
         console.log("Download Completed");
       });
     });
+  });
+export const getThumbUrl = async (
+  classified_image: EEImage,
+  regionOfInterest: EEFeature
+): Promise<string> =>
+  await new Promise((resolve) =>
+    classified_image.getThumbURL(
+      {
+        image: classified_image,
+        min: 0,
+        region: regionOfInterest,
+        max: 100,
+        dimensions: 1000,
+        palette: ["FFFFFF", "C6AC94", "8D8846", "395315", "031A00"],
+      },
+      (res: string) => {
+        console.log(res, " URL");
+        resolve(res as string);
+      }
+    )
+  );
+export const getTiffUrl = async (
+  classified_image: EEImage,
+  regionOfInterest: EEFeature
+): Promise<string> =>
+  await new Promise((resolve) => {
+    classified_image.getDownloadURL(
+      {
+        image: classified_image,
+        maxPixels: 1e20,
+        scale: 500,
+        region: regionOfInterest,
+      },
+      (res: string) => {
+        console.log(res, " URL");
+        resolve(res as string);
+      }
+    );
   });

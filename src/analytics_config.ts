@@ -11,7 +11,6 @@ export type ScriptConfig = {
   buffer?: number;
   outputs?: string;
   mode?: "MEAN" | "SUM";
-
   scale?: number;
   bands?: string[];
 };
@@ -20,6 +19,10 @@ export type randomForestConfig = {
   regionOfInterestCsvPath: string;
   validationPointsCsvPath?: string;
   validationSplit: number;
+  validationSeed?: number;
+  classificationSplit?: number;
+  bufferPerAreaPoint?: number;
+
   outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";
 };
 export type analyticsConfigType = {
@@ -196,63 +199,63 @@ export const analyticsConfig: analyticsConfigType = {
     { key: "elevation" },
     {
       key: "geomorph",
-      // bands: [
-      //   "cti",
-      //   // "tri",
-      //   // "slope",
-      //   // "aspect",
-      //   "vrm",
-      //   "roughness",
-      //   "tpi",
-      //   // "spi",
-      //   "geom",
-      // ],
+      bands: [
+        "cti",
+        // "tri",
+        "slope",
+        "aspect",
+        "vrm",
+        // "roughness",
+        "tpi",
+        "spi",
+        "geom",
+      ],
     },
     {
       key: "global_wind_atlas",
-      // bands: [
-      //   "wind_speed_50",
-      //   // "power_density_10",
-      //   // "power_density_50",
-      //   // "power_density_100",
-      //   // "RIX",
-      // ],
+      bands: [
+        // "wind_speed_50",
+        "power_density_10",
+        // "power_density_50",
+        // "power_density_100",
+        // "RIX",
+      ],
     },
     {
       key: "global_habitat",
-      // bands: [
-      //   "cov",
-      //   // "contrast",
-      //   // "corr",
-      //   // "dissimilarity",
-      //   // "entropy",
-      //   // "maximum",
-      //   "mean",
-      //   // "pielou",
-      //   // "homogeneity",
-      //   // "range",
-      //   // "shannon",
-      //   "simpson",
-      //   // "sd",
-      //   // "variance",
-      // ],
+      bands: [
+        "cov",
+        // "contrast",
+        "corr",
+        // "dissimilarity",
+        "entropy",
+        // "maximum",
+        "mean",
+        // "pielou",
+        // "homogeneity",
+        // "range",
+        // "shannon",
+        // "simpson",
+        // "sd",
+        // "variance",
+      ],
     },
     {
       key: "world_clim_bio",
-      // bands: [
-      //   // "bio01",
-      //   "bio02",
-      //   "bio03",
-      //   // "bio04",
-      //   "bio06",
-      //   // "bio07",
-      //   // "bio08",
-      //   // "bio11",
-      //   // "bio12",
-      //   // "bio13",
-      //   "bio16",
-      //   // "bio19",
-      // ],
+      bands: [
+        // "bio01",
+        "bio02",
+        "bio03",
+        "bio04",
+        // "bio06",
+        "bio07",
+        "bio08",
+        "bio11",
+        // "bio12",
+        // "bio13",
+        // "bio16",
+        // "bio19",
+      ],
     },
 
     {
@@ -260,25 +263,25 @@ export const analyticsConfig: analyticsConfigType = {
       scale: 100,
       dates: {
         april_2022: getDateIntervals([[2022, 2022]], [[3, 3]], [[1, "end"]]),
-        may_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
-        june_2022: getDateIntervals([[2022, 2022]], [[5, 5]], [[1, "end"]]),
-        july_2022: getDateIntervals([[2022, 2022]], [[6, 6]], [[1, "end"]]),
-        august_2022: getDateIntervals([[2022, 2022]], [[7, 7]], [[1, "end"]]),
+        // may_2022: getDateIntervals([[2022, 2022]], [[4, 4]], [[1, "end"]]),
+        // june_2022: getDateIntervals([[2022, 2022]], [[5, 5]], [[1, "end"]]),
+        // july_2022: getDateIntervals([[2022, 2022]], [[6, 6]], [[1, "end"]]),
+        // august_2022: getDateIntervals([[2022, 2022]], [[7, 7]], [[1, "end"]]),
       },
     },
-    {
-      key: "ndvi",
-      scale: 100,
-      buffer: 100,
-      mode: "MEAN",
-      dates: {
-        conv_april_2022: getDateIntervals(
-          [[2022, 2022]],
-          [[3, 3]],
-          [[1, "end"]]
-        ),
-      },
-    },
+    // {
+    //   key: "evi",
+    //   scale: 100,
+    //   buffer: 100,
+    //   mode: "MEAN",
+    //   dates: {
+    //     conv_april_2022: getDateIntervals(
+    //       [[2022, 2022]],
+    //       [[3, 3]],
+    //       [[1, "end"]]
+    //     ),
+    //   },
+    // },
     // {
     //   key: "evi",
     //   scale: 100,
@@ -307,9 +310,12 @@ export const analyticsConfig: analyticsConfigType = {
   // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
   pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/NEOPHRON.csv",
   // pointsCsvPath: "./src/static/Random_forest/Saker_Sterv2010-2022/FALCO.csv",
-  outputs: `NEOPHRON_RF_REGR_CV_ALL`,
+  outputs: `NEOPHRON_RF_REGR_IN_MODEL_res`,
   randomForest: {
-    crossValidation: true,
+    validationSeed: 1,
+    classificationSplit: 25,
+    bufferPerAreaPoint: 1000,
+    // crossValidation: true,
     // validationPointsCsvPath:
     //   "./src/static/Random_forest/Saker_Sterv2010-2022/birds-kz-valid.csv",
     regionOfInterestCsvPath:

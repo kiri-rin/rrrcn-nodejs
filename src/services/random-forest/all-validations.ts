@@ -2,7 +2,30 @@ import { evaluatePromisify } from "../utils/ee-image";
 import { getAcc, getAUCROC } from "./auc-roc-validation";
 import { EEFeatureCollection, EEImage } from "../../types";
 const regression = require("regression");
-
+export type classifierValidationType = {
+  AUC: number;
+  ROC: {
+    features: {
+      properties: {
+        cutoff: number;
+        TP: number;
+        TN: number;
+        FP: number;
+        FN: number;
+        TPR: number;
+        TNR: number;
+        FPR: number;
+        Precision: number;
+        SUMSS: number;
+        ccr: number;
+        kappa: number;
+      };
+    }[];
+  };
+  training_regression: { r2: number };
+  validation_regression: { r2: number };
+  explainedClassifier: any;
+};
 export const validateClassifier = async (
   classifier: any,
   classified_image: EEImage,
@@ -12,19 +35,37 @@ export const validateClassifier = async (
   const explainedClassifier: any = await evaluatePromisify(
     classifier.explain()
   );
-  var predictedValidation = classified_image.sampleRegions({
+  const predictedValidation = classified_image.sampleRegions({
     collection: validationData,
     geometries: true,
     scale: 100,
   });
-  var predictedTraining = classified_image.sampleRegions({
+  const predictedTraining = classified_image.sampleRegions({
     collection: trainingData,
     geometries: true,
     scale: 100,
   });
-  const data_regression = regression.linear(
+
+  const sampleTraining = await evaluatePromisify(
+    predictedTraining.select(["Presence", "classification"])
+  );
+  const sampleValidation = await evaluatePromisify(
+    predictedValidation.select(["Presence", "classification"])
+  );
+  //@ts-ignore
+  console.log(sampleValidation.features.length);
+  const training_regression = regression.linear(
     //@ts-ignore
     sampleTraining.features.map(
+      ({ properties: { Presence, classification } }: any) => [
+        classification,
+        Presence,
+      ]
+    )
+  );
+  const validation_regression = regression.linear(
+    //@ts-ignore
+    sampleValidation.features.map(
       ({ properties: { Presence, classification } }: any) => [
         classification,
         Presence,
@@ -34,6 +75,13 @@ export const validateClassifier = async (
   let ROC = getAcc(predictedValidation);
   const AUC = await evaluatePromisify(getAUCROC(ROC));
   ROC = await evaluatePromisify(ROC);
-  //TODO add kappa, ccr
-  return { AUC, ROC, regression };
+  delete training_regression.points;
+  delete validation_regression.points;
+  return {
+    AUC,
+    ROC,
+    training_regression,
+    validation_regression,
+    explainedClassifier,
+  } as classifierValidationType;
 };

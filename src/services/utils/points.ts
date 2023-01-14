@@ -76,6 +76,19 @@ export async function exportFeatureCollectionsToCsv(
     });
   });
 }
+export const getCsv = async (table: any[][]) => {
+  return await new Promise((resolve, reject) => {
+    //@ts-ignore
+    stringify(table, (error, res) => {
+      if (error) {
+        reject(error);
+      } else {
+        console.log("READY TO WRITE");
+        resolve(res);
+      }
+    });
+  });
+};
 const fulfillRowWithPoint = (
   row: any[],
   point: EEFeature,

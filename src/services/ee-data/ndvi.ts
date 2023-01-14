@@ -20,8 +20,9 @@ export const ndviEviScript = ({
       .filterBounds(regions)
       .select(bands)
       .map((it: EEImage) => it.divide(10000));
-    res[`${bands.join("_")}_${key}`] = period_available.reduce(
-      ee.Reducer.mean()
+    const image = period_available.reduce(ee.Reducer.mean());
+    res[`${bands.join("_")}_${key}`] = image.rename(
+      image.bandNames().map((name: any) => ee.String(name).cat(`_${key}`))
     );
   });
 

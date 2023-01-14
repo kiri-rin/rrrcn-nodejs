@@ -26,20 +26,20 @@ export const printRandomForestCharts = async ({
   regionOfInterest,
   output,
 }: RandomForestChartsMeta) => {
-  const histogramData = await evaluatePromisify(
-    ee.List(
-      new Array(101)
-        .fill(0)
-        .map((it, index) =>
-          classifiedImage
-            .eq(index)
-            .reduceRegion(ee.Reducer.sum(), regionOfInterest, 1000)
-        )
-    ),
-    10,
-    100000
-  );
-  console.log(histogramData);
+  // const histogramData = await evaluatePromisify(
+  //   ee.List(
+  //     new Array(101)
+  //       .fill(0)
+  //       .map((it, index) =>
+  //         classifiedImage
+  //           .eq(index)
+  //           .reduceRegion(ee.Reducer.sum(), regionOfInterest, 1000)
+  //       )
+  //   ),
+  //   10,
+  //   100000
+  // );
+  // console.log(histogramData);
   var predictedTraining = classifiedImage.sampleRegions({
     collection: trainingData,
     geometries: true,
@@ -59,29 +59,29 @@ export const printRandomForestCharts = async ({
     predictedValidation.select(["Presence", "classification"])
   );
 
-  const histogram = await drawHistogramChart(
-    //@ts-ignore
-    histogramData.map(({ classification }, index) => [index, classification])
-  );
+  // const histogram = await drawHistogramChart(
+  //   //@ts-ignore
+  //   histogramData.map(({ classification }, index) => [index, classification])
+  // );
   const paramsHistogram = await drawHistogramChart(
     //@ts-ignore
     Object.entries(explainedClassifier.importance)
   );
-  paramsHistogram.xAxis().labels().height(20);
+  paramsHistogram.xAxis().labels().height(15);
   paramsHistogram.xAxis().labels().rotation(90);
   let ROC = getAcc(predictedValidation);
   const AUC = await evaluatePromisify(getAUCROC(ROC));
   ROC = await evaluatePromisify(ROC);
-  await writeFile(output + "/ROC.json", JSON.stringify(ROC));
+  await writeFile(output + "/ROC.json", JSON.stringify(ROC, null, 4));
   const ROCChart = await drawMarkerChart(
     //@ts-ignore
     ROC.features //@ts-ignore
-      .map(({ properties: { TPR, TNR, FPR } }) => [FPR, TPR])
+      .map(({ properties: { TPR, FPR } }) => [FPR, TPR])
       .reverse(),
     "AUC_ROC" + "\nAUC: " + AUC
   );
   await saveChart(ROCChart, output + "/roc.jpg");
-  await saveChart(histogram, output + "/histogram.jpg");
+  // await saveChart(histogram, output + "/histogram.jpg");
   const regression = await drawRegressionChart(
     //@ts-ignore
     sampleTraining.features.map(

@@ -56,16 +56,12 @@ export const setDefaultsToScriptsConfig = (
   });
   return scriptObjects;
 };
-export const getRFClassifier = async ({
-  points,
+export const getParamsImage = async ({
   scripts,
   regionOfInterest,
-  outputMode,
 }: {
-  points: EEFeatureCollection;
   scripts: Required<ScriptConfig>[];
   regionOfInterest: EEImage;
-  outputMode: randomForestConfig["outputMode"];
 }) => {
   const parametersImageArray = [];
 
@@ -79,30 +75,42 @@ export const getRFClassifier = async ({
           bands,
         })
       )
+      //   .map(([key, image], index, array) =>
+      // array.length > 1
+      //   ? image.rename(
+      //       image
+      //         .bandNames()
+      //         .map((name: any) => ee.String(name).cat(`_${key}`))
+      //     )
+      //   : image
+      // )
     );
   }
-  const paramsImage = parametersImageArray.reduce((acc, it, index) => {
+  return parametersImageArray.reduce((acc, it, index) => {
     return index ? acc.addBands(it) : acc;
   }, parametersImageArray[0]);
-  const bands = paramsImage.bandNames();
-
-  const training = paramsImage.select(bands).sampleRegions({
-    collection: points,
-    properties: ["Presence"],
-    scale: 100,
-  });
+};
+export const getRFClassifier = async ({
+  trainingPoints,
+  outputMode,
+  paramsImage,
+}: {
+  trainingPoints: EEFeatureCollection;
+  paramsImage: EEImage;
+  outputMode: randomForestConfig["outputMode"];
+}) => {
   // console.log(await evaluatePromisify(training.size()));
 
   const classifier = ee.Classifier.smileRandomForest(20)
     .setOutputMode(outputMode)
     .train({
-      features: training,
+      features: trainingPoints,
       classProperty: "Presence",
-      inputProperties: bands,
+      inputProperties: paramsImage.bandNames(),
     });
 
   const classified_image = paramsImage
-    .select(bands)
+    .select(paramsImage.bandNames())
     .classify(classifier)
     .multiply(100)
     .round();
@@ -125,7 +133,7 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
   let raw_points = await getPoints(pointsCsvPath);
   const regionOfInterest = await getRegionOfInterest(regionOfInterestCsvPath);
-  raw_points = raw_points.randomColumn("random");
+  raw_points = raw_points.randomColumn("random", 55);
   let externalValidationPoints;
   if (validationPointsCsvPath) {
     externalValidationPoints = await getPoints(validationPointsCsvPath);
@@ -144,30 +152,38 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     : raw_points.filter(ee.Filter.gte("random", validationSplit));
 
   const scriptObjects = setDefaultsToScriptsConfig(analyticsConfig);
-  const { classified_image, classifier } = await getRFClassifier({
-    points,
-    outputMode,
+  const paramsImage = await getParamsImage({
     scripts: scriptObjects,
     regionOfInterest,
+  });
+  const trainingPoints = paramsImage.sampleRegions({
+    collection: points,
+    properties: ["Presence"],
+    scale: 100,
+  });
+  const { classified_image, classifier } = await getRFClassifier({
+    trainingPoints,
+    outputMode,
+    paramsImage,
   });
 
   await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
   const json: any = await evaluatePromisify(classifier.explain());
   await printRandomForestCharts({
-    classifiedImage: classifier,
+    classifiedImage: classified_image,
     explainedClassifier: json,
     trainingData: points,
     validationData: validationPoints,
     regionOfInterest,
     output: `./.local/outputs/${defaultOutputs}`,
   });
-  // const allData = await reduceRegionsFromImageOrCollection(
-  //   points,
-  //   paramsImage,
-  //   100,
-  //   []
-  // );
-  // await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
+  const allData = await reduceRegionsFromImageOrCollection(
+    points,
+    paramsImage,
+    100,
+    []
+  );
+  await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
   json.thumbUrl = await new Promise((resolve) =>
     classified_image.getThumbURL(
       {

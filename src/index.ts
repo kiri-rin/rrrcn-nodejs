@@ -1,6 +1,7 @@
 import { analyticsConfig } from "./analytics_config";
 import { main } from "./controllers/extract-data";
 import { randomForest } from "./controllers/random-forest";
+import { randomForestCV } from "./controllers/cross-validation-random-forest";
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
 declare global {
@@ -14,7 +15,9 @@ ee.data.authenticateViaPrivateKey(
   () => {
     ee.initialize(null, null, async () => {
       if (analyticsConfig.randomForest) {
-        await randomForest(analyticsConfig);
+        await (analyticsConfig.randomForest.crossValidation
+          ? randomForestCV
+          : randomForest)(analyticsConfig);
       } else {
         await main(analyticsConfig);
       }

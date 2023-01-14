@@ -46,7 +46,7 @@ export const saveChart = (chart: any, output: any) => {
 };
 export const drawHistogramChart = (data: any) => {
   const chart = anychart.column(data);
-  chart.bounds(0, 0, 800, 600);
+  chart.bounds(0, 0, 1200, 600);
 
   chart.container("container");
   chart.draw();
@@ -88,8 +88,8 @@ export const drawRegressionChart = (data: any) => {
 };
 export const drawMarkerChart = async (data: any, title: string) => {
   console.log(data);
-  var chart = anychart.area(data);
-  var series = chart.spline(data);
+  let chart = anychart.area(data);
+  let series = chart.spline(data);
   chart.title(title);
   data.map((point: any) => {
     const seriest = chart.spline([point]).markers(true);
@@ -107,8 +107,8 @@ export const drawMarkerChart = async (data: any, title: string) => {
   return chart;
 };
 function formula(coeff: any, x: any) {
-  var result = null;
-  for (var i = 0, j = coeff.length - 1; i < coeff.length; i++, j--) {
+  let result = null;
+  for (let i = 0, j = coeff.length - 1; i < coeff.length; i++, j--) {
     //@ts-ignore
     result += coeff[i] * Math.pow(x, j);
   }
@@ -118,8 +118,8 @@ function formula(coeff: any, x: any) {
 //setting theoretical data array of [X][Y] using experimental X coordinates
 //this works with all types of regression
 function setTheoryData(rawData: any, coeff: any) {
-  var theoryData = [];
-  for (var i = 0; i < rawData.length; i++) {
+  let theoryData = [];
+  for (let i = 0; i < rawData.length; i++) {
     theoryData[i] = [rawData[i][0], formula(coeff, rawData[i][0])];
   }
   return theoryData;

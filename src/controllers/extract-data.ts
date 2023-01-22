@@ -1,4 +1,4 @@
-import { analyticsConfigType } from "../analytics_config";
+import { analyticsConfigType } from "../analytics_config_types";
 import { importPointsFromCsv } from "../services/utils/points";
 import allScripts, { scriptKey } from "../services/ee-data";
 import { EEFeature, EEFeatureCollection } from "../types";
@@ -14,6 +14,9 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
   const {
     dates: defaultDates,
     scripts,
+    id_key,
+    latitude_key,
+    longitude_key,
     pointsCsvPath,
     buffer: defaultBuffer,
     outputs: defaultOutput,
@@ -25,9 +28,9 @@ export const main = async (analyticsConfig: analyticsConfigType) => {
   const pointsParsed = parse(pointsRaw, { delimiter: ",", columns: true });
   const points = importPointsFromCsv({
     csv: pointsParsed,
-    lat_key: "Latitude",
-    long_key: "Longitude",
-    id_key: "id",
+    lat_key: latitude_key || "Latitude",
+    long_key: longitude_key || "Longitude",
+    id_key: id_key || "id",
   });
 
   const scriptObjects = scripts.map((it) =>

@@ -1,4 +1,4 @@
-import { analyticsConfigType } from "../analytics_config";
+import { analyticsConfigType } from "../analytics_config_types";
 import {
   getParamsImage,
   getPoints,

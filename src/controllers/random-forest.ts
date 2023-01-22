@@ -4,7 +4,7 @@ import {
   analyticsConfigType,
   randomForestConfig,
   ScriptConfig,
-} from "../analytics_config";
+} from "../analytics_config_types";
 import fsPromises, { mkdir, writeFile } from "fs/promises";
 import fs from "fs";
 import { importPointsFromCsv, JSCSVTable } from "../services/utils/points";
@@ -19,7 +19,13 @@ import {
   writeScriptFeaturesResult,
 } from "../services/utils/io";
 import { DatesConfig } from "../services/utils/dates";
-export const getPoints = async (path: string) => {
+import { estimatePopulation } from "../services/random/population";
+export const getPoints = async (
+  path: string,
+  lat_key: string = "Latitude",
+  long_key: string = "Longitude",
+  id_key: string = "id"
+) => {
   const pointsFile = await fsPromises.readFile(path);
   const pointsParsed = parse(pointsFile, { delimiter: ",", columns: true });
   return importPointsFromCsv({
@@ -30,7 +36,11 @@ export const getPoints = async (path: string) => {
     inheritProps: ["Presence"],
   });
 };
-export const getRegionOfInterest = async (path: string) => {
+export const getRegionOfInterest = async (
+  path: string,
+  lat_key: string = "Latitude",
+  long_key: string = "Longitude"
+) => {
   const regionPointsRaw = await fsPromises.readFile(path);
   const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
     delimiter: ",",
@@ -38,9 +48,9 @@ export const getRegionOfInterest = async (path: string) => {
   });
   return ee.Geometry.Polygon([
     regionPointsParsed.map((row) => [
-      Number(row.Longitude),
+      Number(row[long_key]),
 
-      Number(row.Latitude),
+      Number(row[lat_key]),
     ]),
   ]);
 };
@@ -121,6 +131,9 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const {
     scripts,
     pointsCsvPath,
+    latitude_key,
+    longitude_key,
+    id_key,
     dates: defaultDates,
     outputs: defaultOutputs,
     randomForest: {
@@ -136,12 +149,26 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
   await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
 
-  let raw_points = await getPoints(pointsCsvPath);
-  const regionOfInterest = await getRegionOfInterest(regionOfInterestCsvPath);
+  let raw_points = await getPoints(
+    pointsCsvPath,
+    latitude_key,
+    longitude_key,
+    id_key
+  );
+  const regionOfInterest = await getRegionOfInterest(
+    regionOfInterestCsvPath,
+    latitude_key,
+    longitude_key
+  );
   raw_points = raw_points.randomColumn("random", validationSeed);
   let externalValidationPoints;
   if (validationPointsCsvPath) {
-    externalValidationPoints = await getPoints(validationPointsCsvPath);
+    externalValidationPoints = await getPoints(
+      validationPointsCsvPath,
+      latitude_key,
+      longitude_key,
+      id_key
+    );
   }
   const abs_raw_points = raw_points.filter(ee.Filter.eq("Presence", 0));
   const pres_raw_points = raw_points.filter(ee.Filter.eq("Presence", 1));
@@ -176,7 +203,14 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     const classified_image_classes = classified_image.gte(
       classificationSplit || 50
     );
-
+    // await estimatePopulation({
+    //   image: classified_image_classes,
+    //   regionOfInterest,
+    //   meanDistance: 5600,
+    //   minDistance: 1000,
+    //   maxDistance: 10200,
+    //   presencePoints: abs_raw_points,
+    // });
     const thumbUrl: string = await getThumbUrl(
       classified_image_classes.multiply(100),
       regionOfInterest
@@ -185,16 +219,16 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       classified_image_classes,
       regionOfInterest
     );
-    toDownload.push(
-      downloadFile(
-        thumbUrl,
-        `${outputDir}classification_classes_${classificationSplit}.png`
-      ),
-      downloadFile(
-        tiffUrl,
-        `${outputDir}classification_classes_${classificationSplit}.zip`
-      )
-    );
+    // toDownload.push(
+    //   downloadFile(
+    //     thumbUrl,
+    //     `${outputDir}classification_classes_${classificationSplit}.png`
+    //   ),
+    //   downloadFile(
+    //     tiffUrl,
+    //     `${outputDir}classification_classes_${classificationSplit}.zip`
+    //   )
+    // );
     if (bufferPerAreaPoint) {
       const buffered_classes = classified_image_classes
         .convolve(ee.Kernel.circle(bufferPerAreaPoint, "meters", false, 1))
@@ -204,16 +238,16 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
         regionOfInterest
       );
       const _tiffUrl = await getTiffUrl(buffered_classes, regionOfInterest);
-      toDownload.push(
-        downloadFile(
-          _thumbUrl,
-          `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.png`
-        ),
-        downloadFile(
-          _tiffUrl,
-          `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.zip`
-        )
-      );
+      // toDownload.push(
+      //   downloadFile(
+      //     _thumbUrl,
+      //     `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.png`
+      //   ),
+      //   downloadFile(
+      //     _tiffUrl,
+      //     `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.zip`
+      //   )
+      // );
     }
   }
 
@@ -235,11 +269,12 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
   json.thumbUrl = await getThumbUrl(classified_image, regionOfInterest);
   json.downloadUrl = await getTiffUrl(classified_image, regionOfInterest);
-  toDownload.push(
-    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-    downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
-  );
-  await Promise.all(toDownload);
+
+  // toDownload.push(
+  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
+  // );
+  // await Promise.all(toDownload);
   const vector = classified_image.sample({
     region: regionOfInterest,
     scale: 1000,

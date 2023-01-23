@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsc && node dist/index.js",
+    "start-estimate": "tsc && node dist/estimate-population.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

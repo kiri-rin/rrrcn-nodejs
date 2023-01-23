@@ -5,11 +5,16 @@ const shp = require("shpjs");
 export async function importShapesToFeatureCollection(path: string) {
   const shapeBuffer = await fs.readFile(path);
   const geojson = await shp(shapeBuffer);
+  return ee.FeatureCollection(geojson);
+}
+
+export async function importShapesPointsToFeatureCollection(path: string) {
+  const shapeBuffer = await fs.readFile(path);
+  const geojson = await shp(shapeBuffer);
   const featureCollection = ee.FeatureCollection(
     geojson.features.map((it: any) =>
-      ee.Feature(ee.Geometry.Polygon(it.geometry.coordinates, null, false), {
+      ee.Feature(ee.Geometry.Point(it.geometry.coordinates, null, false), {
         ...it.properties,
-        id: it.properties.NAME,
       })
     )
   );

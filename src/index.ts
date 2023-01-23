@@ -5,6 +5,7 @@ import { randomForestCV } from "./controllers/cross-validation-random-forest";
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
 declare global {
+  //@ts-ignore
   let ee: any;
 }
 //@ts-ignore

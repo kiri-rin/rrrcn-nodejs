@@ -19,7 +19,6 @@ import {
   writeScriptFeaturesResult,
 } from "../services/utils/io";
 import { DatesConfig } from "../services/utils/dates";
-import { estimatePopulation } from "../services/random/population";
 export const getPoints = async (
   path: string,
   lat_key: string = "Latitude",

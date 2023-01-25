@@ -1,17 +1,17 @@
-import { elevationScript } from "./elevation";
+import { elevationScript } from "./scripts/elevation";
 import { EEFeatureCollection, EEImage } from "../../types";
-import { geomorphScript } from "./geomorph";
-import { globalHabitatScript } from "./global_habitat";
-import { era5MounthlyScript } from "./era5_monthly";
-import { dynamicWorldScript } from "./dynamic-world";
-import { ndviEviScript } from "./ndvi";
+import { geomorphScript } from "./scripts/geomorph";
+import { globalHabitatScript } from "./scripts/global_habitat";
+import { era5MounthlyScript } from "./scripts/era5_monthly";
+import { dynamicWorldScript } from "./scripts/dynamic-world";
+import { ndviEviScript } from "./scripts/ndvi";
 import { DatesConfig } from "../utils/dates";
-import { dynamicWorldMeansScript } from "./dynamic-world-means";
-import { globalWindAtlasScript } from "./global-wind-atlas";
-import { worldClimBioScript } from "./world_clim_bio";
-import { dynamicWorldModeScript } from "./dynamic-world-mode";
-import { worldCoverScript } from "./world-cover";
-import { worldCoverConvolveScript } from "./world-cover-convolve";
+import { dynamicWorldMeansScript } from "./scripts/dynamic-world-means";
+import { globalWindAtlasScript } from "./scripts/global-wind-atlas";
+import { worldClimBioScript } from "./scripts/world_clim_bio";
+import { dynamicWorldModeScript } from "./scripts/dynamic-world-mode";
+import { worldCoverScript } from "./scripts/world-cover";
+import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };
@@ -36,19 +36,13 @@ const scripts = {
   world_clim_bio: worldClimBioScript,
   world_cover: worldCoverScript,
   world_cover_convolve: worldCoverConvolveScript,
-  ndvi: (({
-    regions,
-    datesConfig,
-  }: AnalyticsScriptParams & { datesConfig: DatesConfig }) =>
+  ndvi: (({ regions, datesConfig }: AnalyticsScriptParams) =>
     ndviEviScript({
       regions,
       datesConfig,
       bands: ["NDVI"],
     })) as AnalyticsScript,
-  evi: (({
-    regions,
-    datesConfig,
-  }: AnalyticsScriptParams & { datesConfig: DatesConfig }) =>
+  evi: (({ regions, datesConfig }: AnalyticsScriptParams) =>
     ndviEviScript({ regions, datesConfig, bands: ["EVI"] })) as AnalyticsScript,
 };
 export type scriptKey = keyof typeof scripts;

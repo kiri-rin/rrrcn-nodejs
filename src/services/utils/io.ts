@@ -19,7 +19,6 @@ export const reduceImageRegions = async (
   let reducer = mode === "MEAN" ? ee.Reducer.mean() : ee.Reducer.sum();
 
   const bands = image.bandNames();
-  //TODO MOVE TO SERVER  SIDE CALC
   reducer = ee.Algorithms.If(
     bands.size().eq(keys?.length || 0),
     reducer.setOutputs(keys),
@@ -55,7 +54,6 @@ export const writeScriptFeaturesResult = async (
     recursive: true,
   });
   const stream = fsCommon.createWriteStream(`${fileName}`);
-  console.log({ features });
   const res = await exportFeatureCollectionsToCsv(
     await evaluateScriptResultsToFeaturesArray(features)
   );

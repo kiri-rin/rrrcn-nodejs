@@ -3,38 +3,6 @@ import { EEFeature, EEFeatureCollection } from "../../types";
 const { stringify } = require("csv-stringify");
 export type JSCSVTable = { [rowName: string]: any }[];
 
-export function importPointsFromCsv({
-  csv,
-  lat_key,
-  long_key,
-  id_key,
-  inheritProps,
-}: {
-  csv: JSCSVTable;
-  lat_key: string;
-  long_key: string;
-  id_key: string;
-  inheritProps?: string[];
-}) {
-  return ee
-    .FeatureCollection(
-      csv.map((row) =>
-        ee.Feature(
-          ee.Geometry.Point([Number(row[long_key]), Number(row[lat_key])]),
-          {
-            id: row[id_key],
-            longitude: row[long_key],
-            latitude: row[lat_key],
-            ...inheritProps?.reduce((acc, key) => {
-              acc[key] = Number(row[key]);
-              return acc;
-            }, {} as any),
-          }
-        )
-      )
-    )
-    .distinct(["latitude", "longitude"]);
-}
 export async function exportFeatureCollectionsToCsv(
   collection: EEFeatureCollection
 ): Promise<string> {
@@ -63,21 +31,11 @@ export async function exportFeatureCollectionsToCsv(
     []
   );
   table.unshift(keysArray);
-  console.log("READY TO STRINGIFY");
-  return await new Promise((resolve, reject) => {
-    //@ts-ignore
-    stringify(table, (error, res) => {
-      if (error) {
-        reject(error);
-      } else {
-        console.log("READY TO WRITE");
-        resolve(res);
-      }
-    });
-  });
+  return await getCsv(table);
 }
+
 export const getCsv = async (table: any[][]) => {
-  return await new Promise((resolve, reject) => {
+  return await new Promise<string>((resolve, reject) => {
     //@ts-ignore
     stringify(table, (error, res) => {
       if (error) {
@@ -89,6 +47,7 @@ export const getCsv = async (table: any[][]) => {
     });
   });
 };
+
 const fulfillRowWithPoint = (
   row: any[],
   point: EEFeature,

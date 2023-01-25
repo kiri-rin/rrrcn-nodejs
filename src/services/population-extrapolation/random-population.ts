@@ -10,11 +10,12 @@ type RandomGenerationArgs = {
 export const recursiveGetRandomPointsWithDistance = async (
   args: Omit<RandomGenerationArgs, "prevRandoms"> & {
     grid: EEFeatureCollection;
+    prevRandoms?: EEFeatureCollection;
   }
 ) => {
-  const size = args.grid.size().getInfo();
+  const size: number = (await evaluatePromisify(args.grid.size())) as number;
   const samplesList = args.grid.toList(size);
-  let randoms = ee.FeatureCollection([]);
+  let randoms = ee.FeatureCollection(args.prevRandoms || []);
   let randomsOutput: any = {};
   for (let start = 0; start < size; start += 1000) {
     console.log({ start, size });

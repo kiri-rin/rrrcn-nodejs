@@ -23,23 +23,8 @@ export const printRandomForestCharts = async ({
   trainingData,
   explainedClassifier,
   validationData,
-  regionOfInterest,
   output,
 }: RandomForestChartsMeta) => {
-  // const histogramData = await evaluatePromisify(
-  //   ee.List(
-  //     new Array(101)
-  //       .fill(0)
-  //       .map((it, index) =>
-  //         classifiedImage
-  //           .eq(index)
-  //           .reduceRegion(ee.Reducer.sum(), regionOfInterest, 1000)
-  //       )
-  //   ),
-  //   10,
-  //   100000
-  // );
-  // console.log(histogramData);
   var predictedTraining = classifiedImage.sampleRegions({
     collection: trainingData,
     geometries: true,

@@ -27,14 +27,10 @@ export type classifierValidationType = {
   explainedClassifier: any;
 };
 export const validateClassifier = async (
-  classifier: any,
   classified_image: EEImage,
   validationData: EEFeatureCollection,
   trainingData: EEFeatureCollection
 ) => {
-  const explainedClassifier: any = await evaluatePromisify(
-    classifier.explain()
-  );
   const predictedValidation = classified_image.sampleRegions({
     collection: validationData,
     geometries: true,
@@ -82,6 +78,5 @@ export const validateClassifier = async (
     ROC,
     training_regression,
     validation_regression,
-    explainedClassifier,
   } as classifierValidationType;
 };

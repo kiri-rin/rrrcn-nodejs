@@ -13,7 +13,9 @@ export const estimatePopulationService = async ({
   classified_image,
   regionOfInterest,
   seed,
+  prevRandoms,
 }: {
+  prevRandoms?: EEFeatureCollection;
   classified_image: EEImage;
   regionOfInterest: any;
   points: EEFeatureCollection;
@@ -35,6 +37,7 @@ export const estimatePopulationService = async ({
   });
   const { randoms, randomsOutput } = await recursiveGetRandomPointsWithDistance(
     {
+      prevRandoms,
       grid: randomGrid,
       minDistance: minDistance.divide(2),
       maxDistance: averageDistance

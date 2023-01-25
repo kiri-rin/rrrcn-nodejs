@@ -1,5 +1,4 @@
 import { analyticsConfigType } from "../analytics_config_types";
-import { importPointsFromCsv } from "../services/utils/points";
 import allScripts, { scriptKey } from "../services/ee-data";
 import { EEFeature, EEFeatureCollection } from "../types";
 import {
@@ -10,6 +9,7 @@ import fs from "fs/promises";
 import fsCommon from "fs";
 import path from "path";
 import { parse } from "csv-parse/sync";
+import { importPointsFromCsv } from "../services/utils/import-geometries";
 export const main = async (analyticsConfig: analyticsConfigType) => {
   const {
     dates: defaultDates,

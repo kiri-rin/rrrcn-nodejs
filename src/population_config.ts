@@ -1,7 +1,7 @@
 import { scriptKey } from "./services/ee-data";
 import { DatesConfig } from "./services/utils/dates";
 import { randomForestConfig, ScriptConfig } from "./analytics_config_types";
-import { populationEstimationKaratau } from "./configs/Karatau/population_estimation_Karatau";
+import { populationEstimationKaratau } from "./for-papers/configs/Karatau/population_estimation_Karatau";
 
 export type populationEstimationType = {
   latitude_key?: string;

@@ -15,6 +15,8 @@ export type ScriptConfig = {
   bands?: string[];
 };
 export type randomForestConfig = {
+  absencePointsCsvPath?: string;
+  presencePointsCsvPath?: string;
   crossValidation?: boolean;
   regionOfInterestCsvPath: string;
   validationPointsCsvPath?: string;
@@ -30,13 +32,11 @@ export type analyticsConfigType = {
   longitude_key?: string;
   id_key?: string;
   pointsCsvPath: string;
-
   scripts: ScriptConfig[] | scriptKey[];
   buffer?: number;
-  dates: DatesConfig; //TODO  optional
+  dates?: DatesConfig;
   outputs: string;
   mode?: "MEAN" | "SUM";
-
   scale?: number;
   randomForest?: randomForestConfig;
 };

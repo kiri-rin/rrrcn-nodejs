@@ -1,14 +1,11 @@
 import { populationEstimationType } from "../population_config";
 import { mkdir } from "fs/promises";
-import { getPoints, getRegionOfInterest } from "./random-forest";
-import {
-  importShapesPointsToFeatureCollection,
-  importShapesToFeatureCollection,
-} from "../services/utils/shapes";
+import { getPoints, getRegionOfInterest } from "./random-forest/random-forest";
 import { recursiveGetRandomPointsWithDistance } from "../services/population-extrapolation/random-population";
 import { estimatePopulationService } from "../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../services/utils/ee-image";
 import { writeFileSync } from "fs";
+import { importShapesToFeatureCollection } from "../services/utils/import-geometries";
 
 export const estimatePopulation = async (config: populationEstimationType) => {
   const {

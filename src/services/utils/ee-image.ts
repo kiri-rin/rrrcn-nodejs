@@ -1,6 +1,7 @@
-import { EEFeatureCollection, EEImage } from "../../types";
+import { EEFeature, EEFeatureCollection, EEImage } from "../../types";
 import { AnalyticsScriptResult } from "../ee-data";
 import { clearTimeout, setTimeout } from "timers";
+
 const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
 export async function evaluateScriptResultsToFeaturesArray(
@@ -74,3 +75,44 @@ export async function evaluatePromisify(
     }
   });
 }
+
+export const getThumbUrl = async (
+  classified_image: EEImage,
+  regionOfInterest?: EEFeature,
+  props?: any
+): Promise<string> =>
+  await new Promise((resolve) =>
+    classified_image.getThumbURL(
+      {
+        image: classified_image,
+        min: 0,
+        region: regionOfInterest,
+        max: 100,
+        dimensions: 1000,
+        palette: ["FFFFFF", "C6AC94", "8D8846", "395315", "031A00"],
+        ...props,
+      },
+      (res: string) => {
+        console.log(res, " URL");
+        resolve(res as string);
+      }
+    )
+  );
+export const getTiffUrl = async (
+  classified_image: EEImage,
+  regionOfInterest?: EEFeature
+): Promise<string> =>
+  await new Promise((resolve) => {
+    classified_image.getDownloadURL(
+      {
+        image: classified_image,
+        maxPixels: 1e20,
+        scale: 500,
+        region: regionOfInterest,
+      },
+      (res: string) => {
+        console.log(res, " URL");
+        resolve(res as string);
+      }
+    );
+  });

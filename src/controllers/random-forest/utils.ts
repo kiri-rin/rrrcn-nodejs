@@ -1,29 +1,33 @@
 import { EEFeatureCollection, EEImage } from "../../types";
 import {
-  randomForestConfig,
+  RandomForestConfig,
   RandomForestParamsConfig,
 } from "../../analytics_config_types2";
 import { setDefaultsToScriptsConfig } from "../extract-data/extract-data";
 import allScripts, { scriptKey } from "../../services/ee-data";
 import { DatesConfig } from "../../services/utils/dates";
 import { importGeometries } from "../../services/utils/import-geometries";
+import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
+import { downloadFile } from "../../services/utils/io";
 
 export const getAllPoints = async (
-  trainingPointsConfig: randomForestConfig["trainingPoints"]
+  trainingPointsConfig: RandomForestConfig["trainingPoints"]
 ) => {
   switch (trainingPointsConfig.type) {
     case "all-points": {
       const presenceProp = trainingPointsConfig.allPoints.presenceProperty;
       const allPoints = await importGeometries(
-        trainingPointsConfig.allPoints.points
+        trainingPointsConfig.allPoints.points,
+        "points",
+        [presenceProp || "Presence"]
       );
-      if (presenceProp && presenceProp !== "Presence") {
-        return allPoints.map((it: any) =>
-          it.set("Presence", it.get(presenceProp))
-        );
-      } else {
-        return allPoints;
-      }
+      // if (presenceProp && presenceProp !== "Presence") {
+      //   return allPoints.map((it: any) =>
+      //     it.set("Presence", it.get(presenceProp))
+      //   );
+      // } else {
+      return allPoints;
+      // }
     }
     case "separate-points": {
       const absencePoints = (
@@ -38,13 +42,14 @@ export const getAllPoints = async (
 };
 export const getTrainingValidationPointsPare = (
   allPoints: EEFeatureCollection,
-  validationConfig: randomForestConfig["validation"]
+  validationConfig: RandomForestConfig["validation"],
+  seed?: number
 ) => {
   switch (validationConfig.type) {
     case "split": {
       const pointsWithRandom = allPoints.randomColumn(
         "random",
-        validationConfig.seed
+        seed || validationConfig.seed
       );
       return {
         trainingPoints: pointsWithRandom.filter(
@@ -73,15 +78,18 @@ export const getParamsImage = async ({
   switch (params.type) {
     case "scripts": {
       const scripts = setDefaultsToScriptsConfig(params);
-      const parametersImageArray = await Promise.all(
-        scripts.map(({ key: script, dates, bands }) =>
-          allScripts[script as scriptKey]({
-            regions: regionOfInterest,
-            datesConfig: dates as DatesConfig,
-            bands,
-          })
+      const parametersImageArray = (
+        await Promise.all(
+          scripts.map(({ key: script, dates, bands }) =>
+            allScripts[script]({
+              regions: regionOfInterest,
+              datesConfig: dates as DatesConfig,
+              bands,
+            })
+          )
         )
-      );
+      ).flatMap((it) => [...Object.values(it)]);
+      console.log(parametersImageArray);
       return parametersImageArray.reduce((acc, it, index) => {
         return index ? acc.addBands(it) : acc;
       }, parametersImageArray[0]);
@@ -98,7 +106,7 @@ export const getRFClassifier = async ({
 }: {
   trainingSamples: EEFeatureCollection;
   paramsImage: EEImage;
-  outputMode: randomForestConfig["outputMode"];
+  outputMode: RandomForestConfig["outputMode"];
 }) => {
   const classifier = ee.Classifier.smileRandomForest(20)
     .setOutputMode(outputMode)
@@ -114,4 +122,30 @@ export const getRFClassifier = async ({
     .multiply(100)
     .round();
   return { classified_image, classifier };
+};
+
+export const downloadClassifiedImage = async ({
+  classified_image,
+  regionOfInterest,
+  output,
+  filename = "classification",
+}: {
+  classified_image: EEImage;
+  regionOfInterest?: EEImage;
+  output: string;
+  filename?: string;
+}) => {
+  const thumbUrl: string = await getThumbUrl(
+    classified_image,
+    regionOfInterest
+  );
+  const tiffUrl: string = await getTiffUrl(classified_image, regionOfInterest);
+  return {
+    promise: Promise.all([
+      downloadFile(thumbUrl, `${output}/${filename}.png`),
+      downloadFile(tiffUrl, `${output}/${filename}.zip`),
+    ]),
+    tiffUrl,
+    thumbUrl,
+  };
 };

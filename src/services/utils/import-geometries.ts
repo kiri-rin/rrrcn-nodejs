@@ -7,7 +7,8 @@ import { EEFeatureCollection } from "../../types";
 
 export const importGeometries = async (
   conf: GeometriesImportConfig,
-  geometryType = "points"
+  geometryType = "points",
+  inheritProps = [] as string[]
 ): Promise<EEFeatureCollection> => {
   switch (conf.type) {
     case "csv": {
@@ -20,6 +21,7 @@ export const importGeometries = async (
         lat_key: conf.latitude_key,
         long_key: conf.longitude_key,
         id_key: conf.id_key,
+        inheritProps,
       });
     }
     case "shp": {
@@ -37,28 +39,29 @@ export async function importShapesToFeatureCollection(path: string) {
 }
 export const importPolygonFromCsv = ({
   csv,
-  lat_key = "latitude",
-  long_key = "longitude",
+  lat_key = "Latitude",
+  long_key = "Longitude",
 }: {
   csv: JSCSVTable;
   lat_key?: string;
   long_key?: string;
   id_key?: string;
-}) => {
+}) =>
   ee.Geometry.Polygon([
     csv.map((row) => [Number(row[long_key]), Number(row[lat_key])]),
   ]);
-};
 export function importPointsFromCsv({
   csv,
-  lat_key = "latitude",
-  long_key = "longitude",
+  lat_key = "Latitude",
+  long_key = "Longitude",
   id_key = "id",
+  inheritProps = [],
 }: {
   csv: JSCSVTable;
   lat_key?: string;
   long_key?: string;
   id_key?: string;
+  inheritProps?: string[];
 }) {
   return ee
     .FeatureCollection(
@@ -66,10 +69,13 @@ export function importPointsFromCsv({
         ee.Feature(
           ee.Geometry.Point([Number(row[long_key]), Number(row[lat_key])]),
           {
-            ...row,
             id: row[id_key],
             longitude: row[long_key],
             latitude: row[lat_key],
+            ...inheritProps?.reduce((acc, key) => {
+              acc[key] = Number(row[key]);
+              return acc;
+            }, {} as any),
           }
         )
       )

@@ -48,8 +48,6 @@ export const validateClassifier = async (
   const sampleValidation = await evaluatePromisify(
     predictedValidation.select(["Presence", "classification"])
   );
-  //@ts-ignore
-  console.log(sampleValidation.features.length);
   const training_regression = regression.linear(
     //@ts-ignore
     sampleTraining.features.map(
@@ -78,5 +76,5 @@ export const validateClassifier = async (
     ROC,
     training_regression,
     validation_regression,
-  } as classifierValidationType;
+  };
 };

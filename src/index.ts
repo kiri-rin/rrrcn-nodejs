@@ -18,7 +18,12 @@ import {
   usturtRegrRFConfigCommonParamsForAllFiltered,
   usturtRegrRFConfigUniqParams,
 } from "./for-papers/configs/Usturt/RF-configs";
-import { karatauRegrRFConfigUniqParams } from "./for-papers/configs/Karatau/RF-configs";
+import {
+  karatauProbRFConfigUniqParams,
+  karatauRegrRFConfigUniqParams,
+} from "./for-papers/configs/Karatau/RF-configs";
+import { meanClassifiedImages } from "./controllers/random-forest/meanClassifiedImages";
+import { randomForestConfig } from "./analytics_config_types";
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
 declare global {
@@ -36,10 +41,69 @@ globalThis.ee = ee;
 //   usturtRegrRFConfigCommonParamsForAllFiltered,
 //   usturtRegrRFConfigUniqParams,
 // ];
+export const withGEE = async (callback: () => any) => {
+  ee.data.authenticateViaPrivateKey(
+    key,
+    async () => {
+      await callback();
+    },
+    (r: string) => {
+      console.log(r);
+    }
+  );
+};
 ee.data.authenticateViaPrivateKey(
   key,
   () => {
     ee.initialize(null, null, async () => {
+      // await meanClassifiedImages(
+      //   {
+      //     ...usturtProbRFConfigCommonParamsForAllFiltered,
+      //     randomForest: {
+      //       ...(usturtProbRFConfigCommonParamsForAllFiltered.randomForest as randomForestConfig),
+      //       validationSeed: 7 * 7 * 7,
+      //     },
+      //   },
+      //   {
+      //     ...usturtRegrRFConfigCommonParamsForAllFiltered,
+      //     randomForest: {
+      //       ...(usturtRegrRFConfigCommonParamsForAllFiltered.randomForest as randomForestConfig),
+      //       validationSeed: 7 * 7 * 7,
+      //     },
+      //   }
+      // );
+      // await meanClassifiedImages(
+      //   {
+      //     ...SEKZProbRFConfigUniqParams,
+      //     randomForest: {
+      //       ...(SEKZProbRFConfigUniqParams.randomForest as randomForestConfig),
+      //       validationSeed: 8 * 8 * 8,
+      //     },
+      //   },
+      //   {
+      //     ...SEKZRegrRFConfigUniqParams,
+      //     randomForest: {
+      //       ...(SEKZRegrRFConfigUniqParams.randomForest as randomForestConfig),
+      //       validationSeed: 8 * 8 * 8,
+      //     },
+      //   }
+      // );
+      // await meanClassifiedImages(
+      //   {
+      //     ...karatauProbRFConfigUniqParams,
+      //     randomForest: {
+      //       ...(karatauProbRFConfigUniqParams.randomForest as randomForestConfig),
+      //       validationSeed: 2 * 2 * 2,
+      //     },
+      //   },
+      //   {
+      //     ...karatauRegrRFConfigUniqParams,
+      //     randomForest: {
+      //       ...(karatauRegrRFConfigUniqParams.randomForest as randomForestConfig),
+      //       validationSeed: 2 * 2 * 2,
+      //     },
+      //   }
+      // );
       if (analyticsConfig.randomForest) {
         await (analyticsConfig.randomForest.crossValidation
           ? randomForestCV

@@ -1,25 +1,27 @@
-import { EEFeature, EEFeatureCollection, EEImage } from "../../types";
+import { EEFeatureCollection, EEImage } from "../../types";
 import {
-  analyticsConfig,
   analyticsConfigType,
   randomForestConfig,
   ScriptConfig,
 } from "../../analytics_config_types";
 import fsPromises, { mkdir, writeFile } from "fs/promises";
-import fs from "fs";
 import { JSCSVTable } from "../../services/utils/points";
 import { parse } from "csv-parse/sync";
 import allScripts, { scriptKey } from "../../services/ee-data";
-import { it } from "node:test";
-import { evaluatePromisify } from "../../services/utils/ee-image";
-import { printRandomForestCharts } from "../../services/random-forest/charts";
-import http from "https";
 import {
+  evaluatePromisify,
+  getThumbUrl,
+  getTiffUrl,
+} from "../../services/utils/ee-image";
+import { printRandomForestCharts } from "../../services/random-forest/charts";
+import {
+  downloadFile,
   reduceRegionsFromImageOrCollection,
   writeScriptFeaturesResult,
 } from "../../services/utils/io";
 import { DatesConfig } from "../../services/utils/dates";
 import { importPointsFromCsv } from "../../services/utils/import-geometries";
+
 export const getPoints = async (
   path: string,
   lat_key: string = "Latitude",
@@ -118,6 +120,7 @@ export const getRFClassifier = async ({
 };
 
 export const randomForest = async (analyticsConfig: analyticsConfigType) => {
+  if (!analyticsConfig.randomForest) return;
   const {
     scripts,
     pointsCsvPath,
@@ -134,17 +137,41 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
       classificationSplit,
       validationPointsCsvPath,
       validationSeed,
+      absencePointsCsvPath,
+      presencePointsCsvPath,
     },
   } = analyticsConfig;
   const outputDir = `./.local/outputs/${defaultOutputs}/`;
   await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
-
-  let raw_points = await getPoints(
-    pointsCsvPath,
-    latitude_key,
-    longitude_key,
-    id_key
-  );
+  let raw_points;
+  if (absencePointsCsvPath && presencePointsCsvPath) {
+    raw_points = (
+      await getPoints(
+        presencePointsCsvPath,
+        latitude_key,
+        longitude_key,
+        id_key
+      )
+    )
+      .map((it: any) => it.set("Presence", 1))
+      .merge(
+        (
+          await getPoints(
+            absencePointsCsvPath,
+            latitude_key,
+            longitude_key,
+            id_key
+          )
+        ).map((it: any) => it.set("Presence", 0))
+      );
+  } else {
+    raw_points = await getPoints(
+      pointsCsvPath,
+      latitude_key,
+      longitude_key,
+      id_key
+    );
+  }
   const regionOfInterest = await getRegionOfInterest(
     regionOfInterestCsvPath,
     latitude_key,
@@ -240,7 +267,6 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
     explainedClassifier: json,
     trainingData: points,
     validationData: validationPoints,
-    regionOfInterest,
     output: `./.local/outputs/${defaultOutputs}`,
   });
   const allData = await reduceRegionsFromImageOrCollection(
@@ -253,11 +279,11 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
   json.thumbUrl = await getThumbUrl(classified_image, regionOfInterest);
   json.downloadUrl = await getTiffUrl(classified_image, regionOfInterest);
 
-  // toDownload.push(
-  //   downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-  //   downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
-  // );
-  // await Promise.all(toDownload);
+  toDownload.push(
+    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
+    downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
+  );
+  await Promise.all(toDownload);
   const vector = classified_image.sample({
     region: regionOfInterest,
     scale: 1000,
@@ -290,58 +316,5 @@ export const randomForest = async (analyticsConfig: analyticsConfigType) => {
 
   await writeFile(`${outputDir}trained.json`, JSON.stringify(json, null, 4));
 
-  return;
+  return { classified_image, regionOfInterest };
 };
-export const downloadFile = async (url: string, path: string) =>
-  new Promise((resolve, reject) => {
-    console.log("DOWNLOADING ", url);
-    const file = fs.createWriteStream(path);
-    const request = http.get(url, function (response) {
-      response.pipe(file);
-
-      // after download completed close filestream
-      file.on("finish", () => {
-        file.close();
-        resolve(true);
-        console.log("Download Completed");
-      });
-    });
-  });
-export const getThumbUrl = async (
-  classified_image: EEImage,
-  regionOfInterest: EEFeature
-): Promise<string> =>
-  await new Promise((resolve) =>
-    classified_image.getThumbURL(
-      {
-        image: classified_image,
-        min: 0,
-        region: regionOfInterest,
-        max: 100,
-        dimensions: 1000,
-        palette: ["FFFFFF", "C6AC94", "8D8846", "395315", "031A00"],
-      },
-      (res: string) => {
-        console.log(res, " URL");
-        resolve(res as string);
-      }
-    )
-  );
-export const getTiffUrl = async (
-  classified_image: EEImage,
-  regionOfInterest: EEFeature
-): Promise<string> =>
-  await new Promise((resolve) => {
-    classified_image.getDownloadURL(
-      {
-        image: classified_image,
-        maxPixels: 1e20,
-        scale: 500,
-        region: regionOfInterest,
-      },
-      (res: string) => {
-        console.log(res, " URL");
-        resolve(res as string);
-      }
-    );
-  });

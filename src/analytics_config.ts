@@ -49,8 +49,8 @@ import {
 // export const analyticsConfig = Usturt_randoms_allParameters;
 
 // export const analyticsConfig = karatauProbRFConfigCommonParamsForAll;
-// export const analyticsConfig = karatauProbRFConfigCommonParamsForAllFiltered;
-export const analyticsConfig = karatauProbRFConfigUniqParams;
+export const analyticsConfig = karatauProbRFConfigCommonParamsForAllFiltered;
+// export const analyticsConfig = karatauProbRFConfigUniqParams;
 // export const analyticsConfig = karatauRegrRFConfigCommonParamsForAll;
 // export const analyticsConfig = karatauRegrRFConfigCommonParamsForAllFiltered;
 // export const analyticsConfig = karatauRegrRFConfigUniqParams;

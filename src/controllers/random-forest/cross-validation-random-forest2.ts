@@ -1,12 +1,3 @@
-import { analyticsConfigType } from "../../analytics_config_types";
-import {
-  getParamsImage,
-  getPoints,
-  getRegionOfInterest,
-  getRFClassifier,
-  setDefaultsToScriptsConfig,
-} from "./random-forest";
-import { EEImage } from "../../types";
 import {
   classifierValidationType,
   validateClassifier,
@@ -19,20 +10,24 @@ import {
   saveChart,
 } from "../../services/charts";
 import { evaluatePromisify } from "../../services/utils/ee-image";
-import { printRandomForestCharts } from "../../services/random-forest/charts";
 import { mkdir } from "fs/promises";
-import { randomForestConfig } from "../../analytics_config_types2";
-import { getAllPoints, getTrainingValidationPointsPare } from "./utils";
+import { RandomForestConfig } from "../../analytics_config_types2";
+import {
+  getAllPoints,
+  getParamsImage,
+  getTrainingValidationPointsPare,
+} from "./utils";
 import { importGeometries } from "../../services/utils/import-geometries";
 import { randomForestAndValidateService } from "../../services/random-forest";
 
-export const randomForestCV = async (config: randomForestConfig) => {
+export const randomForestCV = async (config: RandomForestConfig) => {
   const {
     outputMode,
     regionOfInterest: regionOfInterestConfig,
     trainingPoints: trainingPointsConfig,
     validation: validationConfig,
     params,
+    outputs,
   } = config;
   let raw_points = await getAllPoints(trainingPointsConfig);
   const regionOfInterest = await importGeometries(
@@ -43,26 +38,30 @@ export const randomForestCV = async (config: randomForestConfig) => {
     params,
     regionOfInterest,
   });
-  const outputDir = `./.local/outputs/${defaultOutputs}/`;
+  // await evaluatePromisify(regionOfInterest);
+  // console.log("RAW POINTS");
+  const outputDir = `./.local/outputs/${outputs}`;
 
   let modelsValidations: {
     classifier: any;
     classified_image: any;
-    validation: classifierValidationType;
+    validations: classifierValidationType;
   }[] = [];
 
   await mkdir(outputDir, { recursive: true });
 
   for (let i = 1; i <= 10; i++) {
     const { trainingPoints, validationPoints } =
-      getTrainingValidationPointsPare(raw_points, validationConfig);
-    const trainingSamples = paramsImage.sampleRegions({
-      collection: trainingPoints,
-      properties: ["Presence"],
-      scale: 100,
-    });
+      getTrainingValidationPointsPare(raw_points, validationConfig, i * i * i);
+    // await evaluatePromisify(trainingPoints);
+    // console.log("POINTS");
+
+    // await evaluatePromisify(trainingSamples);
+    //
+    // console.log("samples");
+
     const res = await randomForestAndValidateService({
-      trainingSamples,
+      trainingPoints,
       validationPoints,
       outputMode,
       paramsImage,
@@ -88,16 +87,16 @@ const validationTableKeys = [
   "max_ccr_cutoff",
 ];
 const writeValidationTable = async (
-  validations: { validation: classifierValidationType }[],
+  validations: { validations: classifierValidationType }[],
   outputDir: string
 ) => {
   let average_validation_data: any;
   const ROCsArray = [] as { [p: string]: { TPR: number; FPR: number } }[];
   const importanceArray = [] as { [p: string]: number }[];
   const { values, CSV } = validations.reduce(
-    (acc, { validation }, index) => {
-      importanceArray.push(validation.explainedClassifier.importance);
-      const ccrAndKappaArray = validation.ROC.features.map(
+    (acc, { validations }, index) => {
+      importanceArray.push(validations.explainedClassifier.importance);
+      const ccrAndKappaArray = validations.ROC.features.map(
         ({ properties: { ccr, kappa, cutoff, TPR, FPR } }) => ({
           ccr,
           kappa,
@@ -119,13 +118,13 @@ const writeValidationTable = async (
         ccrAndKappaArray.sort((a, b) => (a.kappa > b.kappa ? -1 : 1))[0];
 
       const values = {
-        AUC: validation.AUC,
+        AUC: validations.AUC,
         max_kappa,
         max_ccr,
         max_kappa_cutoff,
         max_ccr_cutoff,
-        training_regression_r2: validation.training_regression.r2,
-        validation_regression_r2: validation.validation_regression.r2,
+        training_regression_r2: validations.training_regression.r2,
+        validation_regression_r2: validations.validation_regression.r2,
       };
       acc.values.push(values);
       acc.CSV.push(getCSVRow(values, validationTableKeys, "Model" + index));
@@ -155,9 +154,9 @@ const writeValidationTable = async (
   );
   paramsHistogram.xAxis().labels().height(15);
   paramsHistogram.xAxis().labels().rotation(90);
-  await saveChart(ROCHart, `${outputDir}aver_roc.jpg`);
-  await saveChart(paramsHistogram, `${outputDir}aver_importance.jpg`);
-  writeFileSync(`${outputDir}validations.csv`, (await getCsv(CSV)) as string);
+  await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
+  await saveChart(paramsHistogram, `${outputDir}/aver_importance.jpg`);
+  writeFileSync(`${outputDir}/validations.csv`, (await getCsv(CSV)) as string);
 };
 
 const getAverageValues = (objs: { [p: string]: number }[]) => {

@@ -32,7 +32,7 @@ export type analyticsConfigType = {
   longitude_key?: string;
   id_key?: string;
   pointsCsvPath: string;
-  scripts: ScriptConfig[] | scriptKey[];
+  scripts: (ScriptConfig | scriptKey)[];
   buffer?: number;
   dates?: DatesConfig;
   outputs: string;

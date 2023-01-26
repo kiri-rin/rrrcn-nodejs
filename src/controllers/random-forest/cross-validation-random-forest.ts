@@ -118,10 +118,13 @@ export const randomForestCV = async (analyticsConfig: analyticsConfigType) => {
     //   trainingData: trainingPoints,
     //   validationData: validationPoints,
     // });
-    const validation = await validateClassifier(
+    const validation = (await validateClassifier(
       classified_image,
       validationPoints,
       trainingPoints
+    )) as classifierValidationType;
+    validation.explainedClassifier = await evaluatePromisify(
+      classifier.explain()
     );
     modelsValidations.push({
       classifier,

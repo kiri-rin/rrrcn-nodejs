@@ -1,11 +1,8 @@
 import { EEFeatureCollection, EEImage, EEImageCollection } from "../../types";
 import { exportFeatureCollectionsToCsv } from "./points";
-import {
-  evaluatePromisify,
-  evaluateScriptResultsToFeaturesArray,
-} from "./ee-image";
-import { type } from "os";
-import { AnalyticsScriptResult } from "../ee-data";
+import { evaluateScriptResultsToFeaturesArray } from "./ee-image";
+import http from "https";
+
 const fsCommon = require("fs");
 const path = require("path");
 const fs = require("fs/promises");
@@ -67,3 +64,18 @@ export const writeScriptFeaturesResult = async (
     });
   });
 };
+export const downloadFile = async (url: string, path: string) =>
+  new Promise((resolve, reject) => {
+    console.log("DOWNLOADING ", url);
+    const file = fsCommon.createWriteStream(path);
+    const request = http.get(url, function (response) {
+      response.pipe(file);
+
+      // after download completed close filestream
+      file.on("finish", () => {
+        file.close();
+        resolve(true);
+        console.log("Download Completed");
+      });
+    });
+  });

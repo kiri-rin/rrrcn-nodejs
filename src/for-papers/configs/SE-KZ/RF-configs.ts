@@ -13,7 +13,7 @@ export const SEKZProbRFConfigUniqParams: analyticsConfigType = {
   latitude_key: "Y_coord",
   longitude_key: "X_coord",
   pointsCsvPath: "",
-  outputs: "FINAL_RFS/SEKZ/UNIQ_CROSS_PROB",
+  outputs: "FINAL_RFS/SEKZ/UNIQ_CROSS_PROB2",
   randomForest: {
     crossValidation: true,
     presencePointsCsvPath:

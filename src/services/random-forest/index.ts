@@ -1,29 +1,41 @@
 import { getRFClassifier } from "../../controllers/random-forest/utils";
-import { randomForestConfig } from "../../analytics_config_types2";
-import { validateClassifier } from "./all-validations";
+import { RandomForestConfig } from "../../analytics_config_types2";
+import {
+  classifierValidationType,
+  validateClassifier,
+} from "./all-validations";
+import { evaluatePromisify } from "../utils/ee-image";
 
 type RandomForestServiceParams = {
-  trainingSamples: any;
+  trainingPoints: any;
   validationPoints: any;
   regionOfInterest: any;
   paramsImage: any;
-  outputMode: randomForestConfig["outputMode"];
+  outputMode: RandomForestConfig["outputMode"];
 };
 export const randomForestAndValidateService = async ({
-  trainingSamples,
+  trainingPoints,
   validationPoints,
   paramsImage,
   outputMode,
 }: RandomForestServiceParams) => {
+  const trainingSamples = paramsImage.sampleRegions({
+    collection: trainingPoints,
+    properties: ["Presence"],
+    scale: 100,
+  });
   const { classified_image, classifier } = await getRFClassifier({
     trainingSamples,
     outputMode,
     paramsImage,
   });
-  const validations = validateClassifier(
+  const validations = (await validateClassifier(
     classified_image,
     validationPoints,
-    trainingSamples
+    trainingPoints
+  )) as classifierValidationType;
+  validations.explainedClassifier = await evaluatePromisify(
+    classifier.explain()
   );
   return { classified_image, classifier, validations };
 };

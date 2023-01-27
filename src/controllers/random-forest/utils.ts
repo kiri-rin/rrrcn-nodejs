@@ -9,6 +9,7 @@ import { DatesConfig } from "../../services/utils/dates";
 import { importGeometries } from "../../services/utils/import-geometries";
 import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
 import { downloadFile } from "../../services/utils/io";
+import { mkdir } from "fs/promises";
 
 export const getAllPoints = async (
   trainingPointsConfig: RandomForestConfig["trainingPoints"]
@@ -89,7 +90,6 @@ export const getParamsImage = async ({
           )
         )
       ).flatMap((it) => [...Object.values(it)]);
-      console.log(parametersImageArray);
       return parametersImageArray.reduce((acc, it, index) => {
         return index ? acc.addBands(it) : acc;
       }, parametersImageArray[0]);
@@ -129,17 +129,26 @@ export const downloadClassifiedImage = async ({
   regionOfInterest,
   output,
   filename = "classification",
+  discrete = false,
 }: {
   classified_image: EEImage;
   regionOfInterest?: EEImage;
   output: string;
   filename?: string;
+  discrete?: boolean;
 }) => {
   const thumbUrl: string = await getThumbUrl(
     classified_image,
-    regionOfInterest
+    regionOfInterest,
+    discrete && {
+      min: 0,
+      max: 1,
+      palette: ["white", "blue", "black"],
+    }
   );
   const tiffUrl: string = await getTiffUrl(classified_image, regionOfInterest);
+  await mkdir(output, { recursive: true });
+
   return {
     promise: Promise.all([
       downloadFile(thumbUrl, `${output}/${filename}.png`),

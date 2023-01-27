@@ -1,8 +1,8 @@
 import {
   analyticsConfigType,
   randomForestConfig,
-} from "../../../analytics_config_types";
-import { getDateIntervals } from "../../../services/utils/dates";
+} from "../../../../analytics_config_types";
+import { getDateIntervals } from "../../../../services/utils/dates";
 import {
   commonImportantRFParamsCollinearFiltered,
   commonImportantRFParamsForAll,
@@ -10,7 +10,7 @@ import {
 import {
   DataExtractionConfig,
   RandomForestConfig,
-} from "../../../analytics_config_types2";
+} from "../../../../analytics_config_types2";
 export const karatauUniqParams: DataExtractionConfig["scripts"] = [
   { key: "elevation" },
   {

@@ -2,7 +2,7 @@ import { commonScripts } from "../common-scripts";
 import {
   CsvImportConfig,
   DataExtractionConfig,
-} from "../../../analytics_config_types2";
+} from "../../../../analytics_config_types2";
 const Karatau_points: CsvImportConfig = {
   type: "csv",
   latitude_key: "Y_coord",

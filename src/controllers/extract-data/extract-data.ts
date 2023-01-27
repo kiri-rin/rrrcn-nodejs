@@ -26,7 +26,7 @@ export const setDefaultsToScriptsConfig = (
   });
 
 export const extractData = async (config: DataExtractionConfig) => {
-  const { defaultScriptParams, points: pointsConfig, scripts } = config;
+  const { points: pointsConfig } = config;
 
   const points = await importGeometries(pointsConfig);
 

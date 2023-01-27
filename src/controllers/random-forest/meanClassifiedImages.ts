@@ -6,7 +6,9 @@ import { randomForest } from "./random-forest2";
 
 export const meanClassifiedImages = async (
   config1: RandomForestConfig,
-  config2: RandomForestConfig
+  config2: RandomForestConfig,
+  outputs: string,
+  split = 50
 ) => {
   //@ts-ignore
   const { classified_image: image1, regionOfInterest } = await randomForest(
@@ -14,11 +16,10 @@ export const meanClassifiedImages = async (
   );
   //@ts-ignore
   const { classified_image: image2 } = await randomForest(config2);
-  const outputs = config1.outputs + "/MEAN";
   const meanImage = image1.add(image2).divide(2);
   const meanImageSplitted = meanImage.gte(50);
-  const outputDir = `./.local/outputs/MEANS/${outputs}/`;
-  await mkdir(`./.local/outputs/MEANS/${outputs}`, { recursive: true });
+  const outputDir = `./.local/outputs/${outputs}`;
+  await mkdir(outputDir, { recursive: true });
   const thumbUrl_mean = await getThumbUrl(meanImage, regionOfInterest);
   const downloadUrl_mean = await getTiffUrl(meanImage, regionOfInterest);
   const thumbUrl_splitted = await getThumbUrl(
@@ -32,10 +33,11 @@ export const meanClassifiedImages = async (
   );
 
   const toDownload = [
-    downloadFile(thumbUrl_mean, `${outputDir}classification.png`),
-    downloadFile(downloadUrl_mean, `${outputDir}classification.zip`),
-    downloadFile(thumbUrl_splitted, `${outputDir}classification50.png`),
-    downloadFile(downloadUrl_splitted, `${outputDir}classification50.zip`),
+    downloadFile(thumbUrl_mean, `${outputDir}/classification.png`),
+    downloadFile(downloadUrl_mean, `${outputDir}/classification.zip`),
+    downloadFile(thumbUrl_splitted, `${outputDir}/classification50.png`),
+    downloadFile(downloadUrl_splitted, `${outputDir}/classification50.zip`),
   ];
   await Promise.all(toDownload);
+  return { meanImage, meanImageSplitted, regionOfInterest };
 };

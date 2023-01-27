@@ -1,5 +1,5 @@
-import { getDateIntervals } from "../../services/utils/dates";
-import { DataExtractionConfig } from "../../analytics_config_types2";
+import { getDateIntervals } from "../../../services/utils/dates";
+import { DataExtractionConfig } from "../../../analytics_config_types2";
 
 export const commonImportantRFParamsCollinearFiltered: DataExtractionConfig["scripts"] =
   [
@@ -32,7 +32,7 @@ export const commonImportantRFParamsCollinearFiltered: DataExtractionConfig["scr
       key: "world_cover_convolve",
       scale: 10,
       bands: [
-        "Permanent_water_bodies",
+        "Tree_cover",
         "Shrubland",
         "Grassland",
         "Cropland",

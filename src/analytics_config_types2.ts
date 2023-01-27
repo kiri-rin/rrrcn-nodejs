@@ -8,7 +8,7 @@ import {
 export type CommonConfig = {
   outputs?: string;
 };
-type CsvImportConfig = {
+export type CsvImportConfig = {
   type: "csv";
   path: string;
   latitude_key?: string;
@@ -16,20 +16,25 @@ type CsvImportConfig = {
   id_key?: string;
   csvParseConfig?: ParseOptions;
 };
-type CommonScriptParams = {
+export type CommonScriptParams = {
   buffer?: number;
   dates?: DatesConfig;
   outputs?: string;
   mode?: "MEAN" | "SUM";
   scale?: number;
 };
-type ShpImportConfig = { type: "shp"; path: string };
-type AssetImportConfig = { type: "asset"; path: string };
+export type ShpImportConfig = { type: "shp"; path: string };
+export type AssetImportConfig = { type: "asset"; path: string };
+export type ComputedObjectImportConfig = {
+  type: "computedObject";
+  object: any;
+};
 export type GeometriesImportConfig =
-  | { type: "asset" | "shp" | "csv" } & (
+  | { type: "asset" | "shp" | "csv" | "computedObject" } & (
       | CsvImportConfig
       | ShpImportConfig
       | AssetImportConfig
+      | ComputedObjectImportConfig
     );
 
 export type ScriptConfig = {
@@ -40,10 +45,11 @@ export type ScriptConfig = {
 export type DataExtractionConfig = {
   points: GeometriesImportConfig;
   defaultScriptParams?: CommonScriptParams;
-  scripts: (ScriptConfig | string)[];
+  scripts: (ScriptConfig | scriptKey)[];
 } & CommonConfig;
 export type RandomForestParamsConfig =
-  | { type: "asset"; path: string }
+  | AssetImportConfig
+  | ComputedObjectImportConfig
   | {
       type: "scripts";
       defaultScriptParams?: CommonScriptParams;
@@ -74,7 +80,7 @@ export type RandomForestConfig = {
   outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";
 } & CommonConfig;
 export type ValidateClassifiedImageConfig = {
-  classified_image: string;
+  classified_image: AssetImportConfig | ComputedObjectImportConfig;
   validationPoints: RandomForestConfig["trainingPoints"];
 } & CommonConfig;
 //@ts-ignore

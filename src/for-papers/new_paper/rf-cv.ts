@@ -22,7 +22,7 @@ import {
   karatauRegrRFConfigCommonParamsForAll,
   karatauRegrRFConfigCommonParamsForAllFiltered,
 } from "./configs/Karatau/RF-configs";
-import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest2";
+import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest";
 const configs = [
   karatauProbRFConfigUniqParams,
   karatauProbRFConfigCommonParamsForAll,

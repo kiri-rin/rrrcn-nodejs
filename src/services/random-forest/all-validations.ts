@@ -78,3 +78,26 @@ export const validateClassifier = async (
     validation_regression,
   };
 };
+
+export const ROCTOCSV = (ROC: classifierValidationType["ROC"]) => {
+  const columns = ["param", ...ROC.features.map((it) => it.properties.cutoff)];
+  const rows = [
+    "TP",
+    "FP",
+    "TN",
+    "FN",
+    "TNR",
+    "TPR",
+    "FPR",
+    "Precision",
+    "SUMSS",
+    "ccr",
+    "kappa",
+  ].map((key) => [
+    key,
+    ...ROC.features.map(
+      (it) => it.properties[key as keyof typeof it.properties]
+    ),
+  ]);
+  return [columns, ...rows];
+};

@@ -1,29 +1,3 @@
-import { analyticsConfig } from "./analytics_config";
-import { main } from "./controllers/extract-data";
-import { randomForest } from "./controllers/random-forest/random-forest";
-import { randomForestCV } from "./controllers/random-forest/cross-validation-random-forest";
-import {
-  SEKZProbRFConfigCommonParamsForAll,
-  SEKZProbRFConfigCommonParamsForAllFiltered,
-  SEKZProbRFConfigUniqParams,
-  SEKZRegrRFConfigCommonParamsForAll,
-  SEKZRegrRFConfigCommonParamsForAllFiltered,
-  SEKZRegrRFConfigUniqParams,
-} from "./for-papers/configs/SE-KZ/RF-configs";
-import {
-  usturtProbRFConfigCommonParamsForAll,
-  usturtProbRFConfigCommonParamsForAllFiltered,
-  usturtProbRFConfigUniqParams,
-  usturtRegrRFConfigCommonParamsForAll,
-  usturtRegrRFConfigCommonParamsForAllFiltered,
-  usturtRegrRFConfigUniqParams,
-} from "./for-papers/configs/Usturt/RF-configs";
-import {
-  karatauProbRFConfigUniqParams,
-  karatauRegrRFConfigUniqParams,
-} from "./for-papers/configs/Karatau/RF-configs";
-import { meanClassifiedImages } from "./controllers/random-forest/meanClassifiedImages";
-import { randomForestConfig } from "./analytics_config_types";
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
 declare global {
@@ -32,15 +6,7 @@ declare global {
 }
 //@ts-ignore
 globalThis.ee = ee;
-// const configs = [
-//   SEKZRegrRFConfigUniqParams,
-//   usturtProbRFConfigCommonParamsForAll,
-//   usturtProbRFConfigCommonParamsForAllFiltered,
-//   usturtProbRFConfigUniqParams,
-//   usturtRegrRFConfigCommonParamsForAll,
-//   usturtRegrRFConfigCommonParamsForAllFiltered,
-//   usturtRegrRFConfigUniqParams,
-// ];
+
 export const withGEE = async (callback: () => any) => {
   //@ts-ignore
 

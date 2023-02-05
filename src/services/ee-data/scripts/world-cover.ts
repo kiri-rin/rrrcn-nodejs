@@ -6,7 +6,7 @@ import fs from "fs/promises";
 import { JSCSVTable } from "../../utils/points";
 import { parse } from "csv-parse/sync";
 
-const targetsKeys = {
+export const worldCoverTargetsKeys = {
   Tree_cover: 10,
   Shrubland: 20,
   Grassland: 30,

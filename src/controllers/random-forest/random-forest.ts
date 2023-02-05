@@ -1,320 +1,64 @@
-import { EEFeatureCollection, EEImage } from "../../types";
-import {
-  analyticsConfigType,
-  randomForestConfig,
-  ScriptConfig,
-} from "../../analytics_config_types";
-import fsPromises, { mkdir, writeFile } from "fs/promises";
-import { JSCSVTable } from "../../services/utils/points";
-import { parse } from "csv-parse/sync";
-import allScripts, { scriptKey } from "../../services/ee-data";
-import {
-  evaluatePromisify,
-  getThumbUrl,
-  getTiffUrl,
-} from "../../services/utils/ee-image";
+import { mkdir, writeFile } from "fs/promises";
 import { printRandomForestCharts } from "../../services/random-forest/charts";
+import { importGeometries } from "../../services/utils/import-geometries";
+import { RandomForestConfig } from "../../analytics_config_types2";
 import {
-  downloadFile,
-  reduceRegionsFromImageOrCollection,
-  writeScriptFeaturesResult,
-} from "../../services/utils/io";
-import { DatesConfig } from "../../services/utils/dates";
-import { importPointsFromCsv } from "../../services/utils/import-geometries";
+  downloadClassifiedImage,
+  getAllPoints,
+  getParamsImage,
+  getTrainingValidationPointsPare,
+} from "./utils";
+import { randomForestAndValidateService } from "../../services/random-forest";
 
-export const getPoints = async (
-  path: string,
-  lat_key: string = "Latitude",
-  long_key: string = "Longitude",
-  id_key: string = "id",
-  inheritProps = ["Presence"]
-) => {
-  const pointsFile = await fsPromises.readFile(path);
-  const pointsParsed = parse(pointsFile, { delimiter: ",", columns: true });
-  return importPointsFromCsv({
-    csv: pointsParsed,
-    lat_key,
-    long_key,
-    id_key,
-    inheritProps,
-  });
-};
-export const getRegionOfInterest = async (
-  path: string,
-  lat_key: string = "Latitude",
-  long_key: string = "Longitude"
-) => {
-  const regionPointsRaw = await fsPromises.readFile(path);
-  const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
-    delimiter: ",",
-    columns: true,
-  });
-  return ee.Geometry.Polygon([
-    regionPointsParsed.map((row) => [
-      Number(row[long_key]),
-
-      Number(row[lat_key]),
-    ]),
-  ]);
-};
-export const setDefaultsToScriptsConfig = (
-  analyticsConfig: analyticsConfigType
-) => {
-  const scriptObjects = analyticsConfig.scripts.map((it) => {
-    const obj = typeof it === "string" ? { key: it } : it;
-    if (obj.dates === undefined) {
-      obj.dates = analyticsConfig.dates;
-    }
-    return obj as Required<ScriptConfig>;
-  });
-  return scriptObjects;
-};
-export const getParamsImage = async ({
-  scripts,
-  regionOfInterest,
-}: {
-  scripts: Required<ScriptConfig>[];
-  regionOfInterest: EEImage;
-}) => {
-  const parametersImageArray = [];
-
-  for (let { key: script, dates, bands } of scripts) {
-    console.log(script);
-    parametersImageArray.push(
-      ...Object.values(
-        await allScripts[script as scriptKey]({
-          regions: regionOfInterest,
-          datesConfig: dates as DatesConfig,
-          bands,
-        })
-      )
-    );
-  }
-  return parametersImageArray.reduce((acc, it, index) => {
-    return index ? acc.addBands(it) : acc;
-  }, parametersImageArray[0]);
-};
-export const getRFClassifier = async ({
-  trainingPoints,
-  outputMode,
-  paramsImage,
-}: {
-  trainingPoints: EEFeatureCollection;
-  paramsImage: EEImage;
-  outputMode: randomForestConfig["outputMode"];
-}) => {
-  const classifier = ee.Classifier.smileRandomForest(20)
-    .setOutputMode(outputMode)
-    .train({
-      features: trainingPoints,
-      classProperty: "Presence",
-      inputProperties: paramsImage.bandNames(),
-    });
-
-  const classified_image = paramsImage
-    .select(paramsImage.bandNames())
-    .classify(classifier)
-    .multiply(100)
-    .round();
-  return { classified_image, classifier };
-};
-
-export const randomForest = async (analyticsConfig: analyticsConfigType) => {
-  if (!analyticsConfig.randomForest) return;
+export const randomForest = async (config: RandomForestConfig) => {
   const {
-    scripts,
-    pointsCsvPath,
-    latitude_key,
-    longitude_key,
-    id_key,
-    dates: defaultDates,
-    outputs: defaultOutputs,
-    randomForest: {
-      regionOfInterestCsvPath,
-      validationSplit,
-      outputMode,
-      bufferPerAreaPoint,
-      classificationSplit,
-      validationPointsCsvPath,
-      validationSeed,
-      absencePointsCsvPath,
-      presencePointsCsvPath,
-    },
-  } = analyticsConfig;
-  const outputDir = `./.local/outputs/${defaultOutputs}/`;
-  await mkdir(`./.local/outputs/${defaultOutputs}`, { recursive: true });
-  let raw_points;
-  if (absencePointsCsvPath && presencePointsCsvPath) {
-    raw_points = (
-      await getPoints(
-        presencePointsCsvPath,
-        latitude_key,
-        longitude_key,
-        id_key
-      )
-    )
-      .map((it: any) => it.set("Presence", 1))
-      .merge(
-        (
-          await getPoints(
-            absencePointsCsvPath,
-            latitude_key,
-            longitude_key,
-            id_key
-          )
-        ).map((it: any) => it.set("Presence", 0))
-      );
-  } else {
-    raw_points = await getPoints(
-      pointsCsvPath,
-      latitude_key,
-      longitude_key,
-      id_key
-    );
-  }
-  const regionOfInterest = await getRegionOfInterest(
-    regionOfInterestCsvPath,
-    latitude_key,
-    longitude_key
+    outputMode,
+    regionOfInterest: regionOfInterestConfig,
+    trainingPoints: trainingPointsConfig,
+    validation: validationConfig,
+    params,
+    outputs,
+  } = config;
+  let raw_points = await getAllPoints(trainingPointsConfig);
+  const regionOfInterest = await importGeometries(
+    regionOfInterestConfig,
+    "polygon"
   );
-  raw_points = raw_points.randomColumn("random", validationSeed);
-  let externalValidationPoints;
-  if (validationPointsCsvPath) {
-    externalValidationPoints = await getPoints(
-      validationPointsCsvPath,
-      latitude_key,
-      longitude_key,
-      id_key
-    );
-  }
-  const abs_raw_points = raw_points.filter(ee.Filter.eq("Presence", 0));
-  const pres_raw_points = raw_points.filter(ee.Filter.eq("Presence", 1));
-  var validationPoints = externalValidationPoints
-    ? externalValidationPoints.merge(
-        abs_raw_points.filter(ee.Filter.lt("random", validationSplit))
-      )
-    : raw_points.filter(ee.Filter.lt("random", validationSplit));
-  var points = externalValidationPoints
-    ? pres_raw_points.merge(
-        abs_raw_points.filter(ee.Filter.gt("random", validationSplit))
-      )
-    : raw_points.filter(ee.Filter.gte("random", validationSplit));
-
-  const scriptObjects = setDefaultsToScriptsConfig(analyticsConfig);
   const paramsImage = await getParamsImage({
-    scripts: scriptObjects,
+    params,
     regionOfInterest,
   });
-  const trainingPoints = paramsImage.sampleRegions({
-    collection: points,
-    properties: ["Presence"],
-    scale: 100,
-  });
-  const { classified_image, classifier } = await getRFClassifier({
-    trainingPoints,
-    outputMode,
-    paramsImage,
-  });
-  const toDownload = [];
-  if (outputMode !== "CLASSIFICATION") {
-    const classified_image_classes = classified_image.gte(
-      classificationSplit || 50
-    );
+  const { trainingPoints, validationPoints } = getTrainingValidationPointsPare(
+    raw_points,
+    validationConfig
+  );
+  const { classified_image, classifier, validations } =
+    await randomForestAndValidateService({
+      trainingPoints,
+      regionOfInterest,
+      paramsImage,
+      outputMode,
+      validationPoints,
+    });
 
-    const thumbUrl: string = await getThumbUrl(
-      classified_image_classes.multiply(100),
-      regionOfInterest
-    );
-    const tiffUrl: string = await getTiffUrl(
-      classified_image_classes,
-      regionOfInterest
-    );
-    // toDownload.push(
-    //   downloadFile(
-    //     thumbUrl,
-    //     `${outputDir}classification_classes_${classificationSplit}.png`
-    //   ),
-    //   downloadFile(
-    //     tiffUrl,
-    //     `${outputDir}classification_classes_${classificationSplit}.zip`
-    //   )
-    // );
-    if (bufferPerAreaPoint) {
-      const buffered_classes = classified_image_classes
-        .convolve(ee.Kernel.circle(bufferPerAreaPoint, "meters", false, 1))
-        .gt(0);
-      const _thumbUrl = await getThumbUrl(
-        buffered_classes.multiply(100),
-        regionOfInterest
-      );
-      const _tiffUrl = await getTiffUrl(buffered_classes, regionOfInterest);
-      // toDownload.push(
-      //   downloadFile(
-      //     _thumbUrl,
-      //     `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.png`
-      //   ),
-      //   downloadFile(
-      //     _tiffUrl,
-      //     `${outputDir}classification_classes_buffered_${classificationSplit}_${bufferPerAreaPoint}.zip`
-      //   )
-      // );
-    }
-  }
-
-  const json: any = await evaluatePromisify(classifier.explain());
+  const outputDir = `./.local/outputs/${outputs}`;
+  await mkdir(outputDir, { recursive: true });
   await printRandomForestCharts({
     classifiedImage: classified_image,
-    explainedClassifier: json,
-    trainingData: points,
+    explainedClassifier: validations.explainedClassifier,
+    trainingData: trainingPoints,
     validationData: validationPoints,
-    output: `./.local/outputs/${defaultOutputs}`,
+    output: outputDir,
   });
-  const allData = await reduceRegionsFromImageOrCollection(
-    points,
-    paramsImage,
-    100,
-    []
+  await writeFile(
+    `${outputDir}/trained.json`,
+    JSON.stringify(validations.explainedClassifier, null, 4)
   );
-  await writeScriptFeaturesResult({ allData }, `${outputDir}dataset.csv`);
-  json.thumbUrl = await getThumbUrl(classified_image, regionOfInterest);
-  json.downloadUrl = await getTiffUrl(classified_image, regionOfInterest);
-
-  toDownload.push(
-    downloadFile(json.thumbUrl, `${outputDir}classification.png`),
-    downloadFile(json.downloadUrl, `${outputDir}classification.zip`)
-  );
-  await Promise.all(toDownload);
-  const vector = classified_image.sample({
-    region: regionOfInterest,
-    scale: 1000,
-    geometries: true,
+  const { promise } = await downloadClassifiedImage({
+    classified_image,
+    regionOfInterest,
+    output: outputDir,
   });
-  // json.downloadJSONUrl = await new Promise((resolve) => {
-  //   vector.getDownloadURL(
-  //     "JSON",
-  //     ["classification", ".geo"],
-  //     "EXPORTED",
-  //     (res: any, error: any) => {
-  //       console.log({ res, error });
-  //       console.log(res, " URL");
-  //       resolve(res);
-  //     }
-  //   );
-  // });
-  // json.downloadKMLUrl = await new Promise((resolve) => {
-  //   vector.getDownloadURL(
-  //     "KML",
-  //     ["classification"],
-  //     "EXPORTED",
-  //     (res: any, error: any) => {
-  //       console.log({ res, error });
-  //       console.log(res, " URL");
-  //       resolve(res);
-  //     }
-  //   );
-  // });
-
-  await writeFile(`${outputDir}trained.json`, JSON.stringify(json, null, 4));
-
-  return { classified_image, regionOfInterest };
+  await promise;
+  return { classifier, classified_image, regionOfInterest };
 };

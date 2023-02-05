@@ -1,6 +1,6 @@
-import { estimatePopulation } from "./controllers/estimate-population";
+import { estimatePopulation } from "./controllers/population-estimation/estimate-population";
 import { estimationConfig } from "./population_config";
-import { crossValidationPopulationEstimation } from "./controllers/cross-validation-estimate-population";
+import { crossValidationPopulationEstimation } from "./controllers/population-estimation/cross-validation-estimate-population";
 
 const ee = require("@google/earthengine");
 const key = require("../.local/ee-key.json");
@@ -15,9 +15,9 @@ ee.data.authenticateViaPrivateKey(
   key,
   () => {
     ee.initialize(null, null, async () => {
-      await crossValidationPopulationEstimation(estimationConfig);
+      // await crossValidationPopulationEstimation(estimationConfig);
 
-      // await estimatePopulation(estimationConfig);
+      await estimatePopulation(estimationConfig);
     });
   },
   (r: any) => {

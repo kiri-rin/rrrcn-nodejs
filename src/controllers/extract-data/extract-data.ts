@@ -9,6 +9,8 @@ import {
 } from "../../services/utils/io";
 import { EEFeature } from "../../types";
 import allScripts, { scriptKey } from "../../services/ee-data";
+import { getParamsImage } from "../random-forest/utils";
+import { mkdir } from "fs/promises";
 export const setDefaultsToScriptsConfig = (
   config: Omit<DataExtractionConfig, "points">
 ) =>
@@ -31,7 +33,7 @@ export const extractData = async (config: DataExtractionConfig) => {
   const points = await importGeometries(pointsConfig);
 
   const scriptObjects = setDefaultsToScriptsConfig(config);
-
+  let results: any = {};
   for (let {
     key: script,
     dates,
@@ -61,10 +63,22 @@ export const extractData = async (config: DataExtractionConfig) => {
         mode
       );
     }
-
+    if (!config.inOneFile) {
+      await writeScriptFeaturesResult(
+        scriptResults,
+        `./.local/outputs/${outputs || config.outputs}/${
+          filename || script
+        }.csv`
+      );
+    } else {
+      results = Object.assign(results, scriptResults);
+    }
+  }
+  await mkdir(`./.local/outputs/${config.outputs}`, { recursive: true });
+  if (config.inOneFile) {
     await writeScriptFeaturesResult(
-      scriptResults,
-      `./.local/outputs/${outputs}/${filename || script}.csv`
+      results,
+      `./.local/outputs/${config.outputs}/${config.inOneFile}.csv`
     );
   }
 };

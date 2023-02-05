@@ -1,7 +1,3 @@
-import {
-  analyticsConfigType,
-  randomForestConfig,
-} from "../../../../analytics_config_types";
 import { getDateIntervals } from "../../../../services/utils/dates";
 import {
   commonImportantRFParamsCollinearFiltered,

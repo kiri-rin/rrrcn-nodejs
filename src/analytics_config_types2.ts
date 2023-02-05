@@ -44,6 +44,7 @@ export type ScriptConfig = {
 } & CommonScriptParams;
 export type DataExtractionConfig = {
   points: GeometriesImportConfig;
+  inOneFile?: string;
   defaultScriptParams?: CommonScriptParams;
   scripts: (ScriptConfig | scriptKey)[];
 } & CommonConfig;

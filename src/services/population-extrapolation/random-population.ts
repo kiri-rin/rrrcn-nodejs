@@ -4,7 +4,7 @@ type RandomGenerationArgs = {
   grid: EEList;
   prevRandoms: EEFeatureCollection;
   minDistance: any;
-  maxDistance: any;
+  averageDistance: any;
   seed?: number;
 };
 export const recursiveGetRandomPointsWithDistance = async (
@@ -34,7 +34,7 @@ export const recursiveGetRandomPointsWithDistance = async (
 export const createRandomPointsWithDistance = ({
   grid,
   minDistance,
-  maxDistance,
+  averageDistance,
   prevRandoms,
   seed = 1,
 }: RandomGenerationArgs) => {
@@ -49,7 +49,13 @@ export const createRandomPointsWithDistance = ({
         .get("random");
       const buffer = ee
         .Number(minDistance)
-        .add(ee.Number(maxDistance).multiply(randomNumber));
+        .add(
+          ee
+            .Number(
+              averageDistance.multiply(2).subtract(minDistance.multiply(2))
+            )
+            .multiply(randomNumber)
+        );
       const inBuffer = randoms.filterBounds(center.geometry().buffer(buffer));
       return ee.Algorithms.If(
         inBuffer.size().eq(0),

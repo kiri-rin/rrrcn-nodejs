@@ -1,5 +1,5 @@
 import { withGEE } from "../../index";
-import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest2";
+import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest";
 import {
   karatauOldProbRFConfigAll,
   karatauOldProbRFConfigDFR,

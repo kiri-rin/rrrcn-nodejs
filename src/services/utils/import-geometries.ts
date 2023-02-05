@@ -7,7 +7,7 @@ import { EEFeatureCollection } from "../../types";
 
 export const importGeometries = async (
   conf: GeometriesImportConfig,
-  geometryType = "points",
+  geometryType: "points" | "polygon" = "points",
   inheritProps = [] as string[]
 ): Promise<EEFeatureCollection> => {
   switch (conf.type) {

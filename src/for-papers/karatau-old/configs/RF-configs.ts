@@ -3,7 +3,7 @@ import { getDateIntervals } from "../../../services/utils/dates";
 import {
   DataExtractionConfig,
   RandomForestConfig,
-} from "../../../analytics_config_types2";
+} from "../../../analytics_config_types";
 export const karatauOldAllParams: DataExtractionConfig["scripts"] = [
   { key: "elevation" },
   {

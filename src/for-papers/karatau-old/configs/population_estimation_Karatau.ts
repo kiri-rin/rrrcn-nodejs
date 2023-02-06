@@ -1,4 +1,4 @@
-import { populationEstimationType } from "../../../population_config";
+import { populationEstimationType } from "../../../analytics_config_types";
 
 export const populationEstimationKaratauThiessens: populationEstimationType = {
   // areasSHPZIPPath: "./src/for-papers/karatau-old/assets/merge-plots.zip",

@@ -1,7 +1,7 @@
 import {
   DataExtractionConfig,
   ScriptConfig,
-} from "../../analytics_config_types2";
+} from "../../analytics_config_types";
 import { importGeometries } from "../../services/utils/import-geometries";
 import {
   reduceRegionsFromImageOrCollection,

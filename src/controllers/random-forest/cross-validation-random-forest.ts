@@ -11,7 +11,7 @@ import {
 } from "../../services/charts";
 import { evaluatePromisify } from "../../services/utils/ee-image";
 import { mkdir } from "fs/promises";
-import { RandomForestConfig } from "../../analytics_config_types2";
+import { RandomForestConfig } from "../../analytics_config_types";
 import {
   getAllPoints,
   getParamsImage,

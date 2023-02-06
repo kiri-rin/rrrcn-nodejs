@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { printRandomForestCharts } from "../../services/random-forest/charts";
 import { importGeometries } from "../../services/utils/import-geometries";
-import { RandomForestConfig } from "../../analytics_config_types2";
+import { RandomForestConfig } from "../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,

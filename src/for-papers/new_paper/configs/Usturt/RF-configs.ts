@@ -5,7 +5,7 @@ import {
 import {
   DataExtractionConfig,
   RandomForestConfig,
-} from "../../../../analytics_config_types2";
+} from "../../../../analytics_config_types";
 export const usturtUniqParams: DataExtractionConfig["scripts"] = [
   { key: "elevation" },
   {

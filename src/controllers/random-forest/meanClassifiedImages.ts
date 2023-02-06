@@ -1,7 +1,7 @@
 import { mkdir } from "fs/promises";
 import { downloadFile } from "../../services/utils/io";
 import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
-import { RandomForestConfig } from "../../analytics_config_types2";
+import { RandomForestConfig } from "../../analytics_config_types";
 import { randomForest } from "./random-forest";
 
 export const meanClassifiedImages = async (

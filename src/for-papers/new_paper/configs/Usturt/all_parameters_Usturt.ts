@@ -1,6 +1,6 @@
 import { dateIntervalsToConfig } from "../../../../services/utils/dates";
 import { commonScripts } from "../common-scripts";
-import { DataExtractionConfig } from "../../../../analytics_config_types2";
+import { DataExtractionConfig } from "../../../../analytics_config_types";
 
 export const Usturt_randoms_allParameters = {
   scripts: commonScripts,

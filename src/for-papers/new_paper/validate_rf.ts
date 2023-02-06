@@ -1,6 +1,6 @@
-import { validateClassifiedImage } from "./controllers/random-forest/validateClassifier";
+import { validateClassifiedImage } from "../../controllers/random-forest/validateClassifier";
 const ee = require("@google/earthengine");
-const key = require("../.local/ee-key.json");
+const key = require("../../../.local/ee-key.json");
 declare global {
   //@ts-ignore
   let ee: any;

@@ -2,7 +2,7 @@ import { EEFeatureCollection, EEImage } from "../../types";
 import {
   RandomForestConfig,
   RandomForestParamsConfig,
-} from "../../analytics_config_types2";
+} from "../../analytics_config_types";
 import { setDefaultsToScriptsConfig } from "../extract-data/extract-data";
 import allScripts, { scriptKey } from "../../services/ee-data";
 import { DatesConfig } from "../../services/utils/dates";

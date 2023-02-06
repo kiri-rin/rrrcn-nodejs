@@ -1,4 +1,4 @@
-import { populationEstimationType } from "../../population_config";
+import { populationEstimationType } from "../../analytics_config_types";
 import { mkdir } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../services/utils/ee-image";

@@ -1,4 +1,4 @@
-import { populationEstimationType } from "../../population_config";
+import { populationEstimationType } from "../../analytics_config_types";
 import { mkdir, writeFile } from "fs/promises";
 import { recursiveGetRandomPointsWithDistance } from "../../services/population-extrapolation/random-population";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";

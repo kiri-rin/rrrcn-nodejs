@@ -1,5 +1,5 @@
 import { getDateIntervals } from "../../../services/utils/dates";
-import { DataExtractionConfig } from "../../../analytics_config_types2";
+import { DataExtractionConfig } from "../../../analytics_config_types";
 
 export const commonScripts: DataExtractionConfig["scripts"] = [
   { key: "elevation" },

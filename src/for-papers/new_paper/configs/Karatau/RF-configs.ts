@@ -6,7 +6,7 @@ import {
 import {
   DataExtractionConfig,
   RandomForestConfig,
-} from "../../../../analytics_config_types2";
+} from "../../../../analytics_config_types";
 export const karatauUniqParams: DataExtractionConfig["scripts"] = [
   { key: "elevation" },
   {

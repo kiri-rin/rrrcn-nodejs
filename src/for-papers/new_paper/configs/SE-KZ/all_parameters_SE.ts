@@ -1,6 +1,6 @@
 import { dateIntervalsToConfig } from "../../../../services/utils/dates";
 import { commonScripts } from "../common-scripts";
-import { DataExtractionConfig } from "../../../../analytics_config_types2";
+import { DataExtractionConfig } from "../../../../analytics_config_types";
 
 export const SEKZ_randoms_allParameters = {
   buffer: 0,

@@ -1,4 +1,4 @@
-import { GeometriesImportConfig } from "../../analytics_config_types2";
+import { GeometriesImportConfig } from "../../analytics_config_types";
 import fsPromises from "fs/promises";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";

@@ -4,9 +4,11 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "start": "tsc && node dist/index.js",
-    "start-estimate": "tsc && node dist/estimate-population.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "karatau-old-rf-cv": "tsc && node dist/for-papers/karatau-old/karatau-old-cv-rf.js",
+    "karatau-old-rf-bests": "tsc && node dist/for-papers/karatau-old/karatau-old-best-mean-rf.js",
+    "karatau-old-estimate-population": "tsc && node dist/for-papers/karatau-old/estimate-population.js",
+    "karatau-old-get-all-data": "tsc && node dist/for-papers/karatau-old/get-gee-data.js",
+    "karatau-old-get-presence-data": "tsc && node dist/for-papers/karatau-old/karatau-old-presence-dataset.js"
   },
   "keywords": [],
   "author": "",

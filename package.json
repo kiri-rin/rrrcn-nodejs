@@ -1,5 +1,5 @@
 {
-  "name": "rrcn-ee-nodejs",
+  "name": "@rrrcn/services",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",

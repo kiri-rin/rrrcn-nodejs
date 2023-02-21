@@ -63,22 +63,21 @@ export const extractData = async (config: DataExtractionConfig) => {
         mode
       );
     }
+    results = Object.assign(results, scriptResults);
+
     if (!config.inOneFile) {
       await writeScriptFeaturesResult(
         scriptResults,
-        `./.local/outputs/${outputs || config.outputs}/${
-          filename || script
-        }.csv`
+        `${outputs || config.outputs}/${filename || script}.csv`
       );
-    } else {
-      results = Object.assign(results, scriptResults);
     }
   }
-  await mkdir(`./.local/outputs/${config.outputs}`, { recursive: true });
+  await mkdir(`${config.outputs}`, { recursive: true });
   if (config.inOneFile) {
     await writeScriptFeaturesResult(
       results,
-      `./.local/outputs/${config.outputs}/${config.inOneFile}.csv`
+      `${config.outputs}/${config.inOneFile}.csv`
     );
   }
+  return results;
 };

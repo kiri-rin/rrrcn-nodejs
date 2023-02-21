@@ -41,11 +41,13 @@ export const importPolygonFromCsv = ({
   csv,
   lat_key = "Latitude",
   long_key = "Longitude",
+  inheritProps = [],
 }: {
   csv: JSCSVTable;
   lat_key?: string;
   long_key?: string;
   id_key?: string;
+  inheritProps?: string[];
 }) =>
   ee.Geometry.Polygon([
     csv.map((row) => [Number(row[long_key]), Number(row[lat_key])]),

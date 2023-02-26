@@ -9,9 +9,9 @@ import {
 export type CommonConfig = {
   outputs?: string;
 };
-export type CsvImportConfig = {
+export type CsvImportConfig<FileType = string> = {
   type: "csv";
-  path: string;
+  path: FileType;
   latitude_key?: string;
   longitude_key?: string;
   id_key?: string;
@@ -24,16 +24,29 @@ export type CommonScriptParams = {
   mode?: "MEAN" | "SUM";
   scale?: number;
 };
-export type ShpImportConfig = { type: "shp"; path: string };
+export type ShpImportConfig<FileType = string> = {
+  type: "shp";
+  path: FileType;
+};
 export type AssetImportConfig = { type: "asset"; path: string };
+export type GeojsonImportConfig = {
+  type: "geojson";
+  json: GeoJSON.FeatureCollection;
+};
+export type GeojsonFileImportConfig<FileType = string> = {
+  type: "geojson_file";
+  path: FileType;
+};
 export type ComputedObjectImportConfig = {
   type: "computedObject";
   object: any;
 };
-export type GeometriesImportConfig =
+export type GeometriesImportConfig<FileType = string> =
   | { type: "asset" | "shp" | "csv" | "computedObject" } & (
-      | CsvImportConfig
-      | ShpImportConfig
+      | CsvImportConfig<FileType>
+      | ShpImportConfig<FileType>
+      | GeojsonFileImportConfig<FileType>
+      | GeojsonImportConfig
       | AssetImportConfig
       | ComputedObjectImportConfig
     );
@@ -43,8 +56,8 @@ export type ScriptConfig = {
   filename?: string;
   bands?: string[];
 } & CommonScriptParams;
-export type DataExtractionConfig = {
-  points: GeometriesImportConfig;
+export type DataExtractionConfig<FileType = string> = {
+  points: GeometriesImportConfig<FileType>;
   inOneFile?: string;
   defaultScriptParams?: CommonScriptParams;
   scripts: (ScriptConfig | scriptKey)[];

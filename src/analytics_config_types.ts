@@ -42,7 +42,7 @@ export type ComputedObjectImportConfig = {
   object: any;
 };
 export type GeometriesImportConfig<FileType = string> =
-  | { type: "asset" | "shp" | "csv" | "computedObject" } & (
+  | { type: "asset" | "shp" | "csv" | "computedObject" | "geojson" } & (
       | CsvImportConfig<FileType>
       | ShpImportConfig<FileType>
       | GeojsonFileImportConfig<FileType>

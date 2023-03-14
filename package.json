@@ -10,6 +10,9 @@
     "karatau-old-get-all-data": "tsc && node dist/for-papers/karatau-old/get-gee-data.js",
     "karatau-old-get-presence-data": "tsc && node dist/for-papers/karatau-old/karatau-old-presence-dataset.js"
   },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

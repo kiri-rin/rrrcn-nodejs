@@ -4,6 +4,7 @@ import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "./points";
 import { EEFeatureCollection } from "../../types";
+import * as util from "util";
 
 export const importGeometries = async (
   conf: GeometriesImportConfig,
@@ -27,6 +28,15 @@ export const importGeometries = async (
     case "shp": {
       return await importShapesToFeatureCollection(conf.path);
     }
+    case "geojson": {
+      return ee.FeatureCollection(
+        conf.json.features.map((it, index) => ({
+          ...it,
+          id: String(it.id),
+          properties: { ...it.properties, id: it.id },
+        }))
+      );
+    }
     case "asset": {
       return ee.FeatureCollection(conf.path);
     }
@@ -35,7 +45,7 @@ export const importGeometries = async (
 export async function importShapesToFeatureCollection(path: string) {
   const shapeBuffer = await fsPromises.readFile(path);
   const geojson = await shp(shapeBuffer);
-  return ee.FeatureCollection(geojson);
+  return ee.FeatureCollection(geojson).map((it: any) => it.set("id", it.id()));
 }
 export const importPolygonFromCsv = ({
   csv,

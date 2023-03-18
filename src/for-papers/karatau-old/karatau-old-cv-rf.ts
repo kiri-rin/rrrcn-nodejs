@@ -9,7 +9,7 @@ import {
   karatauOldRegrRFConfigDFR,
   karatauOldRegrRFConfigInModel,
   karatauOldRegrRFConfigInModelDFR,
-} from "./configs/RF-configs";
+} from "./configs/RF-configs-NEOPHRON";
 const configs = [
   karatauOldProbRFConfigAll,
   karatauOldProbRFConfigDFR,

@@ -1,7 +1,7 @@
 import {
   karatauOldProbRFConfigInModel,
   karatauOldRegrRFConfigInModel,
-} from "./configs/RF-configs";
+} from "./configs/RF-configs-NEOPHRON";
 import { withGEE } from "../../index";
 import { meanClassifiedImages } from "../../controllers/random-forest/meanClassifiedImages";
 import { validateClassifiedImage } from "../../controllers/random-forest/validateClassifier";

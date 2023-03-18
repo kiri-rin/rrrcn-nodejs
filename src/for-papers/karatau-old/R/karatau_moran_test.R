@@ -3,13 +3,15 @@ library("sp")
 library("spdep")
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 getwd()
-points <- st_read( "../assets/predictedObservations/predictedObservations-point.shp")
+#points <- st_read( "../assets/predictedObservations/predictedObservations-point.shp")
+points <- st_read( "../assets/FALCO/predictedObservations/predictedObservations.shp")
+
 areas <- st_read( "../assets/merge-plots/merge-plots.shp", quiet=TRUE)
 
 
 filteredPoints <- sf::st_filter(st_set_crs(points, 4269),st_set_crs(areas,4269))
 filteredPoints
-coords <-  remove.duplicates(as(filteredPoints,"Spatial")[9:10])
+coords <-  remove.duplicates(as(filteredPoints,"Spatial"))
 
 coords
 class(coords)

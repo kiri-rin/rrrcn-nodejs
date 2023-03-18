@@ -13,12 +13,14 @@ import { evaluatePromisify } from "../../services/utils/ee-image";
 import { mkdir } from "fs/promises";
 import { RandomForestConfig } from "../../analytics_config_types";
 import {
+  downloadClassifiedImage,
   getAllPoints,
   getParamsImage,
   getTrainingValidationPointsPare,
 } from "./utils";
 import { importGeometries } from "../../services/utils/import-geometries";
 import { randomForestAndValidateService } from "../../services/random-forest";
+import { EEImage } from "../../types";
 
 export const randomForestCV = async (config: RandomForestConfig) => {
   const {
@@ -49,33 +51,52 @@ export const randomForestCV = async (config: RandomForestConfig) => {
   }[] = [];
 
   await mkdir(outputDir, { recursive: true });
-
+  const images: EEImage[] = [];
+  const jobs = [];
   for (let i = 1; i <= 10; i++) {
-    const { trainingPoints, validationPoints } =
-      getTrainingValidationPointsPare(raw_points, validationConfig, i * i * i);
-    // await evaluatePromisify(trainingPoints);
-    // console.log("POINTS");
+    jobs.push(
+      (async () => {
+        const { trainingPoints, validationPoints } =
+          getTrainingValidationPointsPare(
+            raw_points,
+            validationConfig,
+            i * i * i
+          );
+        // await evaluatePromisify(trainingPoints);
+        // console.log("POINTS");
 
-    // await evaluatePromisify(trainingSamples);
-    //
-    // console.log("samples");
+        // await evaluatePromisify(trainingSamples);
+        //
+        // console.log("samples");
 
-    const res = await randomForestAndValidateService({
-      trainingPoints,
-      validationPoints,
-      outputMode,
-      paramsImage,
-      regionOfInterest,
-    });
-    modelsValidations.push(res);
+        const res = await randomForestAndValidateService({
+          trainingPoints,
+          validationPoints,
+          outputMode,
+          paramsImage,
+          regionOfInterest,
+        });
+        images.push(res.classified_image);
+        modelsValidations.push(res);
 
-    writeFileSync(
-      `${outputDir}/model${i}.json`,
-      JSON.stringify(res.validations, null, 4)
+        writeFileSync(
+          `${outputDir}/model${i}.json`,
+          JSON.stringify(res.validations, null, 4)
+        );
+        console.log(i, " success");
+      })()
     );
-    console.log(i, " success");
   }
+  await Promise.all(jobs);
+  const mean_image = ee.ImageCollection(images).reduce(ee.Reducer.mean());
+  const { promise } = await downloadClassifiedImage({
+    classified_image: mean_image,
+    regionOfInterest,
+    output: outputDir,
+    filename: "mean",
+  });
   await writeValidationTable(modelsValidations, outputDir);
+  await promise;
 };
 const validationTableKeys = [
   "AUC",

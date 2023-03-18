@@ -36,7 +36,7 @@ export type GeometriesImportConfig =
       | AssetImportConfig
       | ComputedObjectImportConfig
     );
-
+export type ImageImportConfig = AssetImportConfig | ComputedObjectImportConfig;
 export type ScriptConfig = {
   key: scriptKey;
   filename?: string;
@@ -99,3 +99,12 @@ export type populationEstimationType = {
   | { pointsCsvPath: string; pointsSHPZIPPath?: undefined }
   | { pointsCsvPath?: undefined; pointsSHPZIPPath: string }
 );
+
+export type populationEstimationType2 = {
+  outputs: string;
+  seed?: number;
+  points: GeometriesImportConfig;
+  areas: GeometriesImportConfig;
+  regionOfInterest: GeometriesImportConfig;
+  classified_image: ImageImportConfig;
+};

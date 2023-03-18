@@ -1,7 +1,7 @@
 import { EEFeature, EEFeatureCollection, EEImage } from "../../types";
 import { AnalyticsScriptResult } from "../ee-data";
 import { clearTimeout, setTimeout } from "timers";
-
+import util from "util";
 const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
 export async function evaluateScriptResultsToFeaturesArray(
@@ -31,8 +31,8 @@ export async function getFeatures(featureCollection: EEFeatureCollection) {
 }
 export async function evaluatePromisify(
   image: EEImage,
-  shouldRetry = 10,
-  _timeout = 200000
+  shouldRetry = 100,
+  _timeout = 20000000
 ) {
   return new Promise((resolve, reject) => {
     try {
@@ -47,6 +47,7 @@ export async function evaluatePromisify(
       image.evaluate(async (res: string, error: string) => {
         if (error) {
           console.log(error);
+          reject(error);
           if (
             (error.includes("ECONNRESET") ||
               error.includes("socket hang up") ||
@@ -101,12 +102,14 @@ export const getThumbUrl = async (
 export const getTiffUrl = async (
   classified_image: EEImage,
   regionOfInterest?: EEFeature
-): Promise<string> =>
-  await new Promise((resolve) => {
+): Promise<string> => {
+  // console.log(util.inspect(ee.data.getOperation(task.id), false, null, true));
+
+  return await new Promise((resolve) => {
     classified_image.getDownloadURL(
       {
         image: classified_image,
-        maxPixels: 1e20,
+        maxPixels: 1e19,
         scale: 500,
         region: regionOfInterest,
       },
@@ -116,3 +119,4 @@ export const getTiffUrl = async (
       }
     );
   });
+};

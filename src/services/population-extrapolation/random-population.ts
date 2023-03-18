@@ -18,7 +18,7 @@ export const recursiveGetRandomPointsWithDistance = async (
   let randoms = ee.FeatureCollection(args.prevRandoms || []);
   let randomsOutput: any = {};
   for (let start = 0; start < size; start += 1000) {
-    console.log({ start, size });
+    console.log({ start, size, seed: args.seed });
     const chunk = ee.FeatureCollection(samplesList.slice(start)).limit(1000);
     const newRandoms = createRandomPointsWithDistance({
       ...args,

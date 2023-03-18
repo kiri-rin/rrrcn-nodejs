@@ -77,7 +77,11 @@ export const usturtProbRFConfigUniqParams: RandomForestConfig = {
     },
     absencePoints: {
       type: "csv",
-      path: "./src/for-papers/new_paper/assets/Usturt/Points-withoutNP-Usturt.csv",
+      // path: "./src/for-papers/new_paper/assets/Usturt/Points-withoutNP-Usturt.csv",
+      path: "./src/for-papers/new_paper/assets/Usturt/absence_usturt.csv",
+      latitude_key: "Y_coord",
+      longitude_key: "X_coord",
+      id_key: "AUTO_ID",
     },
   },
   regionOfInterest: {

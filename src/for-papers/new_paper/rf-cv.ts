@@ -24,28 +24,28 @@ import {
 } from "./configs/Karatau/RF-configs";
 import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest";
 const configs = [
-  karatauProbRFConfigUniqParams,
-  karatauProbRFConfigCommonParamsForAll,
-  karatauProbRFConfigCommonParamsForAllFiltered,
-  karatauRegrRFConfigCommonParamsForAll,
-  karatauRegrRFConfigCommonParamsForAllFiltered,
-
-  SEKZProbRFConfigUniqParams,
+  // karatauProbRFConfigUniqParams,
+  // karatauProbRFConfigCommonParamsForAll,
+  // karatauProbRFConfigCommonParamsForAllFiltered,
+  // karatauRegrRFConfigCommonParamsForAll,
+  // karatauRegrRFConfigCommonParamsForAllFiltered,
+  //
+  // SEKZProbRFConfigUniqParams,
   SEKZProbRFConfigCommonParamsForAll,
-  SEKZProbRFConfigCommonParamsForAllFiltered,
+  // SEKZProbRFConfigCommonParamsForAllFiltered,
   SEKZRegrRFConfigCommonParamsForAll,
-  SEKZRegrRFConfigCommonParamsForAllFiltered,
-  SEKZRegrRFConfigUniqParams,
-
-  usturtProbRFConfigCommonParamsForAll,
-  usturtProbRFConfigCommonParamsForAllFiltered,
-  usturtProbRFConfigUniqParams,
-  usturtRegrRFConfigCommonParamsForAll,
-  usturtRegrRFConfigCommonParamsForAllFiltered,
-  usturtRegrRFConfigUniqParams,
+  // SEKZRegrRFConfigCommonParamsForAllFiltered,
+  // SEKZRegrRFConfigUniqParams,
+  //
+  // usturtProbRFConfigCommonParamsForAll,
+  // usturtProbRFConfigCommonParamsForAllFiltered,
+  // usturtProbRFConfigUniqParams,
+  // usturtRegrRFConfigCommonParamsForAll,
+  // usturtRegrRFConfigCommonParamsForAllFiltered,
+  // usturtRegrRFConfigUniqParams,
 ];
 withGEE(async () => {
   for (let config of configs) {
-    // await randomForestCV(config);
+    await randomForestCV(config);
   }
 });

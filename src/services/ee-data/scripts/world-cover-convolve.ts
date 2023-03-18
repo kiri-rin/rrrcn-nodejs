@@ -19,20 +19,25 @@ const targetsKeys = {
   Mangroves: 95,
   Moss_and_lichen: 100,
 };
-export const worldCoverConvolveScript = async ({
+export const worldCoverConvolveScript = ({
   regions,
   bands,
+  buffer = 100,
 }: AnalyticsScriptParams) => {
   const res: AnalyticsScriptResult = {};
+  const areaPerPixel = ee.Image.pixelArea();
 
-  const collection = ee.ImageCollection("ESA/WorldCover/v100");
+  const collection = ee
+    .ImageCollection("ESA/WorldCover/v100")
+    .filterBounds(regions);
   let period_available = collection.select(["Map"]);
   for (let name of bands || Object.keys(targetsKeys)) {
     const key = targetsKeys[name as keyof typeof targetsKeys];
     res[`world_cover_${name}`] = period_available
       .reduce(ee.Reducer.mode().setOutputs(["world_cover"]))
       .eq(key)
-      .convolve(ee.Kernel.square(100, "meters"))
+      .clip(regions)
+      .convolve(ee.Kernel.square(buffer, "meters"))
       .rename([`world_cover_${name}`]);
   }
   return res;

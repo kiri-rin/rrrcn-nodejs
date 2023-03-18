@@ -52,11 +52,12 @@ export const extractData = async (config: DataExtractionConfig) => {
       regions,
       datesConfig: dates,
       bands,
+      buffer,
     });
 
     for (let [key, imageOrCollection] of Object.entries(scriptResults)) {
       scriptResults[key] = await reduceRegionsFromImageOrCollection(
-        regions,
+        key === "world_cover_convolve" ? points : regions,
         imageOrCollection,
         scale,
         [key],

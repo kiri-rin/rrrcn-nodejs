@@ -81,13 +81,19 @@ export const getParamsImage = async ({
       const scripts = setDefaultsToScriptsConfig(params);
       const parametersImageArray = (
         await Promise.all(
-          scripts.map(({ key: script, dates, bands }) =>
-            allScripts[script]({
+          scripts.map(({ key: script, dates, bands, filename }) => {
+            const res = allScripts[script]({
               regions: regionOfInterest,
               datesConfig: dates as DatesConfig,
               bands,
-            })
-          )
+            });
+            if (filename) {
+              for (let [key, image] of Object.entries(res)) {
+                res[key] = res[key].rename([`${filename}_${key}`]);
+              }
+            }
+            return res;
+          })
         )
       ).flatMap((it) => [...Object.values(it)]);
       return parametersImageArray.reduce((acc, it, index) => {
@@ -140,15 +146,34 @@ export const downloadClassifiedImage = async ({
   const thumbUrl: string = await getThumbUrl(
     classified_image,
     regionOfInterest,
-    discrete && {
-      min: 0,
-      max: 1,
-      palette: ["white", "blue", "black"],
-    }
+    discrete
+      ? {
+          min: 0,
+          max: 1,
+          palette: ["white", "blue", "black"],
+        }
+      : {
+          min: 0,
+          max: 100,
+          palette: ["white", "blue", "black"],
+        }
   );
   const tiffUrl: string = await getTiffUrl(classified_image, regionOfInterest);
   await mkdir(output, { recursive: true });
-
+  var task = ee.batch.Export.image.toDrive({
+    image: classified_image,
+    folder: "GEE_DEMO",
+    description: "demo",
+    fileNamePrefix: `${output}/${filename}`,
+    scale: 500,
+    region: regionOfInterest,
+  });
+  task.start(
+    () => {},
+    (err: string) => {
+      console.log({ err });
+    }
+  );
   return {
     promise: Promise.all([
       downloadFile(thumbUrl, `${output}/${filename}.png`),

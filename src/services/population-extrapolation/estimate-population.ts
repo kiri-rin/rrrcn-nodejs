@@ -32,6 +32,9 @@ export const estimatePopulationService = async ({
   const minDistance = ee.Number(
     distances.filter("nearest < 50000").aggregate_min("nearest")
   );
+  if (!minDistance) {
+    throw new Error("null min distance");
+  }
   const randomGrid = generateRandomGrid({
     regionOfInterest,
     seed,
@@ -80,7 +83,7 @@ export const estimatePopulationService = async ({
     minDistanceRandoms,
     trainingErrorPercent,
     validatingErrorPercent,
-    fixedValidationErrorPercent,
+    // fixedValidationErrorPercent,
     distances: distances.filter("nearest < 50000"),
     distancesRandoms: distancesRandoms.filter("nearest < 50000"),
     trainingPointsSize: trainingPoints.size(),
@@ -94,7 +97,7 @@ export function calcDistances(
 ) {
   return areas
     ? centroids.map(function (curr: any) {
-        const buffer = curr.buffer(50000).geometry();
+        const buffer = curr.buffer(30000).geometry();
         const inBuffer = centroids.filterBounds(buffer);
         const nearest = curr.distance(
           inBuffer.geometry().difference(curr.geometry())
@@ -125,7 +128,7 @@ export function calcDistances(
       //   );
       // })
       centroids.map(function (curr: any) {
-        const inBuffer = centroids.filterBounds(curr.buffer(20000).geometry());
+        const inBuffer = centroids.filterBounds(curr.buffer(30000).geometry());
         const nearest = curr.distance(
           inBuffer.geometry().difference(curr.geometry())
         );

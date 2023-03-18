@@ -43,62 +43,47 @@ export const crossValidationPopulationEstimation = async (
     const validationAreas = areasWithRandom.filter(
       ee.Filter.lte("random", 0.2)
     );
-
-    const promise = estimatePopulationService({
-      points,
-      classified_image,
-      regionOfInterest: regionOfInterest,
-      validationAreas,
-      trainingAreas,
-      seed,
-    }).then(
-      ({
-        randomsOutput,
-        inArea,
-        averageDistance,
-        minDistance,
-        averageDistanceRandoms,
-        minDistanceRandoms,
-        inTrainingArea,
-        trainingErrorPercent,
-        trainingPointsSize,
-        validatingErrorPercent,
-        validationPointsSize,
-        fixedValidationErrorPercent,
-      }) =>
-        evaluatePromisify(
-          ee.List([
-            inArea.size(),
-            validationPointsSize,
-            inTrainingArea.size(),
-            trainingPointsSize,
-            trainingErrorPercent,
-            validatingErrorPercent,
-            minDistance,
-            averageDistance,
-            minDistanceRandoms,
-            averageDistanceRandoms,
-            fixedValidationErrorPercent,
-            inArea.size().divide(ee.Number(1).add(trainingErrorPercent)),
-          ])
-        ).then(
-          //@ts-ignore
-          ([
-            inValidationArea,
-            validationPointsSize,
-            inTrainingArea,
-            trainingPointsSize,
-            trainingErrorPercent,
-            validatingErrorPercent,
-            minNearestDistanceTraining,
-            averageNearestDistanceTraining,
-            minNearestDistanceResult,
-            averageNearestDistanceResult,
-            fixedValidationErrorPercent,
-            fixedInArea,
-          ]) => {
-            const res = {
-              total: randomsOutput.features?.length,
+    try {
+      const promise = estimatePopulationService({
+        points,
+        classified_image,
+        regionOfInterest: regionOfInterest,
+        validationAreas,
+        trainingAreas,
+        seed,
+      }).then(
+        ({
+          randomsOutput,
+          inArea,
+          averageDistance,
+          minDistance,
+          averageDistanceRandoms,
+          minDistanceRandoms,
+          inTrainingArea,
+          trainingErrorPercent,
+          trainingPointsSize,
+          validatingErrorPercent,
+          validationPointsSize,
+          // fixedValidationErrorPercent,
+        }) =>
+          evaluatePromisify(
+            ee.List([
+              inArea.size(),
+              validationPointsSize,
+              inTrainingArea.size(),
+              trainingPointsSize,
+              trainingErrorPercent,
+              validatingErrorPercent,
+              minDistance,
+              averageDistance,
+              minDistanceRandoms,
+              averageDistanceRandoms,
+              // fixedValidationErrorPercent,
+              // inArea.size().divide(ee.Number(1).add(trainingErrorPercent)),
+            ])
+          ).then(
+            //@ts-ignore
+            ([
               inValidationArea,
               validationPointsSize,
               inTrainingArea,
@@ -109,20 +94,41 @@ export const crossValidationPopulationEstimation = async (
               averageNearestDistanceTraining,
               minNearestDistanceResult,
               averageNearestDistanceResult,
-              fixedValidationErrorPercent,
-              fixedInArea,
-              fixedTotal:
-                randomsOutput.features?.length / (1 + trainingErrorPercent),
-              seed,
-            };
-            console.log(res);
-            return res;
-          }
-        )
-    );
-    results.push(promise);
+              // fixedValidationErrorPercent,
+              // fixedInArea,
+            ]) => {
+              const res = {
+                total: randomsOutput.features?.length,
+                inValidationArea,
+                validationPointsSize,
+                inTrainingArea,
+                trainingPointsSize,
+                trainingErrorPercent,
+                validatingErrorPercent,
+                minNearestDistanceTraining,
+                averageNearestDistanceTraining,
+                minNearestDistanceResult,
+                averageNearestDistanceResult,
+                // fixedValidationErrorPercent,
+                // fixedInArea,
+                // fixedTotal:
+                //   randomsOutput.features?.length / (1 + trainingErrorPercent),
+                seed,
+              };
+              console.log(res);
+              return res;
+            }
+          )
+      );
+      promise && results.push(promise);
+    } catch (e) {
+      console.log("DROP ", seed);
+    }
   }
-  let processed = await Promise.all(results);
+  let processed = (await Promise.allSettled(results))
+    .filter((it) => it.status === "fulfilled")
+    //@ts-ignore
+    .map((it) => it.value);
   const means = processed.reduce(
     (acc: any, curr: any, index, arr) => {
       acc.averageFixedValidationDeviation += curr.fixedValidationErrorPercent;
@@ -152,15 +158,15 @@ export const crossValidationPopulationEstimation = async (
     {
       averageValidationDeviation: 0,
       averageValidationAbsDeviation: 0,
-      averageFixedValidationDeviation: 0,
-      averageFixedValidationAbsDeviation: 0,
+      // averageFixedValidationDeviation: 0,
+      // averageFixedValidationAbsDeviation: 0,
       averageTrainingDeviation: 0,
       averageTrainingAbsDeviation: 0,
       // validationSD: 0,
       // validationFixedSD: 0,
       // trainingSD: 0,
       averageTotal: 0,
-      averageFixedTotal: 0,
+      // averageFixedTotal: 0,
     }
   ) as any;
   means.totalSD = Math.sqrt(
@@ -219,5 +225,8 @@ export const crossValidationPopulationEstimation = async (
     )
   );
   console.log("FINISH");
-  return means;
+  return {
+    processed,
+    ...means,
+  };
 };

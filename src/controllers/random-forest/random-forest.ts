@@ -41,7 +41,7 @@ export const randomForest = async (config: RandomForestConfig) => {
       validationPoints,
     });
 
-  const outputDir = `./.local/outputs/${outputs}`;
+  const outputDir = `${outputs}`;
   await mkdir(outputDir, { recursive: true });
   await printRandomForestCharts({
     classifiedImage: classified_image,

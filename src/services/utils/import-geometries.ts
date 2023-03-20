@@ -29,13 +29,18 @@ export const importGeometries = async (
       return await importShapesToFeatureCollection(conf.path);
     }
     case "geojson": {
-      return ee.FeatureCollection(
+      const fc = ee.FeatureCollection(
         conf.json.features.map((it, index) => ({
           ...it,
           id: String(it.id),
           properties: { ...it.properties, id: it.id },
         }))
       );
+      if (geometryType === "polygon") {
+        return fc.geometry();
+      } else {
+        return fc;
+      }
     }
     case "asset": {
       return ee.FeatureCollection(conf.path);

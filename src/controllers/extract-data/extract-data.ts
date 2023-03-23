@@ -33,7 +33,7 @@ export const extractData = async (config: DataExtractionConfig) => {
   const points = await importGeometries(pointsConfig);
 
   const scriptObjects = setDefaultsToScriptsConfig(config);
-  let results: any = {};
+  let results: { [p: string]: any } = {};
   for (let {
     key: script,
     dates,

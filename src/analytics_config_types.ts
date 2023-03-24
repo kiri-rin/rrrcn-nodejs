@@ -70,10 +70,17 @@ export type RandomForestParamsConfig =
       defaultScriptParams?: CommonScriptParams;
       scripts: (ScriptConfig | scriptKey)[];
     };
-export type SeparateTrainingPoints = {
+export type SeparateTrainingPoints<FileType = string> = {
   type: "separate-points";
-  absencePoints: GeometriesImportConfig;
-  presencePoints: GeometriesImportConfig;
+  absencePoints: GeometriesImportConfig<FileType>;
+  presencePoints: GeometriesImportConfig<FileType>;
+};
+export type AllTrainingPoints<FileType = string> = {
+  type: "all-points";
+  allPoints: {
+    points: GeometriesImportConfig<FileType>;
+    presenceProperty?: string;
+  };
 };
 export type RandomForestConfig<FileType = string> = {
   params: RandomForestParamsConfig;
@@ -83,14 +90,8 @@ export type RandomForestConfig<FileType = string> = {
     | { type: "split"; split: number; seed?: number }
     | { type: "external"; points: RandomForestConfig["trainingPoints"] };
   trainingPoints:
-    | {
-        type: "all-points";
-        allPoints: {
-          points: GeometriesImportConfig<FileType>;
-          presenceProperty?: string;
-        };
-      }
-    | SeparateTrainingPoints;
+    | AllTrainingPoints<FileType>
+    | SeparateTrainingPoints<FileType>;
   classificationSplits?: number[];
   buffersPerAreaPoint?: number[];
   outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";

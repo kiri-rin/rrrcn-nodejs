@@ -19,6 +19,7 @@ export const randomForest = async (config: RandomForestConfig) => {
     params,
     outputs,
   } = config;
+  console.log("preparing data");
   let raw_points = await getAllPoints(trainingPointsConfig);
   const regionOfInterest = await importGeometries(
     regionOfInterestConfig,
@@ -32,6 +33,8 @@ export const randomForest = async (config: RandomForestConfig) => {
     raw_points,
     validationConfig
   );
+  console.log("processing random forest");
+
   const { classified_image, classifier, validations } =
     await randomForestAndValidateService({
       trainingPoints,

@@ -8,13 +8,11 @@ module.exports = (regions) => {
     .ImageCollection("ECMWF/ERA5_LAND/HOURLY")
     .filterBounds(regions);
   for (let year of years) {
-    console.log(year);
     for (
       let date = new Date(year, monthsRange[0], 1, 0, 0, 0, 0);
       date < new Date(year, monthsRange[1] + 1, 1, 0, 0, 0, 0);
       date && date.setDate(date.getDate() + 1)
     ) {
-      console.log(date);
       const endDate = new Date(date);
       endDate.setDate(date.getDate() + 1);
       const min_temp = collection

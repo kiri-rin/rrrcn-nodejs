@@ -34,7 +34,7 @@ export const dynamicWorldModeScript = ({
   const collection = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1");
   const res: AnalyticsScriptResult = {};
 
-  Object.entries(datesConfig).forEach(([key, intervals], index) => {
+  Object.entries(datesConfig || {}).forEach(([key, intervals], index) => {
     let period_available = mergeDateIntervalsFilters(collection, intervals)
       .filterBounds(regions)
       .select(["label"]);

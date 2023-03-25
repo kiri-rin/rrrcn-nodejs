@@ -38,7 +38,7 @@ export const dynamicWorldScript = ({
 
   for (let target of targets) {
     const target_index = targets.indexOf(target);
-    Object.entries(datesConfig).forEach(([key, intervals], index) => {
+    Object.entries(datesConfig || {}).forEach(([key, intervals], index) => {
       let period_available = mergeDateIntervalsFilters(collection, intervals)
         .filterBounds(regions)
         .select("label");

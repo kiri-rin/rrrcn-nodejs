@@ -51,6 +51,8 @@ export const printRandomForestCharts = async ({
     output + "/sampleValidation.json",
     JSON.stringify(sampleValidation, null, 4)
   );
+  console.log("writing charts");
+
   await saveChart(ROCChart, output + "/roc.jpg");
 
   const regression = await drawRegressionChart(

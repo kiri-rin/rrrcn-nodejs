@@ -66,7 +66,7 @@ export const writeScriptFeaturesResult = async (
 };
 export const downloadFile = async (url: string, path: string) =>
   new Promise((resolve, reject) => {
-    console.log("DOWNLOADING ", url);
+    console.log("DOWNLOADING result files");
     const file = fsCommon.createWriteStream(path);
     const request = http.get(url, function (response) {
       response.pipe(file);

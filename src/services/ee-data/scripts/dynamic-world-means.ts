@@ -38,7 +38,7 @@ export const dynamicWorldMeansScript = ({
 
   for (let target of targets) {
     const target_index = targets.indexOf(target);
-    Object.entries(datesConfig).forEach(([key, intervals], index) => {
+    Object.entries(datesConfig || {}).forEach(([key, intervals], index) => {
       res[`${target}_${key}`] = ee
         .ImageCollection(
           intervals.map((interval) => {

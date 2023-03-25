@@ -14,8 +14,10 @@ export const ndviEviScript = ({
 }) => {
   const collection = ee.ImageCollection("MODIS/006/MOD13A1");
   const res: AnalyticsScriptResult = {};
+  console.error(datesConfig);
 
-  Object.entries(datesConfig).forEach(([key, intervals], index) => {
+  Object.entries(datesConfig || {}).forEach(([key, intervals], index) => {
+    console.error({ key, intervals });
     const period_available = mergeDateIntervalsFilters(collection, intervals)
       .filterBounds(regions)
       .select(bands)

@@ -93,7 +93,6 @@ export const getThumbUrl = async (
         ...props,
       },
       (res: string) => {
-        console.log(res, " URL");
         resolve(res as string);
       }
     )
@@ -111,7 +110,6 @@ export const getTiffUrl = async (
         region: regionOfInterest,
       },
       (res: string) => {
-        console.log(res, " URL");
         resolve(res as string);
       }
     );

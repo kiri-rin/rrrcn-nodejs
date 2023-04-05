@@ -26,7 +26,13 @@ export const importGeometries = async (
       });
     }
     case "shp": {
-      return await importShapesToFeatureCollection(conf.path);
+      const fc = await importShapesToFeatureCollection(conf.path);
+      if (geometryType === "polygon") {
+        //TODO refactor
+        return fc.geometry();
+      } else {
+        return fc;
+      }
     }
     case "geojson": {
       const fc = ee.FeatureCollection(
@@ -43,7 +49,12 @@ export const importGeometries = async (
       }
     }
     case "asset": {
-      return ee.FeatureCollection(conf.path);
+      const fc = ee.FeatureCollection(conf.path);
+      if (geometryType === "polygon") {
+        return fc.geometry();
+      } else {
+        return fc;
+      }
     }
   }
 };

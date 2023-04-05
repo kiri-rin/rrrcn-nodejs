@@ -115,6 +115,44 @@ export type populationEstimationType = {
   | { pointsCsvPath: string; pointsSHPZIPPath?: undefined }
   | { pointsCsvPath?: undefined; pointsSHPZIPPath: string }
 );
+export type ImageOrGeometryAsset = {
+  type: "asset";
+  image?: boolean;
+  path: string;
+};
+export type PopulationRandomGenerationConfigType<FileType = string> = {
+  areas: GeometriesImportConfig<FileType>;
+  regionOfInterest: GeometriesImportConfig<FileType>;
+  points: GeometriesImportConfig<FileType>;
+  seed?: number;
+  outputs: string;
+  presenceArea: GeometriesImportConfig<FileType>;
+};
+export type PopulationDistanceConfigType<FileType = string> = {
+  distanceFile: FileType;
+  totalArea: number;
+  outputs?: string;
+};
+export type PopulationDensityType<FileType = string> = {
+  areas: GeometriesImportConfig<FileType>;
+  points: GeometriesImportConfig<FileType>;
+  presenceArea: GeometriesImportConfig<FileType>;
+  outputs?: string;
+};
+export type PopulationConfig<FileType = string> = (
+  | {
+      type: "random-points";
+      config: PopulationRandomGenerationConfigType<FileType>;
+    }
+  | {
+      type: "distance";
+      config: PopulationDistanceConfigType<FileType>;
+    }
+  | {
+      type: "density";
+      config: PopulationDensityType<FileType>;
+    }
+) & { outputs?: string };
 
 export type populationEstimationType2 = {
   outputs: string;

@@ -6,18 +6,22 @@ import {
 import { evaluatePromisify } from "../utils/ee-image";
 import { writeFileSync } from "fs";
 import { generateRandomGrid } from "./random-grid";
+import {
+  PopulationDistanceConfigType,
+  PopulationRandomGenerationConfigType,
+} from "../../analytics_config_types";
+import { importGeometries } from "../utils/import-geometries";
 const util = require("node:util");
+
 export const estimatePopulationService = async ({
   points,
   validationAreas = ee.FeatureCollection([]),
   trainingAreas,
-  classified_image,
-  regionOfInterest,
+  region,
   seed,
 }: {
   prevRandoms?: EEFeatureCollection;
-  classified_image: EEImage;
-  regionOfInterest: any;
+  region: any;
   points: EEFeatureCollection;
   validationAreas?: EEFeatureCollection;
   trainingAreas?: EEFeatureCollection;
@@ -36,10 +40,9 @@ export const estimatePopulationService = async ({
     throw new Error("null min distance");
   }
   const randomGrid = generateRandomGrid({
-    regionOfInterest,
+    region,
     seed,
     cellSize: minDistance,
-    mask: classified_image.selfMask(),
   });
   const { randoms, randomsOutput } = await recursiveGetRandomPointsWithDistance(
     {

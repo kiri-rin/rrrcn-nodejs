@@ -25,21 +25,28 @@ var anychartExport = require("anychart-nodejs")(anychart);
 // chart creating should be called only right after anychart-nodejs module requiring
 
 // generate JPG image and save it to a file
-export const saveChart = (chart: any, output: any) => {
-  anychartExport.exportTo(chart, "jpg").then(
-    function (image: any) {
-      fs.writeFile(output, image, function (fsWriteError: any) {
-        if (fsWriteError) {
-          console.log(fsWriteError);
-        } else {
-          console.log("Complete");
-        }
-      });
-    },
-    function (generationError: any) {
-      console.log(generationError);
-    }
-  );
+// anychartExport.loadFontSync("../../assets/Ubuntu-Regular.ttf");
+
+export const saveChart = async (chart: any, output: any) => {
+  await new Promise((resolve, reject) => {
+    anychartExport.exportTo(chart, "jpg").then(
+      function (image: any) {
+        fs.writeFile(output, image, function (fsWriteError: any) {
+          if (fsWriteError) {
+            console.log(fsWriteError);
+            resolve(true);
+          } else {
+            console.log("Complete");
+            resolve(true);
+          }
+        });
+      },
+      function (generationError: any) {
+        console.log(generationError);
+        resolve(true);
+      }
+    );
+  });
 };
 export const drawHistogramChart = (data: any) => {
   const chart = anychart.column(data);

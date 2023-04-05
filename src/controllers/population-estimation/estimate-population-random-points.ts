@@ -1,82 +1,42 @@
-import { populationEstimationType } from "../../analytics_config_types";
+import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
 import { mkdir, writeFile } from "fs/promises";
-import { recursiveGetRandomPointsWithDistance } from "../../services/population-extrapolation/random-population";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../services/utils/ee-image";
 import { writeFileSync } from "fs";
-import {
-  importPointsFromCsv,
-  importShapesToFeatureCollection,
-} from "../../services/utils/import-geometries";
-import { writeScriptFeaturesResult } from "../../services/utils/io";
-import {
-  exportFeatureCollectionsToCsv,
-  getCsv,
-  JSCSVTable,
-} from "../../services/utils/points";
-import { parse } from "csv-parse/sync";
-import fsPromises from "fs/promises";
-export const getPoints = async (
-  path: string,
-  lat_key: string = "Latitude",
-  long_key: string = "Longitude",
-  id_key: string = "id",
-  inheritProps = ["Presence"]
-) => {
-  const pointsFile = await fsPromises.readFile(path);
-  const pointsParsed = parse(pointsFile, { delimiter: ",", columns: true });
-  return importPointsFromCsv({
-    csv: pointsParsed,
-    lat_key,
-    long_key,
-    id_key,
-    inheritProps,
-  });
-};
-export const getRegionOfInterest = async (
-  path: string,
-  lat_key: string = "Latitude",
-  long_key: string = "Longitude"
-) => {
-  const regionPointsRaw = await fsPromises.readFile(path);
-  const regionPointsParsed: JSCSVTable = parse(regionPointsRaw, {
-    delimiter: ",",
-    columns: true,
-  });
-  return ee.Geometry.Polygon([
-    regionPointsParsed.map((row) => [
-      Number(row[long_key]),
+import { importGeometries } from "../../services/utils/import-geometries";
+import { getCsv } from "../../services/utils/points";
 
-      Number(row[lat_key]),
-    ]),
-  ]);
+export const getPresenceRegion = (
+  regionConfig: PopulationRandomGenerationConfigType["presenceArea"]
+) => {
+  switch (regionConfig.type) {
+    case "asset": {
+      return ee.Image(regionConfig.path).reduceToVectors();
+    }
+    case "computedObject": {
+      return regionConfig.object;
+    }
+    default: {
+      return importGeometries(regionConfig, "polygon");
+    }
+  }
 };
-export const estimatePopulation = async (config: populationEstimationType) => {
+export const estimatePopulationRandomGeneration = async (
+  config: PopulationRandomGenerationConfigType
+) => {
   const {
     outputs,
-    latitude_key,
-    longitude_key,
-    id_key,
-    pointsCsvPath,
+
     seed,
-    pointsSHPZIPPath,
-    regionOfInterestCsvPath,
-    classified_image_id,
-    areasSHPZIPPath,
+    presenceArea: presenceAreaConfig,
+    points: pointsConfig,
+    areas: areasConfig,
   } = config;
-  const classified_image = ee.Image(classified_image_id);
-  const outputDir = `./.local/outputs/${outputs}/`;
-  await mkdir(`./.local/outputs/${outputs}`, { recursive: true });
-  const areas = await importShapesToFeatureCollection(areasSHPZIPPath);
-  const points = pointsCsvPath
-    ? await getPoints(pointsCsvPath, latitude_key, longitude_key, id_key)
-    : pointsSHPZIPPath &&
-      (await importShapesToFeatureCollection(pointsSHPZIPPath));
-  const regionOfInterest = await getRegionOfInterest(
-    regionOfInterestCsvPath,
-    latitude_key,
-    longitude_key
-  );
+  const region = getPresenceRegion(presenceAreaConfig);
+  const outputDir = `${outputs}/`;
+  await mkdir(`${outputs}`, { recursive: true });
+  const areas = await importGeometries(areasConfig);
+  const points = await importGeometries(pointsConfig);
   const areasWithRandom = areas.randomColumn("random", seed); //map random*pointsNumber
   const trainingAreas = areasWithRandom.filter(ee.Filter.gt("random", 0.2));
   const validationAreas = areasWithRandom.filter(ee.Filter.lte("random", 0.2));
@@ -93,9 +53,8 @@ export const estimatePopulation = async (config: populationEstimationType) => {
     distancesRandoms,
     validatingErrorPercent,
   } = await estimatePopulationService({
-    classified_image,
     points,
-    regionOfInterest,
+    region,
     trainingAreas,
     validationAreas,
 

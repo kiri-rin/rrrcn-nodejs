@@ -1,39 +1,27 @@
-import { populationEstimationType } from "../../analytics_config_types";
+import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
 import { mkdir } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../services/utils/ee-image";
 import { writeFileSync } from "fs";
-import { importShapesToFeatureCollection } from "../../services/utils/import-geometries";
-import { getPoints, getRegionOfInterest } from "./estimate-population";
+import { importGeometries } from "../../services/utils/import-geometries";
+import { getPresenceRegion } from "./estimate-population-random-points";
 
 export const crossValidationPopulationEstimation = async (
-  config: populationEstimationType
+  config: PopulationRandomGenerationConfigType
 ) => {
   const {
     outputs,
-    latitude_key,
-    longitude_key,
-    id_key,
-    pointsCsvPath,
+
     seed: configSeed,
-    pointsSHPZIPPath,
-    regionOfInterestCsvPath,
-    classified_image_id,
-    areasSHPZIPPath,
+    presenceArea: presenceAreaConfig,
+    points: pointsConfig,
+    areas: areasConfig,
   } = config;
-  const classified_image = ee.Image(classified_image_id);
+  const region = getPresenceRegion(presenceAreaConfig);
   const outputDir = `./.local/outputs/${outputs}/`;
   await mkdir(`./.local/outputs/${outputs}`, { recursive: true });
-  const areas = await importShapesToFeatureCollection(areasSHPZIPPath);
-  const points = pointsCsvPath
-    ? await getPoints(pointsCsvPath, latitude_key, longitude_key, id_key)
-    : pointsSHPZIPPath &&
-      (await importShapesToFeatureCollection(pointsSHPZIPPath));
-  const regionOfInterest = await getRegionOfInterest(
-    regionOfInterestCsvPath,
-    latitude_key,
-    longitude_key
-  );
+  const areas = await importGeometries(areasConfig);
+  const points = await importGeometries(pointsConfig);
   const results = [];
   for (let i = 0; i < 100; i++) {
     const seed = (configSeed || 1) + i * i;
@@ -46,8 +34,7 @@ export const crossValidationPopulationEstimation = async (
 
     const promise = estimatePopulationService({
       points,
-      classified_image,
-      regionOfInterest: regionOfInterest,
+      region,
       validationAreas,
       trainingAreas,
       seed,

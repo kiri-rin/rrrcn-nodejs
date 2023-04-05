@@ -3,21 +3,16 @@
 import { EEFeature, EEImage } from "../../types";
 
 export const generateRandomGrid = ({
-  regionOfInterest,
+  region,
   cellSize,
-  mask,
   seed,
 }: {
-  regionOfInterest: EEFeature;
+  region: EEFeature;
   cellSize: number;
-  mask: EEImage;
   seed?: number;
 }) => {
-  var region = mask
-    .reduceToVectors({
-      geometry: regionOfInterest,
-    })
-    .geometry();
+  const mask = ee.Image(1).clip(region);
+
   var proj = ee.Projection("EPSG:5070").atScale(cellSize);
   var cells = ee.Image.random(seed)
     .multiply(10000000)

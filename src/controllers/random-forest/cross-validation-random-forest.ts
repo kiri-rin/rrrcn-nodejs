@@ -21,6 +21,7 @@ import {
 import { importGeometries } from "../../services/utils/import-geometries";
 import { randomForestAndValidateService } from "../../services/random-forest";
 import { EEImage } from "../../types";
+import { printRandomForestCharts } from "../../services/random-forest/charts";
 
 export const randomForestCV = async (config: RandomForestConfig) => {
   const {
@@ -42,18 +43,22 @@ export const randomForestCV = async (config: RandomForestConfig) => {
   });
   // await evaluatePromisify(regionOfInterest);
   // console.log("RAW POINTS");
-  const outputDir = `./.local/outputs/${outputs}`;
-
+  const outputDir = `${outputs}`;
+  const iterationNumber =
+    (validationConfig.type === "split" && validationConfig.cross_validation) ||
+    10;
   let modelsValidations: {
     classifier: any;
     classified_image: any;
     validations: classifierValidationType;
+    seed: number;
   }[] = [];
 
   await mkdir(outputDir, { recursive: true });
+  await mkdir(outputDir, { recursive: true });
   const images: EEImage[] = [];
   const jobs = [];
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= iterationNumber; i++) {
     jobs.push(
       (async () => {
         const { trainingPoints, validationPoints } =
@@ -71,7 +76,7 @@ export const randomForestCV = async (config: RandomForestConfig) => {
           regionOfInterest,
         });
         images[i - 1] = res.classified_image;
-        modelsValidations[i - 1] = res;
+        modelsValidations[i - 1] = { ...res, seed: i * i * i };
 
         writeFileSync(
           `${outputDir}/model${i}.json`,
@@ -83,22 +88,71 @@ export const randomForestCV = async (config: RandomForestConfig) => {
   }
   await Promise.all(jobs);
   const mean_image = ee.ImageCollection(images).reduce(ee.Reducer.mean());
-  const { promise } = await downloadClassifiedImage({
-    classified_image: mean_image,
-    regionOfInterest,
-    output: outputDir,
-    filename: "mean",
-  });
+
   const { values: validationValues, bestImageIndex } =
     await writeValidationTable(modelsValidations, outputDir);
-  const { promise: bestPromise } = await downloadClassifiedImage({
-    classified_image: images[bestImageIndex],
+  const downloadPromises = [];
+  console.log(
+    validationConfig, //@ts-ignore
+    validationConfig.render_best === undefined,
+    "REALLY?"
+  );
+  if (
+    validationConfig.type !== "split" ||
+    validationConfig.render_best ||
+    validationConfig.render_best === undefined
+  ) {
+    await mkdir(outputDir + "/best");
+
+    const { promise: bestPromise } = await downloadClassifiedImage({
+      classified_image: images[bestImageIndex],
+      regionOfInterest,
+      output: outputDir + "/best",
+      filename: "best",
+    });
+    const { trainingPoints, validationPoints } =
+      getTrainingValidationPointsPare(
+        raw_points,
+        validationConfig,
+        (bestImageIndex + 1) * (bestImageIndex + 1) * (bestImageIndex + 1)
+      );
+    await printRandomForestCharts({
+      classifiedImage: images[bestImageIndex],
+      trainingData: trainingPoints,
+      explainedClassifier:
+        modelsValidations[bestImageIndex].validations.explainedClassifier,
+      validationData: validationPoints,
+      output: outputDir + "/best",
+    });
+    downloadPromises.push(bestPromise);
+  }
+  if (
+    validationConfig.type !== "split" ||
+    validationConfig.render_mean ||
+    validationConfig.render_mean === undefined
+  ) {
+    await mkdir(outputDir + "/mean");
+
+    const { promise } = await downloadClassifiedImage({
+      classified_image: mean_image,
+      regionOfInterest,
+      output: outputDir + "/mean",
+      filename: "mean",
+    });
+    downloadPromises.push(promise);
+  }
+
+  await Promise.all(downloadPromises);
+  return {
+    mean_image,
+    best_image: images[bestImageIndex],
     regionOfInterest,
-    output: outputDir,
-    filename: "best",
-  });
-  await Promise.all([promise, bestPromise]);
-  return { mean_image, best_image: images[bestImageIndex], regionOfInterest };
+    classified_image:
+      validationConfig.type === "split" &&
+      validationConfig.return_default === "best"
+        ? images[bestImageIndex]
+        : mean_image,
+  };
 };
 const validationTableKeys = [
   "AUC",
@@ -108,16 +162,17 @@ const validationTableKeys = [
   "max_kappa_cutoff",
   "max_ccr",
   "max_ccr_cutoff",
+  "seed",
 ];
 const writeValidationTable = async (
-  validations: { validations: classifierValidationType }[],
+  validations: { validations: classifierValidationType; seed: number }[],
   outputDir: string
 ) => {
   let average_validation_data: any;
   const ROCsArray = [] as { [p: string]: { TPR: number; FPR: number } }[];
   const importanceArray = [] as { [p: string]: number }[];
   const { values, CSV } = validations.reduce(
-    (acc, { validations }, index) => {
+    (acc, { validations, seed }, index) => {
       importanceArray.push(validations.explainedClassifier.importance);
       const ccrAndKappaArray = validations.ROC.features.map(
         ({ properties: { ccr, kappa, cutoff, TPR, FPR } }) => ({
@@ -141,6 +196,7 @@ const writeValidationTable = async (
         ccrAndKappaArray.sort((a, b) => (a.kappa > b.kappa ? -1 : 1))[0];
 
       const values = {
+        seed,
         AUC: validations.AUC,
         max_kappa,
         max_ccr,
@@ -154,7 +210,7 @@ const writeValidationTable = async (
 
       return acc;
     },
-    { CSV: [] as any[], values: [] as typeof average_validation_data[] }
+    { CSV: [] as any[], values: [] as (typeof average_validation_data)[] }
   );
 
   average_validation_data = getAverageValues(values);

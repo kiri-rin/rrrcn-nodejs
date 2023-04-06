@@ -9,6 +9,7 @@ import {
   getTrainingValidationPointsPare,
 } from "./utils";
 import { randomForestAndValidateService } from "../../services/random-forest";
+import { randomForestCV } from "./cross-validation-random-forest";
 
 export const randomForest = async (config: RandomForestConfig) => {
   const {
@@ -19,6 +20,12 @@ export const randomForest = async (config: RandomForestConfig) => {
     params,
     outputs,
   } = config;
+  if (
+    validationConfig.type === "split" &&
+    (validationConfig?.cross_validation || 0) > 1
+  ) {
+    return await randomForestCV(config);
+  }
   console.log("preparing data");
   let raw_points = await getAllPoints(trainingPointsConfig);
   const regionOfInterest = await importGeometries(

@@ -87,7 +87,15 @@ export type RandomForestConfig<FileType = string> = {
   crossValidation?: number;
   regionOfInterest: GeometriesImportConfig<FileType>;
   validation:
-    | { type: "split"; split: number; seed?: number }
+    | {
+        type: "split";
+        split: number;
+        seed?: number;
+        cross_validation?: boolean;
+        render_mean?: boolean;
+        render_best?: boolean;
+        return_default?: "best" | "mean";
+      }
     | { type: "external"; points: RandomForestConfig["trainingPoints"] };
   trainingPoints:
     | AllTrainingPoints<FileType>

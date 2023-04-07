@@ -12,6 +12,8 @@ import { worldClimBioScript } from "./scripts/world_clim_bio";
 import { dynamicWorldModeScript } from "./scripts/dynamic-world-mode";
 import { worldCoverScript } from "./scripts/world-cover";
 import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
+import { alosScript } from "./scripts/alos";
+import { landsatScript } from "./scripts/landsat";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };
@@ -35,6 +37,8 @@ const scripts = {
   global_wind_atlas: globalWindAtlasScript,
   world_clim_bio: worldClimBioScript,
   world_cover: worldCoverScript,
+  landsat: landsatScript,
+  alos: alosScript,
   world_cover_convolve: worldCoverConvolveScript,
   ndvi: (({ regions, datesConfig }: AnalyticsScriptParams) =>
     ndviEviScript({

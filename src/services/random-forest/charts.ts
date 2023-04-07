@@ -82,8 +82,6 @@ export const drawParamsImportanceHistogram = async (importance: object) => {
     //@ts-ignore
     Object.entries(importance)
   );
-  paramsHistogram.xAxis().labels().height(15);
-  paramsHistogram.xAxis().labels().rotation(90);
   return paramsHistogram;
 };
 export const drawAUCROCChart = async (

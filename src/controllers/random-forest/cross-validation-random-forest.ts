@@ -234,9 +234,7 @@ const writeValidationTable = async (
   const paramsHistogram = await drawHistogramChart(
     Object.entries(averageImportance)
   );
-  paramsHistogram.xAxis().labels().height(15);
-  paramsHistogram.xAxis().labels().rotation(90);
-  await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
+   await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
   await saveChart(paramsHistogram, `${outputDir}/aver_importance.jpg`);
   writeFileSync(`${outputDir}/validations.csv`, (await getCsv(CSV)) as string);
   return { values, bestImageIndex };

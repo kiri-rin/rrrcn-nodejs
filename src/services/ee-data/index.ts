@@ -12,8 +12,8 @@ import { worldClimBioScript } from "./scripts/world_clim_bio";
 import { dynamicWorldModeScript } from "./scripts/dynamic-world-mode";
 import { worldCoverScript } from "./scripts/world-cover";
 import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
-import { landsatScript } from "./scripts/landsat";
 import { alosScript } from "./scripts/alos";
+import { landsatScript } from "./scripts/landsat";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };

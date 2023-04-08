@@ -206,5 +206,6 @@ export const crossValidationPopulationEstimation = async (
     )
   );
   console.log("FINISH");
+  strapiLogger("FINISH");
   return means;
 };

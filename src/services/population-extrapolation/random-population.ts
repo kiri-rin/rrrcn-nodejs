@@ -20,6 +20,7 @@ export const recursiveGetRandomPointsWithDistance = async (
   console.log({ size });
   for (let start = 0; start < size; start += 1000) {
     console.log({ start, size });
+    strapiLogger(`Processed ${(start * 100) / size}%`);
     const chunk = ee.FeatureCollection(samplesList.slice(start)).limit(1000);
     const newRandoms = createRandomPointsWithDistance({
       ...args,

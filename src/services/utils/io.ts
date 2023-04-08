@@ -60,6 +60,7 @@ export const writeScriptFeaturesResult = async (
   return new Promise((resolve, reject) => {
     stream.end("", "utf-8", () => {
       console.log("finish", fileName);
+      strapiLogger("finish", fileName);
       resolve(true);
     });
   });
@@ -67,6 +68,7 @@ export const writeScriptFeaturesResult = async (
 export const downloadFile = async (url: string, path: string) =>
   new Promise((resolve, reject) => {
     console.log("DOWNLOADING result files");
+    strapiLogger("DOWNLOADING result files");
     const file = fsCommon.createWriteStream(path);
     const request = http.get(url, function (response) {
       response.pipe(file);
@@ -76,6 +78,7 @@ export const downloadFile = async (url: string, path: string) =>
         file.close();
         resolve(true);
         console.log("Download Completed");
+        strapiLogger("Download Completed");
       });
     });
   });

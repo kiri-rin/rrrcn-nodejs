@@ -7,6 +7,7 @@ export async function exportFeatureCollectionsToCsv(
   collection: EEFeatureCollection
 ): Promise<string> {
   console.log("READY TO PROCESS TABLE");
+  strapiLogger("READY TO PROCESS TABLE");
   const pointsIndices = new Map();
   let keysIndices = new Map(
     ["id", "longitude", "latitude"].map((it, index) => [it, index])
@@ -42,6 +43,7 @@ export const getCsv = async (table: any[][]) => {
         reject(error);
       } else {
         console.log("READY TO WRITE");
+        strapiLogger("READY TO WRITE");
         resolve(res);
       }
     });

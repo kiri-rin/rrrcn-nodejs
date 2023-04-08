@@ -69,7 +69,6 @@ export const drawHistogramChart = (data: any) => {
   return { chart, width: 1200, height: 600 };
 };
 export const drawRegressionChart = (data: any) => {
-  console.log(data, "S");
   var result = regression.linear(data);
 
   //get coefficients from the calculated formula

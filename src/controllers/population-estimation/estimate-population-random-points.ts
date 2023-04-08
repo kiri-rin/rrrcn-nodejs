@@ -92,8 +92,7 @@ export const estimatePopulationRandomGeneration = async (
     `${outputDir}distancesRandoms.csv`,
     await getCsv(distancesRandomsTable)
   );
-
-  console.log({
+  const res = {
     total: randomsOutput.features?.length,
     inAreas: inAreaEv.features?.length,
     minDistanceEv,
@@ -102,7 +101,9 @@ export const estimatePopulationRandomGeneration = async (
     averageDistanceRandEv,
     trainingErrorPercentEv,
     validatingErrorPercentEv,
-  });
+  };
+  console.log(res);
   writeFileSync(`${outputDir}points.json`, JSON.stringify(randomsOutput));
+  writeFileSync(`${outputDir}result.json`, JSON.stringify(res));
   writeFileSync(`${outputDir}inArea.json`, JSON.stringify(inArea));
 };

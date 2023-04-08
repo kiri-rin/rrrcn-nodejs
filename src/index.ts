@@ -3,9 +3,12 @@ const key = require("../.local/ee-key.json");
 declare global {
   //@ts-ignore
   let ee: any;
+  let strapiLogger: (...log: any) => any;
 }
 //@ts-ignore
 globalThis.ee = ee;
+//@ts-ignore
+globalThis.strapiLogger = strapiLogger || (() => {});
 
 export const withGEE = async (callback: () => any) => {
   //@ts-ignore

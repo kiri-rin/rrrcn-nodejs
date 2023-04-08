@@ -52,6 +52,7 @@ export const printRandomForestCharts = async ({
     JSON.stringify(sampleValidation, null, 4)
   );
   console.log("writing charts");
+  strapiLogger("writing charts");
 
   await saveChart(ROCChart, output + "/roc.jpg");
 

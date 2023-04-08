@@ -24,6 +24,7 @@ import { EEImage } from "../../types";
 import { printRandomForestCharts } from "../../services/random-forest/charts";
 
 export const randomForestCV = async (config: RandomForestConfig) => {
+  strapiLogger("Preparing data");
   const {
     outputMode,
     regionOfInterest: regionOfInterestConfig,
@@ -83,6 +84,12 @@ export const randomForestCV = async (config: RandomForestConfig) => {
           JSON.stringify({ seed: i * i * i, ...res.validations }, null, 4)
         );
         console.log(i, " success");
+        strapiLogger(
+          `Processed ${
+            (100 * images.length) /
+            (iterationNumber === true ? 10 : iterationNumber)
+          }%`
+        );
       })()
     );
   }
@@ -92,11 +99,7 @@ export const randomForestCV = async (config: RandomForestConfig) => {
   const { values: validationValues, bestImageIndex } =
     await writeValidationTable(modelsValidations, outputDir);
   const downloadPromises = [];
-  console.log(
-    validationConfig, //@ts-ignore
-    validationConfig.render_best === undefined,
-    "REALLY?"
-  );
+
   if (
     validationConfig.type !== "split" ||
     validationConfig.render_best ||
@@ -149,9 +152,9 @@ export const randomForestCV = async (config: RandomForestConfig) => {
     regionOfInterest,
     classified_image:
       validationConfig.type === "split" &&
-      validationConfig.return_default === "best"
-        ? images[bestImageIndex]
-        : mean_image,
+      validationConfig.return_default === "mean"
+        ? mean_image
+        : images[bestImageIndex],
   };
 };
 const validationTableKeys = [
@@ -234,7 +237,7 @@ const writeValidationTable = async (
   const paramsHistogram = await drawHistogramChart(
     Object.entries(averageImportance)
   );
-   await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
+  await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
   await saveChart(paramsHistogram, `${outputDir}/aver_importance.jpg`);
   writeFileSync(`${outputDir}/validations.csv`, (await getCsv(CSV)) as string);
   return { values, bestImageIndex };

@@ -27,6 +27,7 @@ export const randomForest = async (config: RandomForestConfig) => {
     return await randomForestCV(config);
   }
   console.log("preparing data");
+  strapiLogger("preparing data");
   let raw_points = await getAllPoints(trainingPointsConfig);
   const regionOfInterest = await importGeometries(
     regionOfInterestConfig,
@@ -41,6 +42,7 @@ export const randomForest = async (config: RandomForestConfig) => {
     validationConfig
   );
   console.log("processing random forest");
+  strapiLogger("processing random forest");
 
   const { classified_image, classifier, validations } =
     await randomForestAndValidateService({

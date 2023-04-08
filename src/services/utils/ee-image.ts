@@ -14,8 +14,10 @@ export async function evaluateScriptResultsToFeaturesArray(
       await Promise.allSettled(
         Object.entries(scriptResults).map(([key, it]) => {
           console.log("Processing", key);
+          strapiLogger("Processing", key);
           return getFeatures(it).then((_it) => {
             console.log("Success", key);
+            strapiLogger("Success", key);
             return _it;
           });
         })
@@ -39,6 +41,7 @@ export async function evaluatePromisify(
       let isRetrying = false;
       const timeout = setTimeout(() => {
         console.log("RETRYING BY TIMEOUT");
+        strapiLogger("RETRYING BY TIMEOUT");
         isRetrying = true;
         evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
           .then((_res) => resolve(_res))
@@ -57,6 +60,7 @@ export async function evaluatePromisify(
           ) {
             await setTimeoutPromise(5000);
             console.log("RETRYING");
+            strapiLogger("RETRYING");
 
             evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
               .then((_res) => resolve(_res))

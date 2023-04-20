@@ -1,7 +1,7 @@
 import { EEFeature, EEFeatureCollection } from "../../types";
 
 const { stringify } = require("csv-stringify");
-export type JSCSVTable = { [rowName: string]: any }[];
+export type JSCSVTable = { [colName: string]: any }[];
 
 export async function exportFeatureCollectionsToCsv(
   collection: EEFeatureCollection

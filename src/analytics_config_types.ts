@@ -138,13 +138,12 @@ export type PopulationRandomGenerationConfigType<FileType = string> = {
 };
 export type PopulationDistanceConfigType<FileType = string> = {
   distanceFile: FileType;
-  totalArea: number;
+  densityFunction: "hn" | "hr";
   outputs?: string;
 };
 export type PopulationDensityType<FileType = string> = {
-  areas: GeometriesImportConfig<FileType>;
-  points: GeometriesImportConfig<FileType>;
-  presenceArea: GeometriesImportConfig<FileType>;
+  densityFile: FileType;
+  totalArea: number;
   outputs?: string;
 };
 export type PopulationConfig<FileType = string> = (

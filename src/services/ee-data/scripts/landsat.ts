@@ -1,7 +1,7 @@
-import { dateIntervalsToConfig, DatesConfig } from "../../utils/dates";
+import { dateIntervalsToConfig, DatesConfig } from "../../../utils/dates";
 import { EEFeatureCollection, EEImage } from "../../../types";
 import { AnalyticsScriptParams, AnalyticsScriptResult } from "../index";
-import { mergeDateIntervalsFilters } from "../../utils/ee-image-collection";
+import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
 
 export const landsatScript = ({
   regions,

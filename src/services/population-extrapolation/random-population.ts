@@ -1,5 +1,5 @@
 import { EEFeatureCollection, EEList } from "../../types";
-import { evaluatePromisify } from "../utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 type RandomGenerationArgs = {
   grid: EEList;
   prevRandoms: EEFeatureCollection;

@@ -3,14 +3,14 @@ import {
   createRandomPointsWithDistance,
   recursiveGetRandomPointsWithDistance,
 } from "./random-population";
-import { evaluatePromisify } from "../utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
 import { generateRandomGrid } from "./random-grid";
 import {
   PopulationDistanceConfigType,
   PopulationRandomGenerationConfigType,
 } from "../../analytics_config_types";
-import { importGeometries } from "../utils/import-geometries";
+import { importGeometries } from "../../utils/import-geometries";
 const util = require("node:util");
 
 export const estimatePopulationService = async ({
@@ -29,15 +29,18 @@ export const estimatePopulationService = async ({
 }) => {
   const trainingPoints = points.filterBounds(trainingAreas);
   const validationPoints = points.filterBounds(validationAreas);
-  const distances = calcDistances(trainingPoints);
+  const calculatedBuffer = calcMaxBuffer(trainingAreas);
+  console.log({ calculatedBuffer });
+  const distances = calcDistances(trainingPoints, calculatedBuffer);
   const averageDistance = ee.Number(
-    distances.filter("nearest < 50000").aggregate_mean("nearest")
+    distances.filter(`nearest < ${calculatedBuffer}`).aggregate_mean("nearest")
   );
   const minDistance = ee.Number(
-    distances.filter("nearest < 50000").aggregate_min("nearest")
+    distances.filter(`nearest < ${calculatedBuffer}`).aggregate_min("nearest")
   );
+  console.log(region);
   const randomGrid = generateRandomGrid({
-    region,
+    region: region,
     seed,
     cellSize: minDistance,
   });
@@ -49,13 +52,17 @@ export const estimatePopulationService = async ({
       seed,
     }
   );
-  const distancesRandoms = calcDistances(randoms);
+  const distancesRandoms = calcDistances(randoms, calculatedBuffer);
 
   const averageDistanceRandoms = ee.Number(
-    distancesRandoms.filter("nearest < 50000").aggregate_mean("nearest")
+    distancesRandoms
+      .filter(`nearest < ${calculatedBuffer}`)
+      .aggregate_mean("nearest")
   );
   const minDistanceRandoms = ee.Number(
-    distancesRandoms.filter("nearest < 50000").aggregate_min("nearest")
+    distancesRandoms
+      .filter(`nearest < ${calculatedBuffer}`)
+      .aggregate_min("nearest")
   );
   const inArea = randoms.filterBounds(validationAreas);
   const inTrainingArea = randoms.filterBounds(trainingAreas);
@@ -90,49 +97,24 @@ export const estimatePopulationService = async ({
     validationPointsSize: validationPoints.size(),
   };
 };
-export function calcDistances(
-  centroids: EEFeatureCollection,
-  areas?: EEFeatureCollection,
-  randomSamples?: EEFeatureCollection
-) {
-  return areas
-    ? centroids.map(function (curr: any) {
-        const buffer = curr.buffer(50000).geometry();
-        const inBuffer = centroids.filterBounds(buffer);
-        const nearest = curr.distance(
-          inBuffer.geometry().difference(curr.geometry())
-        );
-        const nearestBuffer = curr.buffer(ee.Number(nearest)).geometry();
+export function calcDistances(centroids: EEFeatureCollection, buffer: any) {
+  return centroids.map(function (curr: any) {
+    const inBuffer = centroids.filterBounds(curr.buffer(20000).geometry());
+    const nearest = curr.distance(
+      inBuffer.geometry().difference(curr.geometry())
+    );
 
-        const trueNearest = ee.Algorithms.If(
-          nearest.gt(20000),
-          0,
-          nearestBuffer.difference(areas).area().eq(0)
-        );
-
-        return curr.set("nearest", nearest).set("true_nearest", trueNearest);
-      })
-    : // .map((curr: any) => {
-      //   const nearest = curr.getNumber("nearest");
-      //   const nearestBuffer = curr.buffer(ee.Number(nearest)).geometry();
-      //
-      //   return curr.set(
-      //     "nearest",
-      //     ee.Algorithms.If(
-      //       nearest.gte(20000),
-      //       nearest,
-      //       nearest
-      //         .multiply(areas.geometry().intersection(nearestBuffer).area())
-      //         .divide(nearestBuffer.area())
-      //     )
-      //   );
-      // })
-      centroids.map(function (curr: any) {
-        const inBuffer = centroids.filterBounds(curr.buffer(20000).geometry());
-        const nearest = curr.distance(
-          inBuffer.geometry().difference(curr.geometry())
-        );
-
-        return curr.set("nearest", nearest);
-      });
+    return curr.set("nearest", nearest);
+  });
+}
+export function calcMaxBuffer(areas: EEFeatureCollection) {
+  const buffers = areas.map((area: any) => {
+    const geometryBounds = area.geometry().bounds();
+    const coords = ee.List(geometryBounds.coordinates().get(0));
+    const diag = ee.Geometry.Point(coords.get(0)).distance(
+      ee.Geometry.Point(coords.get(2))
+    );
+    return area.set("diag", diag);
+  });
+  return ee.Number(buffers.aggregate_max("diag")).getInfo();
 }

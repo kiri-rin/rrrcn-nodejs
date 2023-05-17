@@ -1,5 +1,5 @@
 import { EEFeatureCollection, EEImage } from "../../types";
-import { evaluatePromisify } from "../utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFile } from "fs/promises";
 import {
   drawMarkerChart,

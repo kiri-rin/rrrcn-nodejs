@@ -5,7 +5,7 @@ import { globalHabitatScript } from "./scripts/global_habitat";
 import { era5MounthlyScript } from "./scripts/era5_monthly";
 import { dynamicWorldScript } from "./scripts/dynamic-world";
 import { ndviEviScript } from "./scripts/ndvi";
-import { DatesConfig } from "../utils/dates";
+import { DatesConfig } from "../../utils/dates";
 import { dynamicWorldMeansScript } from "./scripts/dynamic-world-means";
 import { globalWindAtlasScript } from "./scripts/global-wind-atlas";
 import { worldClimBioScript } from "./scripts/world_clim_bio";

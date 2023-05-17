@@ -1,9 +1,9 @@
 import { EEFeatureCollection } from "../../../types";
-import { mergeDateIntervalsFilters } from "../../utils/ee-image-collection";
-import { DatesConfig } from "../../utils/dates";
+import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
+import { DatesConfig } from "../../../utils/dates";
 import { AnalyticsScriptParams, AnalyticsScriptResult } from "../index";
 import fs from "fs/promises";
-import { JSCSVTable } from "../../utils/points";
+import { JSCSVTable } from "../../../utils/points";
 import { parse } from "csv-parse/sync";
 
 export const worldCoverTargetsKeys = {

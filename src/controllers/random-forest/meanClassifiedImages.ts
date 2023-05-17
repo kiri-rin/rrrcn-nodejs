@@ -1,6 +1,6 @@
 import { mkdir } from "fs/promises";
-import { downloadFile } from "../../services/utils/io";
-import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
+import { downloadFile } from "../../utils/io";
+import { getThumbUrl, getTiffUrl } from "../../utils/ee-image";
 import { RandomForestConfig } from "../../analytics_config_types";
 import { randomForest } from "./random-forest";
 

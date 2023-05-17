@@ -4,7 +4,7 @@ import {
   classifierValidationType,
   validateClassifier,
 } from "./all-validations";
-import { evaluatePromisify } from "../utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 
 type RandomForestServiceParams = {
   trainingPoints: any;

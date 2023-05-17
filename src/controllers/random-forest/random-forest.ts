@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
 import { printRandomForestCharts } from "../../services/random-forest/charts";
-import { importGeometries } from "../../services/utils/import-geometries";
+import { importGeometries } from "../../utils/import-geometries";
 import { RandomForestConfig } from "../../analytics_config_types";
 import {
   downloadClassifiedImage,

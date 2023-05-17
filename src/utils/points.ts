@@ -1,4 +1,4 @@
-import { EEFeature, EEFeatureCollection } from "../../types";
+import { EEFeature, EEFeatureCollection } from "../types";
 
 const { stringify } = require("csv-stringify");
 export type JSCSVTable = { [colName: string]: any }[];

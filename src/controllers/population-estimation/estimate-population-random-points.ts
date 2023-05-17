@@ -1,12 +1,12 @@
 import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
 import { mkdir, writeFile } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
-import { evaluatePromisify } from "../../services/utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
-import { importGeometries } from "../../services/utils/import-geometries";
-import { getCsv } from "../../services/utils/points";
+import { importGeometries } from "../../utils/import-geometries";
+import { getCsv } from "../../utils/points";
 
-export const getPresenceRegion = (
+export const getPresenceRegion = async (
   regionConfig: PopulationRandomGenerationConfigType["presenceArea"]
 ) => {
   switch (regionConfig.type) {
@@ -17,7 +17,7 @@ export const getPresenceRegion = (
       return regionConfig.object;
     }
     default: {
-      return importGeometries(regionConfig, "polygon");
+      return await importGeometries(regionConfig, "polygon");
     }
   }
 };
@@ -32,7 +32,7 @@ export const estimatePopulationRandomGeneration = async (
     points: pointsConfig,
     areas: areasConfig,
   } = config;
-  const region = getPresenceRegion(presenceAreaConfig);
+  const region = await getPresenceRegion(presenceAreaConfig);
   const outputDir = `${outputs}/`;
   await mkdir(`${outputs}`, { recursive: true });
   const areas = await importGeometries(areasConfig);

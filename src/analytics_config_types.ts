@@ -4,7 +4,7 @@ import {
   dateIntervalsToConfig,
   DatesConfig,
   getDateIntervals,
-} from "./services/utils/dates";
+} from "./utils/dates";
 
 export type CommonConfig = {
   outputs?: string;

@@ -1,7 +1,7 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "../index";
 import { EEFeatureCollection, EEImage } from "../../../types";
-import { dateIntervalsToConfig, DatesConfig } from "../../utils/dates";
-import { mergeDateIntervalsFilters } from "../../utils/ee-image-collection";
+import { dateIntervalsToConfig, DatesConfig } from "../../../utils/dates";
+import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
 
 export const ndviEviScript = ({
   regions,

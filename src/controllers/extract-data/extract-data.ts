@@ -2,15 +2,16 @@ import {
   DataExtractionConfig,
   ScriptConfig,
 } from "../../analytics_config_types";
-import { importGeometries } from "../../services/utils/import-geometries";
+import { importGeometries } from "../../utils/import-geometries";
 import {
   reduceRegionsFromImageOrCollection,
   writeScriptFeaturesResult,
-} from "../../services/utils/io";
+} from "../../utils/io";
 import { EEFeature } from "../../types";
 import allScripts, { scriptKey } from "../../services/ee-data";
 import { getParamsImage } from "../random-forest/utils";
 import { mkdir } from "fs/promises";
+import { evaluatePromisify } from "../../utils/ee-image";
 export const setDefaultsToScriptsConfig = (
   config: Omit<DataExtractionConfig, "points">
 ) =>
@@ -54,7 +55,8 @@ export const extractData = async (config: DataExtractionConfig) => {
       bands,
       buffer,
     });
-
+    const NumberTest = await evaluatePromisify(ee.Number(10));
+    console.log({ NumberTest });
     for (let [key, imageOrCollection] of Object.entries(scriptResults)) {
       scriptResults[key] = await reduceRegionsFromImageOrCollection(
         key === "world_cover_convolve" ? points : regions,

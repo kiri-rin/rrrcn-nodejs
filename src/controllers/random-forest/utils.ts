@@ -5,10 +5,10 @@ import {
 } from "../../analytics_config_types";
 import { setDefaultsToScriptsConfig } from "../extract-data/extract-data";
 import allScripts, { scriptKey } from "../../services/ee-data";
-import { DatesConfig } from "../../services/utils/dates";
-import { importGeometries } from "../../services/utils/import-geometries";
-import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
-import { downloadFile } from "../../services/utils/io";
+import { DatesConfig } from "../../utils/dates";
+import { importGeometries } from "../../utils/import-geometries";
+import { getThumbUrl, getTiffUrl } from "../../utils/ee-image";
+import { downloadFile } from "../../utils/io";
 import { mkdir } from "fs/promises";
 
 export const getAllPoints = async (

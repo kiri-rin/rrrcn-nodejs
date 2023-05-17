@@ -1,6 +1,8 @@
-import { EEFeature, EEFeatureCollection, EEImage } from "../../types";
-import { AnalyticsScriptResult } from "../ee-data";
+import { EEFeature, EEFeatureCollection, EEImage } from "../types";
+import { AnalyticsScriptResult } from "../services/ee-data";
 import { clearTimeout, setTimeout } from "timers";
+import { evaluateFeatures } from "./gee-api";
+
 import util from "util";
 const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
@@ -33,52 +35,43 @@ export async function getFeatures(featureCollection: EEFeatureCollection) {
 }
 export async function evaluatePromisify(
   image: EEImage,
-  shouldRetry = 100,
-  _timeout = 20000000
-) {
-  return new Promise((resolve, reject) => {
-    try {
-      let isRetrying = false;
-      const timeout = setTimeout(() => {
-        console.log("RETRYING BY TIMEOUT");
-        strapiLogger("RETRYING BY TIMEOUT");
-        isRetrying = true;
-        evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
-          .then((_res) => resolve(_res))
-          .catch((e) => reject(e));
-      }, _timeout);
-      image.evaluate(async (res: string, error: string) => {
-        if (error) {
-          console.log(error);
-          reject(error);
-          if (
-            (error.includes("ECONNRESET") ||
-              error.includes("socket hang up") ||
-              error.includes("ECONNREFUSED")) &&
-            shouldRetry &&
-            !isRetrying
-          ) {
-            await setTimeoutPromise(5000);
-            console.log("RETRYING");
-            strapiLogger("RETRYING");
+  shouldRetry = 10,
+  _timeout = 200000
+): Promise<any> {
+  let timeoutId;
+  try {
+    const { promise, controller } = evaluateFeatures(image);
+    timeoutId = setTimeout(() => {
+      controller.abort();
+    }, _timeout);
+    const {
+      data: { result },
+    } = await promise;
+    clearTimeout(timeoutId);
 
-            evaluatePromisify(image, shouldRetry > 0 ? shouldRetry - 1 : 0)
-              .then((_res) => resolve(_res))
-              .catch((e) => reject(e));
-          } else {
-            clearTimeout(timeout);
-            !isRetrying && reject(error);
-          }
-        } else {
-          clearTimeout(timeout);
-          resolve(res);
-        }
-      });
-    } catch (e) {
-      console.log("CONNECTION", e);
-      reject(e);
+    return result;
+  } catch (error: any) {
+    console.log("ERROR IN REQUEST!");
+    console.log(String(error), { error });
+    clearTimeout(timeoutId);
+    if (
+      (String(error).includes("ECONNRESET") ||
+        String(error).includes("socket hang up") ||
+        String(error).includes("AbortError") ||
+        String(error).includes("ECONNREFUSED")) &&
+      shouldRetry
+    ) {
+      await setTimeoutPromise(5000);
+      console.log("RETRYING");
+      strapiLogger("RETRYING");
+      return await evaluatePromisify(
+        image,
+        shouldRetry > 0 ? shouldRetry - 1 : 0
+      );
+    } else {
+      throw error;
     }
-  });
+  }
 }
 
 export const getThumbUrl = async (

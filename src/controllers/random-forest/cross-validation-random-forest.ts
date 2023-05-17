@@ -3,13 +3,13 @@ import {
   validateClassifier,
 } from "../../services/random-forest/all-validations";
 import { mkdirSync, writeFileSync } from "fs";
-import { getCsv } from "../../services/utils/points";
+import { getCsv } from "../../utils/points";
 import {
   drawHistogramChart,
   drawMarkerChart,
   saveChart,
 } from "../../services/charts";
-import { evaluatePromisify } from "../../services/utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { mkdir } from "fs/promises";
 import { RandomForestConfig } from "../../analytics_config_types";
 import {
@@ -18,7 +18,7 @@ import {
   getParamsImage,
   getTrainingValidationPointsPare,
 } from "./utils";
-import { importGeometries } from "../../services/utils/import-geometries";
+import { importGeometries } from "../../utils/import-geometries";
 import { randomForestAndValidateService } from "../../services/random-forest";
 import { EEImage } from "../../types";
 import { printRandomForestCharts } from "../../services/random-forest/charts";

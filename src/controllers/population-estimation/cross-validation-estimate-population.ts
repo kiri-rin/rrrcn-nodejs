@@ -1,9 +1,9 @@
 import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
 import { mkdir } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
-import { evaluatePromisify } from "../../services/utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
-import { importGeometries } from "../../services/utils/import-geometries";
+import { importGeometries } from "../../utils/import-geometries";
 import { getPresenceRegion } from "./estimate-population-random-points";
 
 export const crossValidationPopulationEstimation = async (

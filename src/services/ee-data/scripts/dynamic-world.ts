@@ -8,8 +8,8 @@ import {
   DatesConfig,
   getDateIntervals,
   getDefaultIntervalKey,
-} from "../../utils/dates";
-import { mergeDateIntervalsFilters } from "../../utils/ee-image-collection";
+} from "../../../utils/dates";
+import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
 import { EEFeatureCollection } from "../../../types";
 
 var targets = [

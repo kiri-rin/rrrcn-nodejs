@@ -1,4 +1,4 @@
-import { EEImageCollection } from "../../types";
+import { EEImageCollection } from "../types";
 import { DateInterval } from "./dates";
 
 export const mergeDateIntervalsFilters = (

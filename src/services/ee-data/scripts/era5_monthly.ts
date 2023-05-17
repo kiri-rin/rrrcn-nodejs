@@ -1,7 +1,7 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "../index";
 import { EEFeatureCollection, EEImage } from "../../../types";
 import { afterEach } from "node:test";
-import { dateIntervalsToConfig } from "../../utils/dates";
+import { dateIntervalsToConfig } from "../../../utils/dates";
 
 const DATASET_ID = "ECMWF/ERA5_LAND/MONTHLY";
 const years = Array(13)

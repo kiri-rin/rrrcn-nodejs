@@ -1,4 +1,4 @@
-import { evaluatePromisify } from "../utils/ee-image";
+import { evaluatePromisify } from "../../utils/ee-image";
 import { getAcc, getAUCROC } from "./auc-roc-validation";
 import { EEFeatureCollection, EEImage } from "../../types";
 const regression = require("regression");

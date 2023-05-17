@@ -1,9 +1,9 @@
-import { GeometriesImportConfig } from "../../analytics_config_types";
+import { GeometriesImportConfig } from "../analytics_config_types";
 import fsPromises from "fs/promises";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "./points";
-import { EEFeatureCollection } from "../../types";
+import { EEFeatureCollection } from "../types";
 import * as util from "util";
 
 export const importGeometries = async (

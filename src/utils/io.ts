@@ -1,4 +1,4 @@
-import { EEFeatureCollection, EEImage, EEImageCollection } from "../../types";
+import { EEFeatureCollection, EEImage, EEImageCollection } from "../types";
 import { exportFeatureCollectionsToCsv } from "./points";
 import { evaluateScriptResultsToFeaturesArray } from "./ee-image";
 import http from "https";

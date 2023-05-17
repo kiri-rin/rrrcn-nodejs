@@ -8,7 +8,7 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import FormData from "form-data";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
-import { JSCSVTable } from "../../services/utils/points";
+import { JSCSVTable } from "../../utils/points";
 const apiRService = axios.create({
   baseURL: process.env.R_BASE_URL || "http://localhost:8000",
 });

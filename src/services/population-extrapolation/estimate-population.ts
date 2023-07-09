@@ -1,17 +1,6 @@
-import { EEFeatureCollection, EEImage } from "../../types";
-import {
-  createRandomPointsWithDistance,
-  recursiveGetRandomPointsWithDistance,
-} from "./random-population";
-import { evaluatePromisify } from "../../utils/ee-image";
-import { writeFileSync } from "fs";
+import { EEFeature, EEFeatureCollection } from "../../types";
+import { recursiveGetRandomPointsWithDistance } from "./random-population";
 import { generateRandomGrid } from "./random-grid";
-import {
-  PopulationDistanceConfigType,
-  PopulationRandomGenerationConfigType,
-} from "../../analytics_config_types";
-import { importGeometries } from "../../utils/import-geometries";
-const util = require("node:util");
 
 export const estimatePopulationService = async ({
   points,
@@ -29,19 +18,11 @@ export const estimatePopulationService = async ({
 }) => {
   const trainingPoints = points.filterBounds(trainingAreas);
   const validationPoints = points.filterBounds(validationAreas);
-  const calculatedBuffer = calcMaxBuffer(trainingAreas);
-  console.log({ calculatedBuffer });
-  const distances = calcDistances(trainingPoints, calculatedBuffer);
-  const averageDistance = ee.Number(
-    distances.filter(`nearest < ${calculatedBuffer}`).aggregate_mean("nearest")
-  );
-  const minDistance = ee.Number(
-    distances.filter(`nearest < ${calculatedBuffer}`).aggregate_min("nearest")
-  );
-  console.log(region);
-  if (!minDistance) {
-    throw new Error("null min distance");
-  }
+
+  const connectedAreas = prepareAreas(trainingAreas);
+  const distances = calcDistances(trainingPoints, connectedAreas);
+  const averageDistance = ee.Number(distances.aggregate_mean("nearest"));
+  const minDistance = ee.Number(distances.aggregate_min("nearest"));
   const randomGrid = generateRandomGrid({
     region: region,
     seed,
@@ -55,17 +36,13 @@ export const estimatePopulationService = async ({
       seed,
     }
   );
-  const distancesRandoms = calcDistances(randoms, calculatedBuffer);
+  const distancesRandoms = calcDistances(randoms, connectedAreas);
 
   const averageDistanceRandoms = ee.Number(
-    distancesRandoms
-      .filter(`nearest < ${calculatedBuffer}`)
-      .aggregate_mean("nearest")
+    distancesRandoms.aggregate_mean("nearest")
   );
   const minDistanceRandoms = ee.Number(
-    distancesRandoms
-      .filter(`nearest < ${calculatedBuffer}`)
-      .aggregate_min("nearest")
+    distancesRandoms.aggregate_min("nearest")
   );
   const inArea = randoms.filterBounds(validationAreas);
   const inTrainingArea = randoms.filterBounds(trainingAreas);
@@ -94,30 +71,32 @@ export const estimatePopulationService = async ({
     trainingErrorPercent,
     validatingErrorPercent,
     fixedValidationErrorPercent,
-    distances: distances.filter("nearest < 50000"),
-    distancesRandoms: distancesRandoms.filter("nearest < 50000"),
+    distances: distances,
+    distancesRandoms: distancesRandoms,
     trainingPointsSize: trainingPoints.size(),
     validationPointsSize: validationPoints.size(),
   };
 };
-export function calcDistances(centroids: EEFeatureCollection, buffer: any) {
-  return centroids.map(function (curr: any) {
-    const inBuffer = centroids.filterBounds(curr.buffer(20000).geometry());
-    const nearest = curr.distance(
-      inBuffer.geometry().difference(curr.geometry())
-    );
-
-    return curr.set("nearest", nearest);
-  });
+export function calcDistances(
+  centroids: EEFeatureCollection,
+  areas: EEFeatureCollection
+) {
+  return areas.iterate(function (area: EEFeature, res: EEFeatureCollection) {
+    const areaPoints = centroids.filterBounds(area.geometry());
+    ee.Algorithm.if(areaPoints.size > 1, function () {
+      const areaNearest = areaPoints.map((curr: EEFeature) => {
+        const nearest = curr.distance(
+          areaPoints.geometry().difference(curr.geometry())
+        );
+        return curr.set("nearest", nearest);
+      });
+      res = res.merge(areaNearest);
+    });
+  }, ee.FeatureCollection([]));
 }
-export function calcMaxBuffer(areas: EEFeatureCollection) {
-  const buffers = areas.map((area: any) => {
-    const geometryBounds = area.geometry().bounds();
-    const coords = ee.List(geometryBounds.coordinates().get(0));
-    const diag = ee.Geometry.Point(coords.get(0)).distance(
-      ee.Geometry.Point(coords.get(2))
-    );
-    return area.set("diag", diag);
-  });
-  return ee.Number(buffers.aggregate_max("diag")).getInfo();
-}
+export const prepareAreas = (
+  areas: EEFeatureCollection
+): EEFeatureCollection => {
+  const imageAreas = ee.Image(1).filterBounds(areas);
+  return imageAreas.reduceToVectors({ scale: 500 });
+};

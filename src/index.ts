@@ -1,5 +1,5 @@
 const ee = require("@google/earthengine");
-const key = require("../.local/ee-key.json");
+const key = require("../../../../.local/ee-key.json");
 declare global {
   //@ts-ignore
   let ee: any;
@@ -8,7 +8,7 @@ declare global {
 //@ts-ignore
 globalThis.ee = ee;
 //@ts-ignore
-globalThis.strapiLogger = strapiLogger || (() => {});
+globalThis.strapiLogger = () => {};
 
 export const withGEE = async (callback: () => any) => {
   //@ts-ignore

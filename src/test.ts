@@ -1,24 +1,12 @@
 import { withGEE } from "./index";
-import { evaluatePromisify } from "./services/utils/ee-image";
-import util from "util";
+import { evaluateFeatures } from "./utils/gee-api";
+import { evaluatePromisify } from "./utils/ee-image";
+
 withGEE(async () => {
   const feature = ee.Feature(null, { tes: 1 });
+  // await feature.evaluate(() => {
+  const res = evaluateFeatures(feature);
+  console.log(await res.promise);
 
-  const expression = ee.data.expressionAugmenter_(
-    ee.Serializer.encodeCloudApiExpression(feature)
-  );
-  const request = { expression };
-  const workloadTag = ee.data.getWorkloadTag();
-  if (workloadTag) {
-    //@ts-ignore
-    request.workloadTag = workloadTag;
-  }
-  console.log(util.inspect(feature, false, null, true));
-  console.log(util.inspect(expression, false, null, true));
-  console.log(
-    util.inspect(new ee.api.ComputeValueRequest(request), false, null, true)
-  );
-
-  console.log(ee.apiclient.getApiBaseUrl());
-  const res = await evaluatePromisify(feature);
+  // });
 });

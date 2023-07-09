@@ -12,7 +12,7 @@ const client = new JWT({
 const isClearObject = (obj: any): boolean =>
   typeof obj === "object" && (!Array.isArray(obj) || isClearObject(obj[0]));
 const computeTableUrl =
-  "https://earthengine.googleapis.com/v1beta/projects/rrrcn2022/value:compute";
+  "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/value:compute";
 const removeUnusedFields = (serialized: { [p: string]: any }): any => {
   const res: any = Array.isArray(serialized) ? [] : {};
   for (let key of Object.keys(serialized)) {
@@ -25,9 +25,14 @@ const removeUnusedFields = (serialized: { [p: string]: any }): any => {
       res[key] = serialized[key];
     } else {
       if (serialized[key] !== null) {
+        //fix me something wrong with null in ee.Feature
         res[key] = removeUnusedFields(serialized[key]);
+      } else {
       }
     }
+  }
+  if (isClearObject(res) && !Object.keys(res).length) {
+    return { constantValue: null };
   }
   return res;
 };
@@ -38,7 +43,7 @@ export const evaluateFeatures = (collection: EEFeatureCollection) => {
     url: computeTableUrl,
     method: "POST",
     data: {
-      expression: removeUnusedFields(
+      expression: ee.apiclient.serialize(
         ee.Serializer.encodeCloudApiExpression(collection)
       ),
     },

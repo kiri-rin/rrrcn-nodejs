@@ -41,6 +41,7 @@ export function getAcc(predictedPoints: EEFeatureCollection) {
         );
       const ccr = TP.add(TN).divide(TP.add(TN).add(FN).add(FP));
       return ee.Feature(null, {
+        //fix me null break logic in gee api module
         cutoff,
         TP,
         TN,

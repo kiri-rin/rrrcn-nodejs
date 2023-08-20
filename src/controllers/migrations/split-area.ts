@@ -39,6 +39,6 @@ export const SplitMigrationsArea = async (
     intersections: (await evaluatePromisify(intersections)).features.map(
       (it: any) => it.properties.size
     ),
-    grid: await evaluatePromisify(coveringGrid),
+    grid: await evaluatePromisify(coveringGrid.map((it: any) => it.bounds())),
   };
 };

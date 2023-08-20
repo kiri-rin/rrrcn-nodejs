@@ -188,8 +188,8 @@ export const downloadClassifiedImage = async ({
   // );
   return {
     promise: Promise.all([
-      // downloadFile(thumbUrl, `${output}/${filename}.png`),
-      // downloadFile(tiffUrl, `${output}/${filename}.zip`),
+      downloadFile(thumbUrl, `${output}/${filename}.png`),
+      downloadFile(tiffUrl, `${output}/${filename}.zip`),
       writeFile(`${output}/${filename}.geojson`, JSON.stringify(geojson)),
     ]),
     tiffUrl,

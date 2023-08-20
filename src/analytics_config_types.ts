@@ -149,6 +149,10 @@ export type PopulationDistanceConfigType<FileType = string> = {
   densityFunction: "hn" | "hr";
   outputs?: string;
 };
+export type SurvivalNestConfig<FileType = string> = {
+  markFile: FileType;
+  outputs?: string;
+};
 export type PopulationDensityType<FileType = string> = {
   densityFile: FileType;
   totalArea: number;

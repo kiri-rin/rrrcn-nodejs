@@ -1,5 +1,5 @@
 const ee = require("@google/earthengine");
-const key = require("../../../../.local/ee-key.json");
+const key = require("../.local/ee-key.json");
 declare global {
   //@ts-ignore
   let ee: any;
@@ -18,7 +18,7 @@ export const withGEE = async (callback: () => any) => {
       ee.initialize(null, null, async () => callback());
     },
     (r: string) => {
-      console.log(r);
+      // console.log(r);
     }
   );
 };

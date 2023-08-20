@@ -3,11 +3,9 @@ import {
   ScriptConfig,
 } from "../../../analytics_config_types";
 import { karatauOldAllParams } from "./RF-configs-NEOPHRON";
-import {
-  dateIntervalsToConfig,
-  getDateIntervals,
-} from "../../../services/utils/dates";
+
 import { karatauOldFalcoAllParams } from "./RF-configs-FALCO";
+import { getDateIntervals } from "../../../utils/dates";
 const ndviEviDates = {
   aprils_2005_2010: getDateIntervals([[2005, 2010]], [[3, 3]], [[1, "end"]]),
   marches_2005_2010: getDateIntervals([[2005, 2010]], [[4, 4]], [[1, "end"]]),

@@ -1,5 +1,5 @@
 import { DataExtractionConfig } from "../../../analytics_config_types";
-import { getDateIntervals } from "../../../services/utils/dates";
+import { getDateIntervals } from "../../../utils/dates";
 
 export const imperialDataConfig: DataExtractionConfig = {
   points: {

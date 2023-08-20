@@ -5,8 +5,8 @@ import { evaluatePromisify } from "./utils/ee-image";
 withGEE(async () => {
   const feature = ee.Feature(null, { tes: 1 });
   // await feature.evaluate(() => {
-  const res = evaluateFeatures(feature);
-  console.log(await res.promise);
+  const res = await evaluateFeatures(feature);
+  // console.log(await res.promise);
 
   // });
 });

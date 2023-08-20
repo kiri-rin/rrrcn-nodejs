@@ -45,7 +45,6 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
   chartCallback: () => chartjs,
 });
 export const drawHistogramChart = (data: any) => {
-  console.log(data);
   const chart: ChartConfiguration = {
     type: "bar",
     options: {

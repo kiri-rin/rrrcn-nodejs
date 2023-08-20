@@ -1,9 +1,8 @@
-import { getDateIntervals } from "../../../services/utils/dates";
-
 import {
   DataExtractionConfig,
   RandomForestConfig,
 } from "../../../analytics_config_types";
+import { getDateIntervals } from "../../../utils/dates";
 export const karatauOldAllParams: DataExtractionConfig["scripts"] = [
   { key: "elevation" },
   {

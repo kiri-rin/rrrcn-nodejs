@@ -3,7 +3,6 @@ import { AnalyticsScriptResult } from "../services/ee-data";
 import { clearTimeout, setTimeout } from "timers";
 import { evaluateFeatures } from "./gee-api";
 
-import util from "util";
 const { setTimeout: setTimeoutPromise } = require("timers/promises");
 
 export async function evaluateScriptResultsToFeaturesArray(
@@ -52,7 +51,7 @@ export async function evaluatePromisify(
     return result;
   } catch (error: any) {
     console.log("ERROR IN REQUEST!");
-    console.log(String(error), { error });
+    // console.log(String(error), { error });
     clearTimeout(timeoutId);
     if (
       (String(error).includes("ECONNRESET") ||

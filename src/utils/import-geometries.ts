@@ -1,5 +1,5 @@
 import { GeometriesImportConfig } from "../analytics_config_types";
-import fsPromises from "fs/promises";
+import fsPromises, { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "./points";
@@ -47,6 +47,16 @@ export const importGeometries = async (
       } else {
         return fc;
       }
+    }
+    case "geojson_file": {
+      const json = JSON.parse(
+        await readFile(conf.path).then((res) => res.toString())
+      );
+      return importGeometries(
+        { type: "geojson", json },
+        geometryType,
+        inheritProps
+      );
     }
     case "asset": {
       const fc = ee.FeatureCollection(conf.path);

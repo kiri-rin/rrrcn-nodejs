@@ -6,9 +6,9 @@ import {
 } from "./configs/population_estimation_Karatau_FALCO";
 
 withGEE(async () => {
-  await estimatePopulationFotPaper(
-    populationEstimationKaratauFalcoThiessens,
-    populationEstimationKaratauFalcoAreas,
-    "FINAL_RFS/KARATAU-OLD-FALCO"
-  );
+  // await estimatePopulationFotPaper(
+  //   populationEstimationKaratauFalcoThiessens,
+  //   populationEstimationKaratauFalcoAreas,
+  //   "FINAL_RFS/KARATAU-OLD-FALCO"
+  // );
 });

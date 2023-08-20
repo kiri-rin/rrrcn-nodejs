@@ -3,7 +3,7 @@
   "include": ["src"],
   "compilerOptions": {
     "allowJs": true,
-    "outDir": "dist",
-    "composite": true
+    "outDir": "dist"
+//    "composite": true
   }
 }

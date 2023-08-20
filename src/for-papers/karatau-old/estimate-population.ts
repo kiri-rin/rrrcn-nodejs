@@ -4,11 +4,8 @@ import {
   populationEstimationKaratauThiessens,
 } from "./configs/population_estimation_Karatau";
 import { estimatePopulationFotPaper } from "../../controllers/population-estimation/estimate-for-paper";
+import { estimatePopulationRandomGeneration } from "../../controllers/population-estimation/estimate-population-random-points";
 
 withGEE(async () => {
-  await estimatePopulationFotPaper(
-    populationEstimationKaratauThiessens,
-    populationEstimationKaratauAreas,
-    "FINAL_RFS/KARATAU-OLD"
-  );
+  await estimatePopulationRandomGeneration(populationEstimationKaratauAreas);
 });

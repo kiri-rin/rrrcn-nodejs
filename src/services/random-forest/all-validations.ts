@@ -67,7 +67,7 @@ export const validateClassifier = async (
     )
   );
   let ROC = getAcc(predictedValidation);
-  console.log(JSON.stringify(ROC));
+  // console.log(JSON.stringify(ROC));
   const AUC = await evaluatePromisify(getAUCROC(ROC));
   ROC = await evaluatePromisify(ROC);
   delete training_regression.points;

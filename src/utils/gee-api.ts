@@ -2,7 +2,7 @@ import { EEFeatureCollection, EEImage } from "../types";
 const { JWT } = require("google-auth-library");
 console.log({ __dirname });
 
-const keys = require("../../../../../.local/ee-key.json");
+const keys = require("../../.local/ee-key.json");
 
 const client = new JWT({
   email: keys.client_email,

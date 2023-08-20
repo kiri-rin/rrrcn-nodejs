@@ -7,9 +7,13 @@ import { setDefaultsToScriptsConfig } from "../extract-data/extract-data";
 import allScripts, { scriptKey } from "../../services/ee-data";
 import { DatesConfig } from "../../utils/dates";
 import { importGeometries } from "../../utils/import-geometries";
-import { getThumbUrl, getTiffUrl } from "../../utils/ee-image";
+import {
+  evaluatePromisify,
+  getThumbUrl,
+  getTiffUrl,
+} from "../../utils/ee-image";
 import { downloadFile } from "../../utils/io";
-import { mkdir } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 
 export const getAllPoints = async (
   trainingPointsConfig: RandomForestConfig["trainingPoints"]
@@ -161,15 +165,21 @@ export const downloadClassifiedImage = async ({
         }
   );
   const tiffUrl: string = await getTiffUrl(classified_image, regionOfInterest);
+  const geojson = await evaluatePromisify(
+    classified_image.gt(50).selfMask().reduceToVectors({
+      geometry: regionOfInterest,
+      scale: 1000,
+    })
+  );
   await mkdir(output, { recursive: true });
-  var task = ee.batch.Export.image.toDrive({
-    image: classified_image,
-    folder: "GEE_DEMO",
-    description: "demo",
-    fileNamePrefix: `${output}/${filename}`,
-    scale: 500,
-    region: regionOfInterest,
-  });
+  // var task = ee.batch.Export.image.toDrive({
+  //   image: classified_image,
+  //   folder: "GEE_DEMO",
+  //   description: "demo",
+  //   fileNamePrefix: `${output}/${filename}`,
+  //   scale: 500,
+  //   region: regionOfInterest,
+  // });
   // task.start(
   //   () => {},
   //   (err: string) => {
@@ -180,6 +190,7 @@ export const downloadClassifiedImage = async ({
     promise: Promise.all([
       // downloadFile(thumbUrl, `${output}/${filename}.png`),
       // downloadFile(tiffUrl, `${output}/${filename}.zip`),
+      writeFile(`${output}/${filename}.geojson`, JSON.stringify(geojson)),
     ]),
     tiffUrl,
     thumbUrl,

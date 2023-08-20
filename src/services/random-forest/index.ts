@@ -24,18 +24,24 @@ export const randomForestAndValidateService = async ({
     properties: ["Presence"],
     scale: 100,
   });
+  console.log("PRE GET CLASSIFIER");
+
   const { classified_image, classifier } = await getRFClassifier({
     trainingSamples,
     outputMode,
     paramsImage,
   });
+  console.log("PRE VALIDATE");
+
   const validations = (await validateClassifier(
     classified_image,
     validationPoints,
     trainingPoints
   )) as classifierValidationType;
+  console.log("PRE EVALUEAT");
   validations.explainedClassifier = await evaluatePromisify(
     classifier.explain()
   );
+  console.log("EVALUATE SUCCESS");
   return { classified_image, classifier, validations };
 };

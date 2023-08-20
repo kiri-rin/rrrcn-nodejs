@@ -1,9 +1,24 @@
 import { GeoJSON, Point } from "geojson";
-import { MigrationYear } from "web/src/features/migrations/types";
 import {
   Directions,
   GetAreaMigrationProbabilitiesReturn,
 } from "../../services/migrations/area-probabilities";
+export enum SEASONS {
+  SPRING = "spring",
+  SUMMER = "summer",
+  AUTUMN = "autumn",
+  WINTER = "winter",
+}
+
+export type MigrationYear = {
+  meta?: any;
+  title?: string;
+
+  [SEASONS.SUMMER]?: [number, number];
+  [SEASONS.AUTUMN]?: [number, number];
+  [SEASONS.WINTER]?: [number, number];
+  [SEASONS.SPRING]?: [number, number];
+};
 export type IndexedMigration = {
   meta?: {};
   title: string;

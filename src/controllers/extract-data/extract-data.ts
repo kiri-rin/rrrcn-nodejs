@@ -24,7 +24,6 @@ export const setDefaultsToScriptsConfig = (
         obj[key] = val;
       }
     }
-    console.log(obj);
     return obj;
   });
 
@@ -56,7 +55,6 @@ export const extractData = async (config: DataExtractionConfig) => {
       buffer,
     });
     const NumberTest = await evaluatePromisify(ee.Number(10));
-    console.log({ NumberTest });
     for (let [key, imageOrCollection] of Object.entries(scriptResults)) {
       scriptResults[key] = await reduceRegionsFromImageOrCollection(
         key === "world_cover_convolve" ? points : regions,

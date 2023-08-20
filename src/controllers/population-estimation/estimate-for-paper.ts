@@ -1,20 +1,23 @@
-import { populationEstimationType } from "../../analytics_config_types";
+import {
+  populationEstimationType,
+  PopulationRandomGenerationConfigType,
+} from "../../analytics_config_types";
 import { crossValidationPopulationEstimation } from "./cross-validation-estimate-population";
 import { writeFile } from "fs/promises";
-import { getCsv } from "../../services/utils/points";
 import {
   findBestAver,
   findBestDeviations,
 } from "../../services/population-extrapolation/find_best";
-import { estimatePopulation } from "./estimate-population";
 import {
   populationEstimationKaratauAreas,
   populationEstimationKaratauThiessens,
 } from "../../for-papers/karatau-old/configs/population_estimation_Karatau";
+import { estimatePopulationRandomGeneration } from "./estimate-population-random-points";
+import { getCsv } from "../../utils/points";
 
 export const estimatePopulationFotPaper = async (
-  thiessensConfig: populationEstimationType,
-  areasConfig: populationEstimationType,
+  thiessensConfig: PopulationRandomGenerationConfigType,
+  areasConfig: PopulationRandomGenerationConfigType,
   output: string
 ) => {
   const thiessens = await crossValidationPopulationEstimation(thiessensConfig);
@@ -50,22 +53,22 @@ export const estimatePopulationFotPaper = async (
   console.log({ areasBest, thiessensBest, thiessensBestDev, areasBestDev });
 
   await Promise.all([
-    estimatePopulation({
+    estimatePopulationRandomGeneration({
       ...thiessensConfig,
       seed: thiessensBest.seed,
       outputs: `${output}/population/thiessensBestMean`,
     }),
-    estimatePopulation({
+    estimatePopulationRandomGeneration({
       ...areasConfig,
       seed: areasBest.seed,
       outputs: `${output}/population/areasBestMean`,
     }),
-    estimatePopulation({
+    estimatePopulationRandomGeneration({
       ...thiessensConfig,
       seed: thiessensBestDev.seed,
       outputs: `${output}/population/thiessensBestDev`,
     }),
-    estimatePopulation({
+    estimatePopulationRandomGeneration({
       ...areasConfig,
       seed: areasBestDev.seed,
       outputs: `${output}/population/areasBestDev`,

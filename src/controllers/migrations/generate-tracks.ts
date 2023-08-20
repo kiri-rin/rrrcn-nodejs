@@ -86,7 +86,6 @@ export const generateMigrationTracks = async ({
     };
   }
   while (Object.values(nextAreasToIndex).length) {
-    console.log(Object.values(nextAreasToIndex).length);
     const newNextAreasToIndex: typeof nextAreasToIndex = {};
 
     for (let { id, ...areaToIndex } of Object.values(nextAreasToIndex)) {
@@ -106,7 +105,6 @@ export const generateMigrationTracks = async ({
           neighboursAreasIds: {},
         };
       }
-      console.log({ areaToIndex });
       for (let { point, from } of areaToIndex.points) {
         const exitDirection = randomlyChooseDirection(
           indexedAreas[id].probabilities
@@ -137,7 +135,6 @@ export const generateMigrationTracks = async ({
                 neighbourIndex;
             }
           }
-          console.log({ neighbourIndex, exitDirection });
           if (newNextAreasToIndex[neighbourIndex]) {
             newNextAreasToIndex[neighbourIndex].points.push({
               point: nextPoint,
@@ -156,7 +153,6 @@ export const generateMigrationTracks = async ({
     }
     nextAreasToIndex = newNextAreasToIndex;
   }
-  console.log({ generatedTracks });
   return generatedTracks;
 };
 const generateEdgePoint = (

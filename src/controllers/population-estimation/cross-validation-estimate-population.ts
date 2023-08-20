@@ -102,7 +102,6 @@ export const crossValidationPopulationEstimation = async (
                 //   randomsOutput.features?.length / (1 + trainingErrorPercent),
                 seed,
               };
-              console.log(res);
               return res;
             }
           )

@@ -96,12 +96,14 @@ export const getParamsImage = async ({
           })
         )
       ).flatMap((it) => [...Object.values(it)]);
-      return parametersImageArray.reduce((acc, it, index) => {
-        return index ? acc.addBands(it) : acc;
-      }, parametersImageArray[0]);
+      return parametersImageArray
+        .reduce((acc, it, index) => {
+          return index ? acc.addBands(it) : acc;
+        }, parametersImageArray[0])
+        .clip(regionOfInterest);
     }
     case "asset": {
-      return ee.Image(params.path);
+      return ee.Image(params.path).clip(regionOfInterest);
     }
   }
 };
@@ -168,16 +170,16 @@ export const downloadClassifiedImage = async ({
     scale: 500,
     region: regionOfInterest,
   });
-  task.start(
-    () => {},
-    (err: string) => {
-      console.log({ err });
-    }
-  );
+  // task.start(
+  //   () => {},
+  //   (err: string) => {
+  //     console.log({ err });
+  //   }
+  // );
   return {
     promise: Promise.all([
-      downloadFile(thumbUrl, `${output}/${filename}.png`),
-      downloadFile(tiffUrl, `${output}/${filename}.zip`),
+      // downloadFile(thumbUrl, `${output}/${filename}.png`),
+      // downloadFile(tiffUrl, `${output}/${filename}.zip`),
     ]),
     tiffUrl,
     thumbUrl,

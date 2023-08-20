@@ -62,12 +62,6 @@ export const randomForestCV = async (config: RandomForestConfig) => {
             validationConfig,
             i * i * i
           );
-        // await evaluatePromisify(trainingPoints);
-        // console.log("POINTS");
-
-        // await evaluatePromisify(trainingSamples);
-        //
-        // console.log("samples");
 
         const res = await randomForestAndValidateService({
           trainingPoints,
@@ -76,12 +70,12 @@ export const randomForestCV = async (config: RandomForestConfig) => {
           paramsImage,
           regionOfInterest,
         });
-        images.push(res.classified_image);
-        modelsValidations.push(res);
+        images[i - 1] = res.classified_image;
+        modelsValidations[i - 1] = res;
 
         writeFileSync(
           `${outputDir}/model${i}.json`,
-          JSON.stringify(res.validations, null, 4)
+          JSON.stringify({ seed: i * i * i, ...res.validations }, null, 4)
         );
         console.log(i, " success");
       })()
@@ -95,8 +89,16 @@ export const randomForestCV = async (config: RandomForestConfig) => {
     output: outputDir,
     filename: "mean",
   });
-  await writeValidationTable(modelsValidations, outputDir);
-  await promise;
+  const { values: validationValues, bestImageIndex } =
+    await writeValidationTable(modelsValidations, outputDir);
+  const { promise: bestPromise } = await downloadClassifiedImage({
+    classified_image: images[bestImageIndex],
+    regionOfInterest,
+    output: outputDir,
+    filename: "best",
+  });
+  await Promise.all([promise, bestPromise]);
+  return { mean_image, best_image: images[bestImageIndex], regionOfInterest };
 };
 const validationTableKeys = [
   "AUC",
@@ -156,6 +158,8 @@ const writeValidationTable = async (
   );
 
   average_validation_data = getAverageValues(values);
+  const bestImageIndex = findBest(values);
+
   const averageRoc = Object.keys(ROCsArray[0])
     .map((cutoff) =>
       getAverageValues(ROCsArray.map((it) => ({ ...it[cutoff] })))
@@ -164,6 +168,7 @@ const writeValidationTable = async (
   values.push(average_validation_data);
   const averageImportance = getAverageValues(importanceArray);
   CSV.push(getCSVRow(average_validation_data, validationTableKeys, "Average"));
+  CSV.push(["best_index", bestImageIndex]);
   CSV.unshift(["name"].concat(validationTableKeys));
 
   const ROCHart = await drawMarkerChart(
@@ -178,6 +183,7 @@ const writeValidationTable = async (
   await saveChart(ROCHart, `${outputDir}/aver_roc.jpg`);
   await saveChart(paramsHistogram, `${outputDir}/aver_importance.jpg`);
   writeFileSync(`${outputDir}/validations.csv`, (await getCsv(CSV)) as string);
+  return { values, bestImageIndex };
 };
 
 const getAverageValues = (objs: { [p: string]: number }[]) => {
@@ -195,6 +201,42 @@ const getAverageValues = (objs: { [p: string]: number }[]) => {
       }, aver),
     average
   );
+};
+const sortOrder: (
+  | "AUC"
+  | "max_kappa"
+  | "max_ccr"
+  | "validation_regression_r2"
+  | "training_regression_r2"
+)[] = [
+  "AUC",
+  "max_kappa",
+  "max_ccr",
+  "validation_regression_r2",
+  "training_regression_r2",
+];
+const findBest = (
+  values: {
+    AUC: number;
+    max_kappa: number;
+    max_ccr: number;
+    max_kappa_cutoff: number;
+    max_ccr_cutoff: number;
+    training_regression_r2: number;
+    validation_regression_r2: number;
+  }[]
+) => {
+  const sorted = [...values]
+    .map((it, index) => ({ ...it, index }))
+    .sort((a, b) => {
+      for (let key of sortOrder) {
+        if (Math.abs(a[key] - b[key]) > 0.01) {
+          return Math.sign(b[key] - a[key]); //DESCENDING
+        }
+      }
+      return 0;
+    });
+  return sorted[0].index;
 };
 const getCSVRow = (
   obj: { [p: string]: number },

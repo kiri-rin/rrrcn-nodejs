@@ -5,12 +5,9 @@ var fs = require("fs");
 // Require JSDOM Class.
 var JSDOM = require("jsdom").JSDOM;
 // Create instance of JSDOM.
-var jsdom = new JSDOM(
-  '<body><div font-familt="ASd" id="container"></div></body>',
-  {
-    runScripts: "dangerously",
-  }
-);
+var jsdom = new JSDOM('<body><div id="container"></div></body>', {
+  runScripts: "dangerously",
+});
 const regression = require("regression");
 // Get window
 var window = jsdom.window;

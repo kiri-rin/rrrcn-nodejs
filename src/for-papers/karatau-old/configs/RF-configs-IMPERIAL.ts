@@ -8,7 +8,7 @@ export const karatauOldImperialAllParams: DataExtractionConfig["scripts"] = [
   {
     key: "landsat",
     dates: {
-      median: getDateIntervals([[2018, 2021]], [[4, 7]]),
+      median_5_6: getDateIntervals([[2018, 2021]], [[4, 5]]),
     },
   },
   {
@@ -38,8 +38,9 @@ export const karatauOldImperialAllParams: DataExtractionConfig["scripts"] = [
 export const karatauOldImperialDFRParams: DataExtractionConfig["scripts"] = [
   {
     key: "landsat",
+    bands: ["nir", "ndvi"],
     dates: {
-      median: getDateIntervals([[2018, 2021]], [[4, 7]]),
+      median_5_6: getDateIntervals([[2018, 2021]], [[4, 5]]),
     },
   },
   {
@@ -48,16 +49,15 @@ export const karatauOldImperialDFRParams: DataExtractionConfig["scripts"] = [
       median: [[new Date(2018, 0, 1), new Date(2022, 0, 1)]],
     },
   },
-
-  { key: "world_cover" },
 ];
 
 export const karatauOldImperialInModelParams: DataExtractionConfig["scripts"] =
   [
     {
       key: "landsat",
+      bands: ["blue", "ndvi", "red", "nir", "swir1"],
       dates: {
-        median: getDateIntervals([[2018, 2021]], [[4, 7]]),
+        median_5_6: getDateIntervals([[2018, 2021]], [[4, 5]]),
       },
     },
     {
@@ -73,19 +73,19 @@ export const karatauOldImperialInModelParams: DataExtractionConfig["scripts"] =
       key: "world_cover_convolve",
       filename: "100",
       buffer: 100,
-      bands: ["Shrubland"],
+      bands: ["Bare_sparse_vegetation", "Grassland"],
     },
     {
       key: "world_cover_convolve",
       filename: "300",
       buffer: 300,
-      bands: ["Grassland", "Cropland", "Bare_sparse_vegetation"],
+      bands: ["Shrubland", "Cropland"],
     },
     {
       key: "world_cover_convolve",
       filename: "600",
       buffer: 600,
-      bands: ["Bare_sparse_vegetation"],
+      bands: ["Tree_cover", "Built_up", "Herbaceous_wetland"],
     },
   ];
 
@@ -94,7 +94,7 @@ export const karatauOldImperialInModelDFRParams: DataExtractionConfig["scripts"]
     {
       key: "landsat",
       dates: {
-        median: getDateIntervals([[2018, 2021]], [[4, 7]]),
+        median_5_6: getDateIntervals([[2018, 2021]], [[4, 5]]),
       },
     },
     {
@@ -105,13 +105,6 @@ export const karatauOldImperialInModelDFRParams: DataExtractionConfig["scripts"]
     },
     { key: "elevation" },
     { key: "geomorph", bands: ["slope", "aspect"] },
-    { key: "world_cover" },
-    {
-      key: "world_cover_convolve",
-      filename: "100",
-      buffer: 100,
-      bands: ["Shrubland", "Grassland", "Cropland", "Bare_sparse_vegetation"],
-    },
   ];
 
 export const karatauOldImperialProbRFConfigAll: RandomForestConfig = {
@@ -142,7 +135,7 @@ export const karatauOldImperialProbRFConfigAll: RandomForestConfig = {
     scripts: karatauOldImperialAllParams,
   },
   validation: { type: "split", split: 0.2 },
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/ALL_CROSS_PROB",
+  outputs: "IMPERIAL/M1-PROB",
 };
 
 export const karatauOldImperialProbRFConfigDFR: RandomForestConfig = {
@@ -151,7 +144,7 @@ export const karatauOldImperialProbRFConfigDFR: RandomForestConfig = {
     type: "scripts",
     scripts: karatauOldImperialDFRParams,
   },
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/DFR_CROSS_PROB",
+  outputs: "IMPERIAL/M2-PROB",
 };
 
 export const karatauOldImperialProbRFConfigInModel: RandomForestConfig = {
@@ -160,7 +153,7 @@ export const karatauOldImperialProbRFConfigInModel: RandomForestConfig = {
     type: "scripts",
     scripts: karatauOldImperialInModelParams,
   },
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/IN_MODEL_CROSS_PROB",
+  outputs: "IMPERIAL/M3-PROB",
 };
 
 export const karatauOldImperialProbRFConfigInModelDFR: RandomForestConfig = {
@@ -169,29 +162,29 @@ export const karatauOldImperialProbRFConfigInModelDFR: RandomForestConfig = {
     type: "scripts",
     scripts: karatauOldImperialInModelDFRParams,
   },
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/IN_MODEL_DFR_CROSS_PROB",
+  outputs: "IMPERIAL/M4-PROB",
 };
 
 export const karatauOldImperialRegrRFConfigAll: RandomForestConfig = {
   ...karatauOldImperialProbRFConfigAll,
   outputMode: "REGRESSION",
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/ALL_CROSS_REGR",
+  outputs: "IMPERIAL/M1-REGR",
 };
 
 export const karatauOldImperialRegrRFConfigDFR: RandomForestConfig = {
   ...karatauOldImperialProbRFConfigDFR,
   outputMode: "REGRESSION",
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/DFR_CROSS_REGR",
+  outputs: "IMPERIAL/M2-REGR",
 };
 
 export const karatauOldImperialRegrRFConfigInModel: RandomForestConfig = {
   ...karatauOldImperialProbRFConfigInModel,
   outputMode: "REGRESSION",
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/IN_MODEL_CROSS_REGR",
+  outputs: "IMPERIAL/M3-REGR",
 };
 
 export const karatauOldImperialRegrRFConfigInModelDFR: RandomForestConfig = {
   ...karatauOldImperialProbRFConfigInModelDFR,
   outputMode: "REGRESSION",
-  outputs: "FINAL_RFS/KARATAU-OLD-IMPERIAL/IN_MODEL_DFR_CROSS_REGR",
+  outputs: "IMPERIAL/M4-REGR",
 };

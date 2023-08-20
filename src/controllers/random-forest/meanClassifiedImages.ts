@@ -3,13 +3,15 @@ import { downloadFile } from "../../services/utils/io";
 import { getThumbUrl, getTiffUrl } from "../../services/utils/ee-image";
 import { RandomForestConfig } from "../../analytics_config_types";
 import { randomForest } from "./random-forest";
+import { Console } from "inspector";
 
 export const meanClassifiedImages = async (
   config1: RandomForestConfig,
   config2: RandomForestConfig,
   outputs: string,
-  split = 50
+  split = 20
 ) => {
+  console.log(config2, config1);
   //@ts-ignore
   const { classified_image: image1, regionOfInterest } = await randomForest(
     config1
@@ -17,7 +19,7 @@ export const meanClassifiedImages = async (
   //@ts-ignore
   const { classified_image: image2 } = await randomForest(config2);
   const meanImage = image1.add(image2).divide(2);
-  const meanImageSplitted = meanImage.gte(50);
+  const meanImageSplitted = meanImage.gte(split);
   const outputDir = `./.local/outputs/${outputs}`;
   await mkdir(outputDir, { recursive: true });
   const thumbUrl_mean = await getThumbUrl(meanImage, regionOfInterest);

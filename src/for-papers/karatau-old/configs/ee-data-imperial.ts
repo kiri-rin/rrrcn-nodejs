@@ -45,7 +45,7 @@ export const imperialDataConfig: DataExtractionConfig = {
       buffer: 600,
     },
   ],
-  outputs: "FINAL_RFS/KARATAU_OLD-IMPERIAL/presence-data2",
+  outputs: "FINAL_RFS/KARATAU_OLD-IMPERIAL/presence-data-fixed2",
 };
 export const imperialRandomDataConfig: DataExtractionConfig = {
   points: {
@@ -56,5 +56,5 @@ export const imperialRandomDataConfig: DataExtractionConfig = {
     path: "./src/for-papers/karatau-old/assets/IMPERIAL/Случайные.csv",
   },
   scripts: imperialDataConfig.scripts,
-  outputs: "FINAL_RFS/KARATAU_OLD-IMPERIAL/random-data2",
+  outputs: "FINAL_RFS/KARATAU_OLD-IMPERIAL/random-data-fixed2",
 };

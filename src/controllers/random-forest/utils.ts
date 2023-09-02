@@ -1,5 +1,6 @@
 import { EEFeatureCollection, EEImage } from "../../types";
 import {
+  MaxentConfig,
   RandomForestConfig,
   RandomForestParamsConfig,
 } from "../../analytics_config_types";
@@ -16,7 +17,7 @@ import { downloadFile } from "../../utils/io";
 import { mkdir, writeFile } from "fs/promises";
 
 export const getAllPoints = async (
-  trainingPointsConfig: RandomForestConfig["trainingPoints"]
+  trainingPointsConfig: MaxentConfig["trainingPoints"]
 ) => {
   switch (trainingPointsConfig.type) {
     case "all-points": {
@@ -35,13 +36,17 @@ export const getAllPoints = async (
       // }
     }
     case "separate-points": {
-      const absencePoints = (
-        await importGeometries(trainingPointsConfig.absencePoints)
-      ).map((it: any) => it.set("Presence", 0));
+      const absencePoints =
+        trainingPointsConfig.absencePoints &&
+        (await importGeometries(trainingPointsConfig.absencePoints)).map(
+          (it: any) => it.set("Presence", 0)
+        );
       const presencePoints = (
         await importGeometries(trainingPointsConfig.presencePoints)
       ).map((it: any) => it.set("Presence", 1));
-      return presencePoints.merge(absencePoints);
+      return absencePoints
+        ? presencePoints.merge(absencePoints)
+        : presencePoints;
     }
   }
 };

@@ -81,7 +81,7 @@ export const getThumbUrl = async (
   await new Promise((resolve) =>
     classified_image.getThumbURL(
       {
-        image: classified_image,
+        image: classified_image.select([1]),
         min: 0,
         region: regionOfInterest,
         max: 100,

@@ -9,13 +9,11 @@ import FormData from "form-data";
 const apiRService = axios.create({
   baseURL: process.env.R_BASE_URL || "http://localhost:8000",
 });
-export const estimateNestSurvivalDistance = async (
-  config: SurvivalNestConfig
-) => {
+export const estimateNestSurvival = async (config: SurvivalNestConfig) => {
   const form = new FormData();
-  form.append("data", fs.readFileSync(config.markFile).toString());
+  form.append("data", fs.readFileSync(config.survivalFile).toString());
   try {
-    const { data } = await apiRService.post("/distance", form, {
+    const { data } = await apiRService.post("/survival", form, {
       params: {
         output: config.outputs,
       },

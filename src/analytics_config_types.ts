@@ -80,7 +80,7 @@ export type RandomForestParamsConfig =
     };
 export type SeparateTrainingPoints<FileType = string> = {
   type: "separate-points";
-  absencePoints: GeometriesImportConfig<FileType>;
+  absencePoints?: GeometriesImportConfig<FileType>;
   presencePoints: GeometriesImportConfig<FileType>;
 };
 export type AllTrainingPoints<FileType = string> = {
@@ -107,10 +107,33 @@ export type RandomForestConfig<FileType = string> = {
     | { type: "external"; points: RandomForestConfig["trainingPoints"] };
   trainingPoints:
     | AllTrainingPoints<FileType>
-    | SeparateTrainingPoints<FileType>;
+    | Required<SeparateTrainingPoints<FileType>>;
   classificationSplits?: number[];
   buffersPerAreaPoint?: number[];
   outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";
+} & CommonConfig;
+
+export type MaxentConfig<FileType = string> = {
+  params: RandomForestParamsConfig;
+  crossValidation?: number;
+  regionOfInterest: GeometriesImportConfig<FileType>;
+  validation:
+    | {
+        type: "split";
+        split: number;
+        seed?: number;
+        cross_validation?: boolean;
+        render_mean?: boolean;
+        render_best?: boolean;
+        return_default?: "best" | "mean";
+      }
+    | { type: "external"; points: RandomForestConfig["trainingPoints"] };
+  trainingPoints:
+    | AllTrainingPoints<FileType>
+    | SeparateTrainingPoints<FileType>;
+  classificationSplits?: number[];
+  buffersPerAreaPoint?: number[];
+  outputMode: "CLAMP" | "PROBABILITY";
 } & CommonConfig;
 
 export type ValidateClassifiedImageConfig = {
@@ -150,7 +173,7 @@ export type PopulationDistanceConfigType<FileType = string> = {
   outputs?: string;
 };
 export type SurvivalNestConfig<FileType = string> = {
-  markFile: FileType;
+  survivalFile: FileType;
   outputs?: string;
 };
 export type PopulationDensityType<FileType = string> = {

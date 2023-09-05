@@ -1,0 +1,82 @@
+id,NestCode,Latitude,Longitude,Date,Year,Spec,Status,Presence
+54,NP2022-1,43.474346,69.863915,5/4/2022,2022,Neophron percnopterus,Live nest,1
+55,NP2022-10,43.28107,69.47685,7/15/2022,2022,Neophron percnopterus,Live nest,1
+56,NP2022-11,43.22346,69.4037,7/15/2022,2022,Neophron percnopterus,Live nest,1
+57,NP2022-14,42.87692,69.77452,7/20/2022,2022,Neophron percnopterus,Live nest,1
+58,NP2022-2,43.596149,69.88046,5/5/2022,2022,Neophron percnopterus,Live nest,1
+59,NP2022-3,43.632805,69.449749,5/6/2022,2022,Neophron percnopterus,Live nest,1
+60,NP2022-5B,43.733736,68.004941,5/12/2022,2022,Neophron percnopterus,Live nest,1
+61,NP2022-6,43.837818,67.836046,5/13/2022,2022,Neophron percnopterus,Live nest,1
+62,NP2022-7,43.9287 ,67.721057,5/16/2022,2022,Neophron percnopterus,Live nest,1
+63,NP2022-8,44.038105,67.629676,5/17/2022,2022,Neophron percnopterus,Live nest,1
+64,NP2022-9,43.656420,69.335820,7/14/2022,2022,Neophron percnopterus,Live nest,1
+65,NP2022G-01,43.218971,69.782718,7/16/2022,2022,Neophron percnopterus,Live nest,1
+66,NP2022G-03,43.001569,69.817203,7/20/2022,2022,Neophron percnopterus,Live nest,1
+67,NP-KZ14-1,42.891703,70.947306,4/27/2022,2022,Neophron percnopterus,Live nest,1
+68,NP-KZ15-1 (NP02),42.81662,70.94396,4/27/2022,2022,Neophron percnopterus,Live nest,1
+69,NP-KZ24-2,43.655192,70.152725,5/3/2022,2022,Neophron percnopterus,Live nest,1
+70,NP-KZ28-2,43.514431,69.883877,5/5/2022,2022,Neophron percnopterus,Live nest,1
+71,NP-KZ29-2,43.543433,69.80069,5/4/2022,2022,Neophron percnopterus,Live nest,1
+72,FC-KZ595-2 (FC03B),43.442301 ,68.981953,5/8/2022,2022,Neophron percnopterus,Occupied bt,1
+73,NP2022-4,43.470684,68.873615,5/9/2022,2022,Neophron percnopterus,Occupied bt,1
+74,NP2022-12,43.183214,69.780455,7/18/2022,2022,Neophron percnopterus,Occupied bt,1
+75,NP2022-13,43.06214,69.71958,7/19/2022,2022,Neophron percnopterus,Occupied bt,1
+76,NP2022-15,42.84476,69.786921,7/21/2022,2022,Neophron percnopterus,Occupied bt,1
+77,NP2022-17A,42.78743,69.746684,7/22/2022,2022,Neophron percnopterus,Occupied bt,1
+78,NP2022-18,43.399957,69.127344,7/25/2022,2022,Neophron percnopterus,Occupied bt,1
+79,NP2022G-02,42.991164,69.764325,7/19/2022,2022,Neophron percnopterus,Occupied bt,1
+80,NP-HZ1,43.536609,69.498408,5/6/2022,2022,Neophron percnopterus,Occupied bt,1
+81,NP-KZ20B,42.831122,69.84485,7/23/2022,2022,Neophron percnopterus,Occupied bt,1
+82,NP-KZ21-2,43.13711,69.54887,7/16/2022,2022,Neophron percnopterus,Occupied bt,1
+83,NP-KZ25,43.190405,70.386967,7/11/2022,2022,Neophron percnopterus,Occupied bt,1
+84,NP-KZ35-2,43.073867,69.890489,7/5/2022,2022,Neophron percnopterus,Occupied bt,1
+85,NP-KZ36-1 (NP06),42.99665,69.97498,7/5/2022,2022,Neophron percnopterus,Occupied bt,1
+86,NP-KZ37-1 (NP07),42.86605,70.05078,7/5/2022,2022,Neophron percnopterus,Occupied bt,1
+87,NP2022-25jul,43.379289,69.090143,7/25/2022,2022,Neophron percnopterus,Occupied bt,1
+88,OBED15JUL-NP,43.23757,69.420927,7/15/2022,2022,Neophron percnopterus,Occupied bt,1
+89,Superkupalka-NP,43.538837,69.957933,7/13/2022,2022,Neophron percnopterus,Occupied bt,1
+90,Sterv-old1,43.411131,70.036127,7/12/2022,2022,Neophron percnopterus,Occupied bt,1
+91,NP2022-16B Borolday1,42.875236,69.825647,7/21/2022,2022,Neophron percnopterus,Occupied bt,1
+92,NP2022-Boralday2,42.874656,69.878827,7/23/2022,2022,Neophron percnopterus,Occupied bt,1
+93,NP2022-Boralday3,42.791773,69.786934,7/23/2022,2022,Neophron percnopterus,Occupied bt,1
+94,NP2022-Boralday4,42.79504,69.703749,7/23/2022,2022,Neophron percnopterus,Occupied bt,1
+95,NP2022-5,43.73059,68.005736,5/12/2022,2022,Neophron percnopterus,Alternative nest,1
+96,NP-FC-perch,43.394336,69.131158,7/25/2022,2022,Neophron percnopterus,Alternative nest,1
+97,NP2022-16A,42.862279,69.827721,7/20/2022,2022,Neophron percnopterus,Alternative nest,1
+98,NP2022-17B,42.77565,69.766393,7/23/2022,2022,Neophron percnopterus,Alternative nest,1
+99,Pris01,42.8596805555556,70.0528,7/4/2022,2022,Neophron percnopterus,Alternative nest,1
+100,NP-KZ23,43.531338,70.572338,4/23/2010,2010,Neophron percnopterus,Live nest,1
+101,NP-KZ24-1 (NP14),43.65019,70.1418,4/22/2010,2010,Neophron percnopterus,Live nest,1
+102,NP-KZ43-1 (NP12),43.45701,68.825276,4/16/2010,2010,Neophron percnopterus,Live nest,1
+103,NP-KZ14,42.891703 ,70.947015,4/5/2010,2010,Neophron percnopterus,Occupied bt,1
+104,NP-KZ15-1 (NP02),42.81662,70.94396,4/5/2010,2010,Neophron percnopterus,Occupied bt,1
+105,NP-KZ16,42.932627,71.121512,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+106,NP-KZ17,42.87162,70.79618,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+107,NP-KZ18,42.634593,70.477697,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+108,NP-KZ19,42.693127,70.402473,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+109,NP-KZ20,42.82992,69.84876,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+110,NP-KZ21,43.128515,69.553837,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+111,NP-KZ22-1,43.422,70.6429,4/23/2010,2010,Neophron percnopterus,Occupied bt,1
+112,NP-KZ25,43.190405,70.386967,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+113,NP-KZ26-1 (NEST),43.24263,70.29129,4/8/2010,2010,Neophron percnopterus,Occupied bt,1
+114,NP-KZ27,43.085389,69.846038,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+115,NP-KZ28,43.516403,69.879951,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+116,NP-KZ29,43.540157,69.798922,6/5/2003,2010,Neophron percnopterus,Occupied bt,1
+117,NP-KZ33 (NP03),43.192506,70.326098,4/8/2010,2010,Neophron percnopterus,Occupied bt,1
+118,NP-KZ34-1 (NP04A),43.14435,69.93725,4/10/2010,2010,Neophron percnopterus,Occupied bt,1
+119,NP-KZ35-1 (NP05),43.08525,69.88986,4/11/2010,2010,Neophron percnopterus,Occupied bt,1
+120,NP-KZ36-1 (NP06),42.99665,69.97498,4/11/2010,2010,Neophron percnopterus,Occupied bt,1
+121,NP-KZ37-1 (NP07),42.86605,70.05078,4/12/2010,2010,Neophron percnopterus,Occupied bt,1
+122,NP-KZ38-1,42.92967,69.98977,4/12/2010,2010,Neophron percnopterus,Occupied bt,1
+123,NP-KZ39-1 (NP08),43.436411,68.912613,4/15/2010,2010,Neophron percnopterus,Occupied bt,1
+124,NP-KZ40 (NP09),43.594624,68.956481,4/16/2010,2010,Neophron percnopterus,Occupied bt,1
+125,NP-KZ41 (NP10),43.55645,68.92598,4/16/2010,2010,Neophron percnopterus,Occupied bt,1
+126,NP-KZ42-1 (NP11),43.48982,68.8502,4/16/2010,2010,Neophron percnopterus,Occupied bt,1
+127,NP-KZ44-1,43.461088,68.714191,4/17/2010,2010,Neophron percnopterus,Occupied bt,1
+128,NP-KZ45-1 (NP13),43.87722,67.9518,4/18/2010,2010,Neophron percnopterus,Occupied bt,1
+129,NP-KZ15,42.814381,70.940054,6/5/2003,2010,Neophron percnopterus,Alternative nest,1
+130,NP-KZ22,43.420866,70.628511,6/5/2003,2010,Neophron percnopterus,Alternative nest,1
+131,NP-KZ24,43.649985 ,70.141436,6/5/2003,2010,Neophron percnopterus,Alternative nest,1
+132,NP-KZ26,43.247325,70.286167,6/5/2003,2010,Neophron percnopterus,Alternative nest,1
+133,NP-KZ34-2 (NP04B),43.1467,69.93247,4/10/2010,2010,Neophron percnopterus,Alternative nest,1
+134,NP-KZ44-2,43.46661,68.71099,4/17/2010,2010,Neophron percnopterus,Alternative nest,1

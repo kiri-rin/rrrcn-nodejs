@@ -41,6 +41,7 @@ export const validateClassifier = async (
     geometries: true,
     scale: 100,
   });
+  console.log(await evaluatePromisify(classified_image), "trainingData!");
 
   const sampleTraining = await evaluatePromisify(
     predictedTraining.select(["Presence", "classification"])

@@ -5,6 +5,7 @@ import shp from "shpjs";
 import { JSCSVTable } from "./points";
 import { EEFeatureCollection } from "../types";
 import * as util from "util";
+import { evaluatePromisify } from "./ee-image";
 
 export const importGeometries = async (
   conf: GeometriesImportConfig,
@@ -38,8 +39,8 @@ export const importGeometries = async (
       const fc = ee.FeatureCollection(
         conf.json.features.map((it, index) => ({
           ...it,
-          id: String(it.id),
-          properties: { ...it.properties, id: it.id },
+          id: String(it.id) || index,
+          properties: { ...it.properties, id: it.id || index },
         }))
       );
       if (geometryType === "polygon") {

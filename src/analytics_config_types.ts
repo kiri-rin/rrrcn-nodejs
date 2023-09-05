@@ -116,6 +116,7 @@ export type RandomForestConfig<FileType = string> = {
 export type MaxentConfig<FileType = string> = {
   params: RandomForestParamsConfig;
   crossValidation?: number;
+  backgroundCount?: number;
   regionOfInterest: GeometriesImportConfig<FileType>;
   validation:
     | {

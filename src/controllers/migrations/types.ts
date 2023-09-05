@@ -3,6 +3,10 @@ import {
   Directions,
   GetAreaMigrationProbabilitiesReturn,
 } from "../../services/migrations/area-probabilities";
+import {
+  CommonConfig,
+  RandomForestParamsConfig,
+} from "../../analytics_config_types";
 export enum SEASONS {
   SPRING = "spring",
   SUMMER = "summer",
@@ -32,7 +36,8 @@ export type MigrationGenerationConfigType = {
   selectedAreasIndices: number[];
   initAreasIndices: number[];
   initCount: number;
-};
+  params: RandomForestParamsConfig;
+} & CommonConfig;
 export type IdType = number;
 export type IndexedArea = {
   id: IdType;

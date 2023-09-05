@@ -14,6 +14,11 @@ import {
   oppositeDirections,
   randomlyChooseDirection,
 } from "../../services/migrations/area-probabilities";
+import { all } from "axios";
+import { getRFClassifier } from "../random-forest/utils";
+import { randomForest } from "../random-forest/random-forest";
+import * as path from "path";
+import { maxent } from "../maxent/maxent";
 
 export const generateMigrationTracks = async ({
   migrations,
@@ -21,6 +26,8 @@ export const generateMigrationTracks = async ({
   selectedAreasIndices,
   initAreasIndices: _,
   initCount = 10,
+  params,
+  outputs,
 }: MigrationGenerationConfigType) => {
   const initAreasIndices: number[] = [];
   allAreasFeatureCollection.features.forEach((it, index) => {
@@ -85,6 +92,64 @@ export const generateMigrationTracks = async ({
       points: areaInitPoints.map((point) => ({ point, from: Directions.STOP })),
     };
   }
+  const rfJobs = [];
+  let rfProgress = 0;
+  for (let selectedAreaIndex of selectedAreasIndices) {
+    const regionOfInterestBBox = allAreas[selectedAreaIndex];
+    const points = migrations.flatMap((it) =>
+      it.features.filter(
+        (it) => !isPointOutsideBBox(it.geometry, regionOfInterestBBox)
+      )
+    );
+    console.log({ points: points.length }, regionOfInterestBBox);
+    const promise = maxent({
+      params,
+      trainingPoints: {
+        type: "separate-points",
+        presencePoints: {
+          type: "geojson",
+          json: {
+            type: "FeatureCollection",
+            features: points,
+          },
+        },
+      },
+      regionOfInterest: {
+        type: "geojson",
+        json: {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [regionOfInterestBBox[0], regionOfInterestBBox[1]],
+                    [regionOfInterestBBox[0], regionOfInterestBBox[3]],
+                    [regionOfInterestBBox[2], regionOfInterestBBox[3]],
+                    [regionOfInterestBBox[2], regionOfInterestBBox[1]],
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
+      outputMode: "PROBABILITY",
+      outputs: path.join(outputs || "", String(selectedAreaIndex)),
+      validation: { split: 0.2, type: "split" },
+    }).then((res) => {
+      rfProgress++;
+      return res;
+    });
+    rfJobs.push(promise);
+  }
+  const processedAreas = (await Promise.all(rfJobs)).map(
+    ({ classified_image }) => classified_image
+  );
+
   while (Object.values(nextAreasToIndex).length) {
     const newNextAreasToIndex: typeof nextAreasToIndex = {};
 

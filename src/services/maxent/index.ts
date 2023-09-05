@@ -6,7 +6,7 @@ import {
   classifierValidationType,
   validateClassifier,
 } from "../random-forest/all-validations";
-
+const { inspect } = require("util");
 type MaxentServiceParams = {
   trainingPoints: any;
   validationPoints: any;
@@ -25,6 +25,11 @@ export const maxentAndValidateService = async ({
     properties: ["Presence"],
     scale: 100,
   });
+  // console.log(await evaluatePromisify(paramsImage), "PARAMS IMAGE");
+  // console.log(
+  //   inspect(await evaluatePromisify(trainingPoints), false, null, true),
+  //   "TRAINING"
+  // );
 
   const { classified_image, classifier } = await getMaxentClassifier({
     trainingSamples,
@@ -57,13 +62,13 @@ export const getMaxentClassifier = async ({
   paramsImage: EEImage;
   outputMode: MaxentConfig["outputMode"];
 }) => {
-  const classifier = ee.Classifier.amnhMaxent()
-    .setOutputMode(outputMode)
-    .train({
-      features: trainingSamples,
-      classProperty: "Presence",
-      inputProperties: paramsImage.bandNames(),
-    });
+  const classifier = ee.Classifier.amnhMaxent({
+    addAllSamplesToBackground: true,
+  }).train({
+    features: trainingSamples,
+    classProperty: "Presence",
+    inputProperties: paramsImage.bandNames(),
+  });
 
   const classified_image = paramsImage
     .select(paramsImage.bandNames())

@@ -10,6 +10,8 @@ import {
 } from "../random-forest/utils";
 import { maxentAndValidateService } from "../../services/maxent";
 import { maxentCV } from "./cross-validation-maxent";
+import { evaluatePromisify } from "../../utils/ee-image";
+import { generateRandomGrid } from "../../services/population-extrapolation/random-grid";
 
 export const maxent = async (config: MaxentConfig) => {
   const {
@@ -28,11 +30,21 @@ export const maxent = async (config: MaxentConfig) => {
   }
   console.log("preparing data");
   strapiLogger("preparing data");
+
   let raw_points = await getAllPoints(trainingPointsConfig);
   const regionOfInterest = await importGeometries(
     regionOfInterestConfig,
     "polygon"
   );
+  if (config.backgroundCount) {
+    const randomGrid = ee.FeatureCollection.randomPoints(
+      regionOfInterest,
+      config.backgroundCount
+    );
+    raw_points = raw_points.merge(
+      randomGrid.map((it: any) => it.set("Presence", 0))
+    );
+  }
   const paramsImage = await getParamsImage({
     params,
     regionOfInterest,
@@ -41,9 +53,9 @@ export const maxent = async (config: MaxentConfig) => {
     raw_points,
     validationConfig
   );
-  console.log("processing random forest");
-  strapiLogger("processing random forest");
 
+  console.log("processing maxent");
+  strapiLogger("processing maxent");
   const { classified_image, classifier, validations } =
     await maxentAndValidateService({
       trainingPoints,

@@ -175,6 +175,7 @@ export type PopulationDistanceConfigType<FileType = string> = {
 };
 export type SurvivalNestConfig<FileType = string> = {
   survivalFile: FileType;
+  nocc: number;
   outputs?: string;
 };
 export type PopulationDensityType<FileType = string> = {

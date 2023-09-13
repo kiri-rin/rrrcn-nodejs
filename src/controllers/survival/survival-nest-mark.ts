@@ -16,6 +16,7 @@ export const estimateNestSurvival = async (config: SurvivalNestConfig) => {
     const { data } = await apiRService.post("/survival", form, {
       params: {
         output: config.outputs,
+        nocc: String(config.nocc),
       },
       headers: form.getHeaders(),
     });

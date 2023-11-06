@@ -1,24 +1,19 @@
-import { MaxentConfig, RandomForestConfig } from "../../analytics_config_types";
-
 import { evaluatePromisify } from "../../utils/ee-image";
 import { EEFeatureCollection, EEImage } from "../../types";
 import {
   classifierValidationType,
   validateClassifier,
 } from "../random-forest/all-validations";
-const { inspect } = require("util");
 type MaxentServiceParams = {
   trainingPoints: any;
   validationPoints: any;
   regionOfInterest: any;
   paramsImage: any;
-  outputMode: MaxentConfig["outputMode"];
 };
 export const maxentAndValidateService = async ({
   trainingPoints,
   validationPoints,
   paramsImage,
-  outputMode,
 }: MaxentServiceParams) => {
   const trainingSamples = paramsImage.sampleRegions({
     collection: trainingPoints,
@@ -33,7 +28,6 @@ export const maxentAndValidateService = async ({
 
   const { classified_image, classifier } = await getMaxentClassifier({
     trainingSamples,
-    outputMode,
     paramsImage,
   });
 
@@ -55,12 +49,10 @@ export const maxentAndValidateService = async ({
 };
 export const getMaxentClassifier = async ({
   trainingSamples,
-  outputMode,
   paramsImage,
 }: {
   trainingSamples: EEFeatureCollection;
   paramsImage: EEImage;
-  outputMode: MaxentConfig["outputMode"];
 }) => {
   const classifier = ee.Classifier.amnhMaxent({
     addAllSamplesToBackground: true,

@@ -28,7 +28,7 @@ export const SplitMigrationsArea = async (
   const convexHull = allFeaturesCollection.geometry().convexHull();
   const coveringGrid = convexHull.coveringGrid(
     ee.Projection("EPSG:4326"),
-    100000
+    10000
   );
   const intersections = coveringGrid.map((square: EEFeature) =>
     ee.Feature(null, {

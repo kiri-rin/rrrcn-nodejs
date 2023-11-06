@@ -22,7 +22,6 @@ import { printMaxentCharts } from "../../services/maxent/charts";
 export const maxentCV = async (config: MaxentConfig) => {
   strapiLogger("Preparing data");
   const {
-    outputMode,
     regionOfInterest: regionOfInterestConfig,
     trainingPoints: trainingPointsConfig,
     validation: validationConfig,
@@ -68,7 +67,6 @@ export const maxentCV = async (config: MaxentConfig) => {
         const res = await maxentAndValidateService({
           trainingPoints,
           validationPoints,
-          outputMode,
           paramsImage,
           regionOfInterest,
         });

@@ -1,7 +1,4 @@
-import {
-  IndexedMigration,
-  MigrationPath,
-} from "../../controllers/migrations/types";
+import { MigrationPath } from "../../controllers/migrations/types";
 
 export type GetAreaMigrationProbabilitiesArgs = {
   area: GeoJSON.BBox;
@@ -47,9 +44,9 @@ export const getAreaMigrationProbabilities = ({
     if (lastInlierIndex === -1) {
       lastInlierIndex = reversedFeatures.findIndex((it, index, arr) => {
         intersection =
-          (arr[index + 1] &&
+          (arr[index - 1] &&
             isIntervalIntersectsBBox(
-              [it.geometry, arr[index + 1].geometry],
+              [it.geometry, arr[index - 1].geometry],
               area
             )) ||
           undefined;
@@ -75,7 +72,6 @@ export const getAreaMigrationProbabilities = ({
     const outlierY = outlier.geometry.coordinates[1];
     if (outlierX < area[0]) {
       const leftEdgeIntersectionY = line(area[0]);
-      console.log({ outlierX, leftEdgeIntersectionY, area });
       if (leftEdgeIntersectionY < area[1]) {
         res.bottom++;
       } else {
@@ -88,7 +84,6 @@ export const getAreaMigrationProbabilities = ({
     } else {
       if (outlierX > area[2]) {
         const rightEdgeIntersectionY = line(area[2]);
-        console.log({ outlierX, rightEdgeIntersectionY });
         if (rightEdgeIntersectionY < area[1]) {
           res.bottom++;
         } else {
@@ -107,7 +102,6 @@ export const getAreaMigrationProbabilities = ({
       }
     }
   }
-  console.log({ res, total });
   if (total) {
     res.top = res.top / total;
     res.bottom = res.bottom / total;
@@ -115,8 +109,6 @@ export const getAreaMigrationProbabilities = ({
     res.right = res.right / total;
     res.stop = res.stop / total;
   }
-  console.log({ res, total }, 2);
-
   return res;
 };
 export const randomlyChooseDirection = (
@@ -206,6 +198,17 @@ const getLineFunction =
       point1.coordinates[1]
     );
   };
+const getLineFunctionY =
+  (point1: GeoJSON.Point, point2: GeoJSON.Point) =>
+  (y: number): number => {
+    const c =
+      (y - point1.coordinates[1]) /
+      (point2.coordinates[1] - point1.coordinates[1]);
+    return (
+      (point2.coordinates[0] - point1.coordinates[0]) * c +
+      point1.coordinates[0]
+    );
+  };
 const isIntervalIntersectsBBox = (
   interval: [GeoJSON.Point, GeoJSON.Point],
   area: GeoJSON.BBox
@@ -242,6 +245,23 @@ const isIntervalIntersectsBBox = (
       type: "Feature",
       properties: {},
       geometry: { type: "Point", coordinates: [a_x2, rightIntersectionY] },
+    };
+  }
+  const lineY = getLineFunctionY(interval[0], interval[1]);
+  const topIntersectionX = lineY(a_y1);
+  if ((topIntersectionX - a_x1) * (topIntersectionX - a_x2) < 0) {
+    return {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "Point", coordinates: [a_y1, leftIntersectionY] },
+    };
+  }
+  const bottomIntersectionX = line(a_y2);
+  if ((bottomIntersectionX - a_x1) * (bottomIntersectionX - a_x2) < 0) {
+    return {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "Point", coordinates: [a_y2, rightIntersectionY] },
     };
   }
   return false;

@@ -134,7 +134,6 @@ export type MaxentConfig<FileType = string> = {
     | SeparateTrainingPoints<FileType>;
   classificationSplits?: number[];
   buffersPerAreaPoint?: number[];
-  outputMode: "CLAMP" | "PROBABILITY";
 } & CommonConfig;
 
 export type ValidateClassifiedImageConfig = {

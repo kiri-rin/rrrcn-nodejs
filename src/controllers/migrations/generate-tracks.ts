@@ -137,7 +137,6 @@ export const generateMigrationTracks = async ({
           ],
         },
       },
-      outputMode: "PROBABILITY",
       outputs: path.join(outputs || "", String(selectedAreaIndex)),
       validation: { split: 0.2, type: "split" },
     }).then((res) => {

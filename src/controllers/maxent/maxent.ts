@@ -15,7 +15,6 @@ import { generateRandomGrid } from "../../services/population-extrapolation/rand
 
 export const maxent = async (config: MaxentConfig) => {
   const {
-    outputMode,
     regionOfInterest: regionOfInterestConfig,
     trainingPoints: trainingPointsConfig,
     validation: validationConfig,
@@ -61,7 +60,6 @@ export const maxent = async (config: MaxentConfig) => {
       trainingPoints,
       regionOfInterest,
       paramsImage,
-      outputMode,
       validationPoints,
     });
 

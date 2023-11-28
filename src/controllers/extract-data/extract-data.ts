@@ -54,7 +54,6 @@ export const extractData = async (config: DataExtractionConfig) => {
       bands,
       buffer,
     });
-    const NumberTest = await evaluatePromisify(ee.Number(10));
     for (let [key, imageOrCollection] of Object.entries(scriptResults)) {
       scriptResults[key] = await reduceRegionsFromImageOrCollection(
         key === "world_cover_convolve" ? points : regions,

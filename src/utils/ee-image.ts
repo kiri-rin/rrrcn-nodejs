@@ -50,8 +50,10 @@ export async function evaluatePromisify(
 
     return result;
   } catch (error: any) {
+    strapiLogger("ERROR IN REQUEST!");
+    strapiLogger(String(error));
     console.log("ERROR IN REQUEST!");
-    // console.log(String(error), { error });
+    console.log(String(error), { error });
     clearTimeout(timeoutId);
     if (
       (String(error).includes("ECONNRESET") ||

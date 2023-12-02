@@ -41,10 +41,12 @@ export const printRandomForestCharts = async ({
   var sampleValidation = await evaluatePromisify(
     predictedValidation.select(["Presence", "classification"])
   );
-  const paramsHistogram = await drawParamsImportanceHistogram(
-    //@ts-ignore
-    explainedClassifier.importance
-  );
+  const paramsHistogram =
+    explainedClassifier &&
+    (await drawParamsImportanceHistogram(
+      //@ts-ignore
+      explainedClassifier.importance
+    ));
   const { ROCChart, ROC } = await drawAUCROCChart(predictedValidation);
   await writeFile(output + "/ROC.json", JSON.stringify(ROC, null, 4));
   await writeFile(
@@ -75,7 +77,8 @@ export const printRandomForestCharts = async ({
     )
   );
   await saveChart(regression, output + "/regression.jpg");
-  await saveChart(paramsHistogram, output + "/paramsHistogram.jpg");
+  paramsHistogram &&
+    (await saveChart(paramsHistogram, output + "/paramsHistogram.jpg"));
   await saveChart(regressionValidation, output + "/regression_valid.jpg");
 };
 export const drawParamsImportanceHistogram = async (importance: object) => {

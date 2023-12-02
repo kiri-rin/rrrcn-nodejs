@@ -6,7 +6,7 @@ import {
 } from "./all-validations";
 import { evaluatePromisify } from "../../utils/ee-image";
 
-type RandomForestServiceParams = {
+export type RandomForestServiceParams = {
   trainingPoints: any;
   validationPoints: any;
   regionOfInterest: any;
@@ -31,8 +31,6 @@ export const randomForestAndValidateService = async ({
     outputMode,
     paramsImage,
   });
-  console.log("PRE VALIDATE");
-
   const validations = (await validateClassifier(
     classified_image,
     validationPoints,

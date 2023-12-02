@@ -110,7 +110,7 @@ export type RandomForestConfig<FileType = string> = {
     | Required<SeparateTrainingPoints<FileType>>;
   classificationSplits?: number[];
   buffersPerAreaPoint?: number[];
-  outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY";
+  outputMode: "CLASSIFICATION" | "REGRESSION" | "PROBABILITY" | "MEAN";
 } & CommonConfig;
 
 export type MaxentConfig<FileType = string> = {

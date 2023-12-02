@@ -170,12 +170,14 @@ export const downloadClassifiedImage = async ({
         }
   );
   const tiffUrl: string = await getTiffUrl(classified_image, regionOfInterest);
-  const geojson = await evaluatePromisify(
-    classified_image.gt(50).selfMask().reduceToVectors({
-      geometry: regionOfInterest,
-      scale: 1000,
-    })
-  );
+  const geojson =
+    discrete &&
+    (await evaluatePromisify(
+      classified_image.gt(0).selfMask().reduceToVectors({
+        geometry: regionOfInterest,
+        scale: 1000,
+      })
+    ));
   await mkdir(output, { recursive: true });
   // var task = ee.batch.Export.image.toDrive({
   //   image: classified_image,
@@ -191,11 +193,14 @@ export const downloadClassifiedImage = async ({
   //     console.log({ err });
   //   }
   // );
+  console.log({ thumbUrl, tiffUrl });
   return {
     promise: Promise.all([
       downloadFile(thumbUrl, `${output}/${filename}.png`),
       downloadFile(tiffUrl, `${output}/${filename}.zip`),
-      writeFile(`${output}/${filename}.geojson`, JSON.stringify(geojson)),
+      geojson
+        ? writeFile(`${output}/${filename}.geojson`, JSON.stringify(geojson))
+        : Promise.resolve(null),
     ]),
     tiffUrl,
     thumbUrl,

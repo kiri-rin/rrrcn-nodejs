@@ -4,7 +4,7 @@ import {
   classifierValidationType,
   validateClassifier,
 } from "../random-forest/all-validations";
-type MaxentServiceParams = {
+export type MaxentServiceParams = {
   trainingPoints: any;
   validationPoints: any;
   regionOfInterest: any;

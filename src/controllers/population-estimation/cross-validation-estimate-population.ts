@@ -4,32 +4,62 @@ import { estimatePopulationService } from "../../services/population-extrapolati
 import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
 import { importGeometries } from "../../utils/import-geometries";
-import { getPresenceRegion } from "./estimate-population-random-points";
+import {
+  estimatePopulationWriteResult,
+  getPresenceRegion,
+} from "./estimate-population-random-points";
+import {
+  findBestAver,
+  findBestDeviations,
+} from "../../services/population-extrapolation/find_best";
+import type { EstimatePopulationRandomGenerationResult } from "./estimate-population-random-points";
 
+export type CrossValidationPopulationEstimationResult = {
+  processed: EstimatePopulationRandomGenerationResult[];
+  totalSD: number;
+  fixedTotalSD: number;
+  maxTotal: number;
+  minTotal: number;
+  maxFixedTotal: number;
+  minFixedTotal: number;
+  minEstimate: number;
+  maxEstimate: number;
+  minFixedEstimate: number;
+  maxFixedEstimate: number;
+  averageValidationDeviation: number;
+  averageValidationAbsDeviation: number;
+  averageTrainingDeviation: number;
+  averageTrainingAbsDeviation: number;
+  averageTotal: number;
+};
 export const crossValidationPopulationEstimation = async (
   config: PopulationRandomGenerationConfigType
 ) => {
   const {
     outputs,
-
     seed: configSeed,
     presenceArea: presenceAreaConfig,
     points: pointsConfig,
     areas: areasConfig,
+    validationSplit = 0.2,
+    crossValidation = 100,
   } = config;
-  const region = getPresenceRegion(presenceAreaConfig);
+  const region = await getPresenceRegion(presenceAreaConfig);
   const outputDir = `./.local/outputs/${outputs}/`;
   await mkdir(`./.local/outputs/${outputs}`, { recursive: true });
   const areas = await importGeometries(areasConfig);
   const points = await importGeometries(pointsConfig);
   const results = [];
-  for (let i = 0; i < 100; i++) {
+  console.log({ validationSplit });
+  for (let i = 0; i < crossValidation; i++) {
     const seed = (configSeed || 1) + i * i;
 
     const areasWithRandom = areas.randomColumn("random", seed); //map random*pointsNumber
-    const trainingAreas = areasWithRandom.filter(ee.Filter.gt("random", 0.2));
+    const trainingAreas = areasWithRandom.filter(
+      ee.Filter.gt("random", validationSplit)
+    );
     const validationAreas = areasWithRandom.filter(
-      ee.Filter.lte("random", 0.2)
+      ee.Filter.lte("random", validationSplit)
     );
     try {
       const promise = estimatePopulationService({
@@ -38,54 +68,40 @@ export const crossValidationPopulationEstimation = async (
         validationAreas,
         trainingAreas,
         seed,
-      }).then(
-        ({
-          randomsOutput,
-          inArea,
-          averageDistance,
-          minDistance,
-          averageDistanceRandoms,
-          minDistanceRandoms,
-          inTrainingArea,
-          trainingErrorPercent,
-          trainingPointsSize,
-          validatingErrorPercent,
-          validationPointsSize,
-          // fixedValidationErrorPercent,
-        }) =>
-          evaluatePromisify(
-            ee.List([
-              inArea.size(),
-              validationPointsSize,
-              inTrainingArea.size(),
-              trainingPointsSize,
-              trainingErrorPercent,
-              validatingErrorPercent,
-              minDistance,
-              averageDistance,
-              minDistanceRandoms,
-              averageDistanceRandoms,
-              // fixedValidationErrorPercent,
-              // inArea.size().divide(ee.Number(1).add(trainingErrorPercent)),
-            ])
-          ).then(
-            //@ts-ignore
-            ([
-              inValidationArea,
-              validationPointsSize,
-              inTrainingArea,
-              trainingPointsSize,
-              trainingErrorPercent,
-              validatingErrorPercent,
-              minNearestDistanceTraining,
-              averageNearestDistanceTraining,
-              minNearestDistanceResult,
-              averageNearestDistanceResult,
-              // fixedValidationErrorPercent,
-              // fixedInArea,
-            ]) => {
-              const res = {
-                total: randomsOutput.features?.length,
+      })
+        .then(
+          ({
+            randomsOutput,
+            inArea,
+            averageDistance,
+            minDistance,
+            averageDistanceRandoms,
+            minDistanceRandoms,
+            inTrainingArea,
+            trainingErrorPercent,
+            trainingPointsSize,
+            validatingErrorPercent,
+            validationPointsSize,
+            // fixedValidationErrorPercent,
+          }) =>
+            evaluatePromisify(
+              ee.List([
+                inArea.size(),
+                validationPointsSize,
+                inTrainingArea.size(),
+                trainingPointsSize,
+                trainingErrorPercent,
+                validatingErrorPercent,
+                minDistance,
+                averageDistance,
+                minDistanceRandoms,
+                averageDistanceRandoms,
+                // fixedValidationErrorPercent,
+                // inArea.size().divide(ee.Number(1).add(trainingErrorPercent)),
+              ])
+            ).then(
+              //@ts-ignore
+              ([
                 inValidationArea,
                 validationPointsSize,
                 inTrainingArea,
@@ -98,29 +114,47 @@ export const crossValidationPopulationEstimation = async (
                 averageNearestDistanceResult,
                 // fixedValidationErrorPercent,
                 // fixedInArea,
-                // fixedTotal:
-                //   randomsOutput.features?.length / (1 + trainingErrorPercent),
-                seed,
-              };
-              return res;
-            }
-          )
-      );
+              ]) => {
+                const res = {
+                  total: randomsOutput.features?.length,
+                  inValidationArea,
+                  validationPointsSize,
+                  inTrainingArea,
+                  trainingPointsSize,
+                  trainingErrorPercent,
+                  validatingErrorPercent,
+                  minNearestDistanceTraining,
+                  averageNearestDistanceTraining,
+                  minNearestDistanceResult,
+                  averageNearestDistanceResult,
+                  randomsOutput,
+                  // fixedValidationErrorPercent,
+                  // fixedInArea,
+                  // fixedTotal:
+                  //   randomsOutput.features?.length / (1 + trainingErrorPercent),
+                  seed,
+                };
+                return res;
+              }
+            )
+        )
+        .catch((e) => {
+          console.log("DROP ", seed);
+        });
       promise && results.push(promise);
     } catch (e) {
-      console.log("DROP ", seed);
+      console.log(e, "DROP ", seed);
     }
   }
   let processed = (await Promise.allSettled(results))
-    .filter((it) => it.status === "fulfilled")
-    //@ts-ignore
-    .map((it) => it.value);
+    .map((it) => it.status === "fulfilled" && it.value)
+    .filter((it) => it);
   const means = processed.reduce(
     (acc: any, curr: any, index, arr) => {
-      acc.averageFixedValidationDeviation += curr.fixedValidationErrorPercent;
-      acc.averageFixedValidationAbsDeviation += Math.abs(
-        curr.fixedValidationErrorPercent
-      );
+      // acc.averageFixedValidationDeviation += curr.fixedValidationErrorPercent;
+      // acc.averageFixedValidationAbsDeviation += Math.abs(
+      //   curr.fixedValidationErrorPercent
+      // );
       // acc.validationFixedSD +=
       //   curr.fixedValidationErrorPercent * curr.fixedValidationErrorPercent;
       acc.averageValidationDeviation += curr.validatingErrorPercent;
@@ -210,10 +244,17 @@ export const crossValidationPopulationEstimation = async (
       4
     )
   );
-  console.log("FINISH");
-  strapiLogger("FINISH");
-  return {
+
+  const res: CrossValidationPopulationEstimationResult = {
     processed,
     ...means,
   };
+  console.log(processed, results);
+  const averBest = findBestAver(res);
+  const devBest = findBestDeviations(res);
+  estimatePopulationWriteResult(averBest, `${outputDir}average_best/`);
+  estimatePopulationWriteResult(devBest, `${outputDir}deviance_best/`);
+  console.log("FINISH");
+  strapiLogger("FINISH");
+  return res;
 };

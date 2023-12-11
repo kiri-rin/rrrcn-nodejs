@@ -1,4 +1,9 @@
-export const findBestAver = (cross: any) => {
+import type { CrossValidationPopulationEstimationResult } from "../../controllers/population-estimation/cross-validation-estimate-population";
+import { EstimatePopulationRandomGenerationResult } from "../../controllers/population-estimation/estimate-population-random-points";
+
+export const findBestAver = (
+  cross: CrossValidationPopulationEstimationResult
+): EstimatePopulationRandomGenerationResult => {
   return cross.processed.reduce((acc: any, curr: any) => {
     if (
       Math.abs(curr.total - cross.averageTotal) <
@@ -9,7 +14,9 @@ export const findBestAver = (cross: any) => {
     return acc;
   }, cross.processed[0]);
 };
-export const findBestDeviations = (cross: any) => {
+export const findBestDeviations = (
+  cross: CrossValidationPopulationEstimationResult
+): EstimatePopulationRandomGenerationResult => {
   return cross.processed.reduce((acc: any, curr: any) => {
     if (
       curr.validatingErrorPercent * curr.validatingErrorPercent +

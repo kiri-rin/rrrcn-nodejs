@@ -5,10 +5,24 @@ import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
 import { importGeometries } from "../../utils/import-geometries";
 import { getCsv } from "../../utils/points";
-
+export type EstimatePopulationRandomGenerationResult = {
+  total: number;
+  inValidationArea: number;
+  validationPointsSize: number;
+  inTrainingArea: number;
+  trainingPointsSize: number;
+  trainingErrorPercent: number;
+  validatingErrorPercent: number;
+  minNearestDistanceTraining: number;
+  averageNearestDistanceTraining: number;
+  minNearestDistanceResult: number;
+  averageNearestDistanceResult: number;
+  randomsOutput: number;
+  seed?: number;
+};
 export const getPresenceRegion = async (
   regionConfig: PopulationRandomGenerationConfigType["presenceArea"]
-) => {
+): Promise<EstimatePopulationRandomGenerationResult> => {
   switch (regionConfig.type) {
     case "asset": {
       return ee.Image(regionConfig.path).reduceToVectors();
@@ -26,20 +40,24 @@ export const estimatePopulationRandomGeneration = async (
 ) => {
   const {
     outputs,
-
+    validationSplit = 0.2,
     seed,
     presenceArea: presenceAreaConfig,
     points: pointsConfig,
     areas: areasConfig,
   } = config;
   const region = await getPresenceRegion(presenceAreaConfig);
-  const outputDir = `${outputs}/`;
+  const outputDir = `${outputs}/`; //TODO refactor with PATH
   await mkdir(`${outputs}`, { recursive: true });
   const areas = await importGeometries(areasConfig);
   const points = await importGeometries(pointsConfig);
   const areasWithRandom = areas.randomColumn("random", seed); //map random*pointsNumber
-  const trainingAreas = areasWithRandom.filter(ee.Filter.gt("random", 0.2));
-  const validationAreas = areasWithRandom.filter(ee.Filter.lte("random", 0.2));
+  const trainingAreas = areasWithRandom.filter(
+    ee.Filter.gt("random", validationSplit)
+  );
+  const validationAreas = areasWithRandom.filter(
+    ee.Filter.lte("random", validationSplit)
+  );
   const {
     randomsOutput,
     randoms,
@@ -52,6 +70,9 @@ export const estimatePopulationRandomGeneration = async (
     trainingErrorPercent,
     distancesRandoms,
     validatingErrorPercent,
+    inTrainingArea,
+    trainingPointsSize,
+    validationPointsSize,
   } = await estimatePopulationService({
     points,
     region,
@@ -70,6 +91,9 @@ export const estimatePopulationRandomGeneration = async (
     validatingErrorPercentEv,
     distancesEv,
     distancesRandomsEv,
+    inTrainingAreaEv,
+    validationPointsSizeEv,
+    trainingPointsSizeEv,
   ]: any[] = await Promise.all([
     evaluatePromisify(inArea),
     evaluatePromisify(minDistance),
@@ -80,6 +104,9 @@ export const estimatePopulationRandomGeneration = async (
     evaluatePromisify(validatingErrorPercent),
     evaluatePromisify(distances),
     evaluatePromisify(distancesRandoms),
+    evaluatePromisify(inTrainingArea),
+    evaluatePromisify(validationPointsSize),
+    evaluatePromisify(trainingPointsSize),
   ]);
   const distancesTable = distancesEv.features.map((it: any) => [
     it.properties.nearest,
@@ -92,17 +119,31 @@ export const estimatePopulationRandomGeneration = async (
     `${outputDir}distancesRandoms.csv`,
     await getCsv(distancesRandomsTable)
   );
-  const res = {
+  const res: EstimatePopulationRandomGenerationResult = {
     total: randomsOutput.features?.length,
-    inAreas: inAreaEv.features?.length,
-    minDistanceEv,
-    averageDistanceEv,
-    minDistanceRandEv,
-    averageDistanceRandEv,
-    trainingErrorPercentEv,
-    validatingErrorPercentEv,
+    inValidationArea: inAreaEv.features?.length,
+    validationPointsSize: validationPointsSizeEv,
+    inTrainingArea: inTrainingAreaEv,
+    trainingPointsSize: trainingPointsSizeEv,
+    trainingErrorPercent: trainingErrorPercentEv,
+    validatingErrorPercent: validatingErrorPercentEv,
+    minNearestDistanceTraining: minDistanceEv,
+    averageNearestDistanceTraining: averageDistanceEv,
+    minNearestDistanceResult: minDistanceRandEv,
+    averageNearestDistanceResult: averageDistanceRandEv,
+    randomsOutput,
+    seed,
   };
   console.log(res);
+  writeFileSync(`${outputDir}points.json`, JSON.stringify(randomsOutput));
+  writeFileSync(`${outputDir}result.json`, JSON.stringify(res));
+  writeFileSync(`${outputDir}inArea.json`, JSON.stringify(inArea));
+};
+export const estimatePopulationWriteResult = (
+  res: EstimatePopulationRandomGenerationResult,
+  outputDir: string
+) => {
+  const { randomsOutput, inValidationArea: inArea } = res;
   writeFileSync(`${outputDir}points.json`, JSON.stringify(randomsOutput));
   writeFileSync(`${outputDir}result.json`, JSON.stringify(res));
   writeFileSync(`${outputDir}inArea.json`, JSON.stringify(inArea));

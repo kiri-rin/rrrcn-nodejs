@@ -2,7 +2,10 @@ import {
   populationEstimationType,
   PopulationRandomGenerationConfigType,
 } from "../../analytics_config_types";
-import { crossValidationPopulationEstimation } from "./cross-validation-estimate-population";
+import {
+  crossValidationPopulationEstimation,
+  CrossValidationPopulationEstimationResult,
+} from "./cross-validation-estimate-population";
 import { writeFile } from "fs/promises";
 import {
   findBestAver,
@@ -23,7 +26,7 @@ export const estimatePopulationFotPaper = async (
   const thiessens = await crossValidationPopulationEstimation(thiessensConfig);
   const areas = await crossValidationPopulationEstimation(areasConfig);
 
-  const csvColumns = [
+  const csvColumns: (keyof CrossValidationPopulationEstimationResult)[] = [
     "minTotal",
     "maxTotal",
     "averageTotal",
@@ -74,4 +77,25 @@ export const estimatePopulationFotPaper = async (
       outputs: `${output}/population/areasBestDev`,
     }),
   ]);
+};
+export const printGenerationPointsCSV = (
+  result: CrossValidationPopulationEstimationResult
+) => {
+  const csvColumns: (keyof CrossValidationPopulationEstimationResult)[] = [
+    "minTotal",
+    "maxTotal",
+    "averageTotal",
+    "totalSD",
+    "minEstimate",
+    "maxEstimate",
+    "averageValidationDeviation",
+    "averageValidationAbsDeviation",
+    "averageTrainingDeviation",
+    "averageTrainingAbsDeviation",
+  ];
+  const csvTable = [
+    ["name", ...csvColumns],
+    // ["Thiessen", ...csvColumns.map((it) => thiessens[it])],
+    ["Areas", ...csvColumns.map((it) => result[it])],
+  ];
 };

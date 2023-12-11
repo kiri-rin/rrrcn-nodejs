@@ -166,6 +166,8 @@ export type PopulationRandomGenerationConfigType<FileType = string> = {
   seed?: number;
   outputs: string;
   presenceArea: GeometriesImportConfig<FileType>;
+  validationSplit?: number;
+  crossValidation?: number;
 };
 export type PopulationDistanceConfigType<FileType = string> = {
   distanceFile: FileType;

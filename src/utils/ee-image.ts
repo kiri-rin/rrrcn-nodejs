@@ -59,6 +59,9 @@ export async function evaluatePromisify(
       (String(error).includes("ECONNRESET") ||
         String(error).includes("socket hang up") ||
         String(error).includes("AbortError") ||
+        String(error).includes(
+          "disconnected before secure TLS connection was established"
+        ) ||
         String(error).includes("ECONNREFUSED")) &&
       shouldRetry
     ) {

@@ -22,11 +22,8 @@ export const estimatePopulationService = async ({
 
   const connectedAreas = prepareAreas(trainingAreas);
   const distances = await calcDistances(trainingPoints, connectedAreas);
-  console.log(await evaluatePromisify(distances));
   const averageDistance = ee.Number(distances.aggregate_mean("nearest"));
   const minDistance = ee.Number(distances.aggregate_min("nearest"));
-  console.log(await evaluatePromisify(averageDistance));
-  console.log(await evaluatePromisify(minDistance));
   const randomGrid = generateRandomGrid({
     region: region,
     seed,
@@ -85,8 +82,6 @@ export async function calcDistances(
   centroids: EEFeatureCollection,
   areas: EEFeatureCollection
 ) {
-  console.log(await evaluatePromisify(areas));
-  console.log(await evaluatePromisify(centroids.size()));
   return ee.FeatureCollection(
     areas.iterate(function (area: EEFeature, res: EEFeatureCollection) {
       const areaPoints = centroids.filterBounds(area.geometry());

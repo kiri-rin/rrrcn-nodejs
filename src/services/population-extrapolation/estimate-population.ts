@@ -21,7 +21,7 @@ export const estimatePopulationService = async ({
   const validationPoints = points.filterBounds(validationAreas);
 
   const connectedAreas = prepareAreas(trainingAreas);
-  const distances = await calcDistances(trainingPoints, connectedAreas);
+  const distances = calcDistances(trainingPoints, connectedAreas);
   const averageDistance = ee.Number(distances.aggregate_mean("nearest"));
   const minDistance = ee.Number(distances.aggregate_min("nearest"));
   const randomGrid = generateRandomGrid({
@@ -78,7 +78,7 @@ export const estimatePopulationService = async ({
     validationPointsSize: validationPoints.size(),
   };
 };
-export async function calcDistances(
+export function calcDistances(
   centroids: EEFeatureCollection,
   areas: EEFeatureCollection
 ) {

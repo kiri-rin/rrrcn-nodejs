@@ -63,6 +63,7 @@ export const crossValidationPopulationEstimation = async (
     const validationAreas = areasWithRandom.filter(
       ee.Filter.lte("random", validationSplit)
     );
+
     try {
       const promise = estimatePopulationService({
         points,
@@ -89,9 +90,9 @@ export const crossValidationPopulationEstimation = async (
             // fixedValidationErrorPercent,
           }) =>
             Promise.all([
-              evaluatePromisify(inArea.size()),
+              evaluatePromisify(inArea),
               evaluatePromisify(validationPointsSize),
-              evaluatePromisify(inTrainingArea.size()),
+              evaluatePromisify(inTrainingArea),
               evaluatePromisify(trainingPointsSize),
               evaluatePromisify(trainingErrorPercent),
               evaluatePromisify(validatingErrorPercent),
@@ -124,6 +125,8 @@ export const crossValidationPopulationEstimation = async (
                 const res: EstimatePopulationRandomGenerationResult = {
                   total: randomsOutput.features?.length,
                   inValidationArea,
+                  inTrainingAreaSize: inTrainingArea.features?.length,
+                  inValidationAreaSize: inValidationArea.features?.length,
                   validationPointsSize,
                   inTrainingArea,
                   trainingPointsSize,
@@ -264,7 +267,6 @@ export const crossValidationPopulationEstimation = async (
     processed,
     ...means,
   };
-  console.log(processed, results);
   const averBest = findBestAver(res);
   const devBest = findBestDeviations(res);
   await estimatePopulationWriteResult(averBest, `${outputDir}average_best/`);

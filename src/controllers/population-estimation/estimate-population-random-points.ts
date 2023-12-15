@@ -7,8 +7,10 @@ import { importGeometries } from "../../utils/import-geometries";
 import { getCsv } from "../../utils/points";
 export type EstimatePopulationRandomGenerationResult = {
   total: number;
-  inValidationArea: number;
+  inValidationAreaSize: number;
+  inValidationArea: GeoJSON.FeatureCollection<GeoJSON.Point>;
   validationPointsSize: number;
+  inTrainingAreaSize: GeoJSON.FeatureCollection<GeoJSON.Point>;
   inTrainingArea: number;
   trainingPointsSize: number;
   trainingErrorPercent: number;
@@ -112,21 +114,13 @@ export const estimatePopulationRandomGeneration = async (
     evaluatePromisify(validationPointsSize),
     evaluatePromisify(trainingPointsSize),
   ]);
-  const distancesTable = distancesEv.features.map((it: any) => [
-    it.properties.nearest,
-  ]);
-  const distancesRandomsTable = distancesRandomsEv.features.map((it: any) => [
-    it.properties.nearest,
-  ]);
-  await writeFile(`${outputDir}distances.csv`, await getCsv(distancesTable));
-  await writeFile(
-    `${outputDir}distancesRandoms.csv`,
-    await getCsv(distancesRandomsTable)
-  );
+
   const res: EstimatePopulationRandomGenerationResult = {
     total: randomsOutput.features?.length,
-    inValidationArea: inAreaEv.features?.length,
+    inValidationAreaSize: inAreaEv.features?.length,
+    inValidationArea: inAreaEv,
     validationPointsSize: validationPointsSizeEv,
+    inTrainingAreaSize: inTrainingAreaEv,
     inTrainingArea: inTrainingAreaEv,
     trainingPointsSize: trainingPointsSizeEv,
     trainingErrorPercent: trainingErrorPercentEv,
@@ -140,10 +134,6 @@ export const estimatePopulationRandomGeneration = async (
     randomsOutput,
     seed,
   };
-  console.log(res);
-  writeFileSync(`${outputDir}points.json`, JSON.stringify(randomsOutput));
-  writeFileSync(`${outputDir}result.json`, JSON.stringify(res));
-  writeFileSync(`${outputDir}inArea.json`, JSON.stringify(inArea));
   await estimatePopulationWriteResult(res, `${outputDir}/test`);
 };
 export const estimatePopulationWriteResult = async (
@@ -151,7 +141,14 @@ export const estimatePopulationWriteResult = async (
   outputDir: string
 ) => {
   await mkdir(`${outputDir}`, { recursive: true });
-  const { randomsOutput, trainingDistances, resultDistances, ..._res } = res;
+  const {
+    randomsOutput,
+    trainingDistances,
+    resultDistances,
+    inTrainingArea,
+    inValidationArea,
+    ..._res
+  } = res;
 
   const distancesTable =
     trainingDistances.features?.map((it: any) => [it.properties.nearest]) || [];
@@ -165,5 +162,12 @@ export const estimatePopulationWriteResult = async (
   );
   writeFileSync(`${outputDir}points.json`, JSON.stringify(randomsOutput));
   writeFileSync(`${outputDir}result.json`, JSON.stringify(_res));
-  // writeFileSync(`${outputDir}inArea.json`, JSON.stringify(inArea));
+  writeFileSync(
+    `${outputDir}inValidationArea.json`,
+    JSON.stringify(inValidationArea)
+  );
+  writeFileSync(
+    `${outputDir}inTrainingArea.json`,
+    JSON.stringify(inTrainingArea)
+  );
 };

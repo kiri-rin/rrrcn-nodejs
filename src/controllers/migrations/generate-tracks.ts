@@ -169,7 +169,9 @@ export const generateMigrationTracks = async ({
           neighboursAreasIds: {},
         };
       }
+      //TODO Optimize cycle
       for (let { point, from } of areaToIndex.points) {
+        //TODO Rename areaToIndex
         const exitDirection = randomlyChooseDirection(
           indexedAreas[id].probabilities
         );

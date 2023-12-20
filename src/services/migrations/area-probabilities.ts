@@ -1,5 +1,5 @@
 import { MigrationPath } from "../../controllers/migrations/types";
-
+import * as turf from "@turf/turf";
 export type GetAreaMigrationProbabilitiesArgs = {
   area: GeoJSON.BBox;
   migrations: MigrationPath[];
@@ -39,23 +39,44 @@ export const getAreaMigrationProbabilities = ({
   for (let migration of migrations) {
     const reversedFeatures = [...migration.features].reverse();
     let lastInlierIndex = reversedFeatures.findIndex(
-      (it, index) => !isPointOutsideBBox(it.geometry, area)
+      (it, index, arr) =>
+        !isPointOutsideBBox(it.geometry, area) ||
+        (arr[index - 1] &&
+          turf.lineIntersect(
+            turf.lineString([
+              arr[index - 1].geometry.coordinates,
+              it.geometry.coordinates,
+            ]),
+            turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
+          ).features[0])
     );
     if (lastInlierIndex === -1) {
-      lastInlierIndex = reversedFeatures.findIndex((it, index, arr) => {
-        intersection =
-          (arr[index - 1] &&
-            isIntervalIntersectsBBox(
-              [it.geometry, arr[index - 1].geometry],
-              area
-            )) ||
-          undefined;
-        if (intersection) {
-          return true;
-        }
-      });
+      // lastInlierIndex = reversedFeatures.findIndex((it, index, arr) => {
+      //   intersection =
+      //     (arr[index - 1] &&
+      //       turf.lineIntersect(
+      //         turf.lineString([
+      //           arr[index - 1].geometry.coordinates,
+      //           it.geometry.coordinates,
+      //         ]),
+      //         turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
+      //       ).features[0]) ||
+      //     undefined;
+
+      //   isIntervalIntersectsBBox(
+      //     [it.geometry, arr[index - 1].geometry],
+      //     area
+      //   )) ||
+      // undefined;
+      //   if (intersection) {
+      //     console.log("INTERSECTION FOUND", intersection, index);
+      //
+      //     return true;
+      //   }
+      // });
       if (!intersection) {
         continue;
+        console.log("INTERSECTION not FOUND", area);
       }
     }
     total++;
@@ -65,7 +86,7 @@ export const getAreaMigrationProbabilities = ({
       continue;
     }
 
-    const inlier = intersection || reversedFeatures[lastInlierIndex];
+    const inlier = reversedFeatures[lastInlierIndex];
     const outlier = reversedFeatures[lastInlierIndex - 1];
     const line = getLineFunction(inlier.geometry, outlier.geometry);
     const outlierX = outlier.geometry.coordinates[0];
@@ -181,6 +202,7 @@ export const findNeighbourAreaIndex = (
 };
 const isNumberInInterval = (number: number, interval: [number, number]) =>
   interval[0] <= number && interval[1] >= number;
+
 export const isPointOutsideBBox = (point: GeoJSON.Point, bbox: GeoJSON.BBox) =>
   bbox[0] > point.coordinates[0] ||
   bbox[1] > point.coordinates[1] ||
@@ -198,71 +220,72 @@ const getLineFunction =
       point1.coordinates[1]
     );
   };
-const getLineFunctionY =
-  (point1: GeoJSON.Point, point2: GeoJSON.Point) =>
-  (y: number): number => {
-    const c =
-      (y - point1.coordinates[1]) /
-      (point2.coordinates[1] - point1.coordinates[1]);
-    return (
-      (point2.coordinates[0] - point1.coordinates[0]) * c +
-      point1.coordinates[0]
-    );
-  };
-const isIntervalIntersectsBBox = (
-  interval: [GeoJSON.Point, GeoJSON.Point],
-  area: GeoJSON.BBox
-): false | GeoJSON.Feature<GeoJSON.Point> => {
-  const [x1, y1] = interval[0].coordinates;
-  const [x2, y2] = interval[1].coordinates;
-  const [a_x1, a_y1, a_x2, a_y2] = area;
-  if (
-    (x1 - a_x1) * (x1 - a_x2) > 0 &&
-    (x2 - a_x1) * (x2 - a_x2) > 0 &&
-    (x1 - a_x1) * (x2 - a_x1) > 0
-  ) {
-    return false;
-  }
-  if (
-    (y1 - a_y1) * (y1 - a_y2) > 0 &&
-    (y2 - a_y1) * (y2 - a_y2) > 0 &&
-    (y1 - a_y1) * (y2 - a_y1) > 0
-  ) {
-    return false;
-  }
-  const line = getLineFunction(interval[0], interval[1]);
-  const leftIntersectionY = line(a_x1);
-  if ((leftIntersectionY - a_y1) * (leftIntersectionY - a_y2) < 0) {
-    return {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "Point", coordinates: [a_x1, leftIntersectionY] },
-    };
-  }
-  const rightIntersectionY = line(a_x2);
-  if ((rightIntersectionY - a_y1) * (rightIntersectionY - a_y2) < 0) {
-    return {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "Point", coordinates: [a_x2, rightIntersectionY] },
-    };
-  }
-  const lineY = getLineFunctionY(interval[0], interval[1]);
-  const topIntersectionX = lineY(a_y1);
-  if ((topIntersectionX - a_x1) * (topIntersectionX - a_x2) < 0) {
-    return {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "Point", coordinates: [a_y1, leftIntersectionY] },
-    };
-  }
-  const bottomIntersectionX = line(a_y2);
-  if ((bottomIntersectionX - a_x1) * (bottomIntersectionX - a_x2) < 0) {
-    return {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "Point", coordinates: [a_y2, rightIntersectionY] },
-    };
-  }
-  return false;
-};
+// const getLineFunctionY =
+//   (point1: GeoJSON.Point, point2: GeoJSON.Point) =>
+//   (y: number): number => {
+//     const c =
+//       (y - point1.coordinates[1]) /
+//       (point2.coordinates[1] - point1.coordinates[1]);
+//     return (
+//       (point2.coordinates[0] - point1.coordinates[0]) * c +
+//       point1.coordinates[0]
+//     );
+//   };
+//
+// const isIntervalIntersectsBBox = (
+//   interval: [GeoJSON.Point, GeoJSON.Point],
+//   area: GeoJSON.BBox
+// ): false | GeoJSON.Feature<GeoJSON.Point> => {
+//   const [x1, y1] = interval[0].coordinates;
+//   const [x2, y2] = interval[1].coordinates;
+//   const [a_x1, a_y1, a_x2, a_y2] = area;
+//   if (
+//     (x1 - a_x1) * (x1 - a_x2) > 0 &&
+//     (x2 - a_x1) * (x2 - a_x2) > 0 &&
+//     (x1 - a_x1) * (x2 - a_x1) > 0
+//   ) {
+//     return false;
+//   }
+//   if (
+//     (y1 - a_y1) * (y1 - a_y2) > 0 &&
+//     (y2 - a_y1) * (y2 - a_y2) > 0 &&
+//     (y1 - a_y1) * (y2 - a_y1) > 0
+//   ) {
+//     return false;
+//   }
+//   const line = getLineFunction(interval[0], interval[1]);
+//   const leftIntersectionY = line(a_x1);
+//   if ((leftIntersectionY - a_y1) * (leftIntersectionY - a_y2) < 0) {
+//     return {
+//       type: "Feature",
+//       properties: {},
+//       geometry: { type: "Point", coordinates: [a_x1, leftIntersectionY] },
+//     };
+//   }
+//   const rightIntersectionY = line(a_x2);
+//   if ((rightIntersectionY - a_y1) * (rightIntersectionY - a_y2) < 0) {
+//     return {
+//       type: "Feature",
+//       properties: {},
+//       geometry: { type: "Point", coordinates: [a_x2, rightIntersectionY] },
+//     };
+//   }
+//   const lineY = getLineFunctionY(interval[0], interval[1]);
+//   const topIntersectionX = lineY(a_y1);
+//   if ((topIntersectionX - a_x1) * (topIntersectionX - a_x2) < 0) {
+//     return {
+//       type: "Feature",
+//       properties: {},
+//       geometry: { type: "Point", coordinates: [a_y1, leftIntersectionY] },
+//     };
+//   }
+//   const bottomIntersectionX = line(a_y2);
+//   if ((bottomIntersectionX - a_x1) * (bottomIntersectionX - a_x2) < 0) {
+//     return {
+//       type: "Feature",
+//       properties: {},
+//       geometry: { type: "Point", coordinates: [a_y2, rightIntersectionY] },
+//     };
+//   }
+//   return false;
+// };

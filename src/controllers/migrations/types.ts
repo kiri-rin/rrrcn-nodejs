@@ -44,6 +44,7 @@ export type IndexedArea = {
   neighboursAreasIds: { [p in Directions]?: IdType };
   probabilities: GetAreaMigrationProbabilitiesReturn;
   area: GeoJSON.BBox;
+  isDeadEnd?: boolean;
 };
 export type NextAreaToIndex = {
   id: IdType;
@@ -53,11 +54,12 @@ export type NextAreaToIndex = {
   }[];
 };
 export type GeneratedTrack = {
-  id: number;
+  id: IdType;
   points: TrackPoint[];
 };
 export type TrackPoint = {
-  trackId: number;
+  trackId: IdType;
   point?: GeoJSON.Point;
-  id: number;
+  id: IdType;
+  areaId: IdType;
 };

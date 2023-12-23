@@ -9,11 +9,7 @@ export type FindFirsOutlierArgs = {
   migration: MigrationPath;
 };
 export type GetAreaMigrationProbabilitiesReturn = {
-  top: number;
-  right: number;
-  left: number;
-  bottom: number;
-  stop: number;
+  [p in Directions]: number;
 };
 export enum Directions {
   TOP = "top",
@@ -38,10 +34,21 @@ export const getAreaMigrationProbabilities = ({
 
   for (let migration of migrations) {
     const reversedFeatures = [...migration.features].reverse();
-    let lastInlierIndex = reversedFeatures.findIndex(
-      (it, index, arr) =>
-        !isPointOutsideBBox(it.geometry, area) ||
-        (arr[index - 1] &&
+    const currentMigrationRes = {
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      stop: 0,
+    };
+    const allLastInliers = reversedFeatures.reduce((acc, it, index, arr) => {
+      if (
+        (!isPointOutsideBBox(it.geometry, area) &&
+          (!arr[index - 1] ||
+            isPointOutsideBBox(arr[index - 1].geometry, area))) ||
+        (isPointOutsideBBox(it.geometry, area) &&
+          arr[index - 1] &&
+          isPointOutsideBBox(arr[index - 1].geometry, area) &&
           turf.lineIntersect(
             turf.lineString([
               arr[index - 1].geometry.coordinates,
@@ -49,87 +56,82 @@ export const getAreaMigrationProbabilities = ({
             ]),
             turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
           ).features[0])
-    );
-    if (lastInlierIndex === -1) {
-      // lastInlierIndex = reversedFeatures.findIndex((it, index, arr) => {
-      //   intersection =
-      //     (arr[index - 1] &&
-      //       turf.lineIntersect(
-      //         turf.lineString([
-      //           arr[index - 1].geometry.coordinates,
-      //           it.geometry.coordinates,
-      //         ]),
-      //         turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
-      //       ).features[0]) ||
-      //     undefined;
-
-      //   isIntervalIntersectsBBox(
-      //     [it.geometry, arr[index - 1].geometry],
-      //     area
-      //   )) ||
-      // undefined;
-      //   if (intersection) {
-      //     console.log("INTERSECTION FOUND", intersection, index);
-      //
-      //     return true;
-      //   }
-      // });
-      if (!intersection) {
+      ) {
+        acc.push(index);
+      }
+      return acc;
+    }, [] as number[]);
+    // let lastInlierIndex = reversedFeatures.findIndex(
+    //   (it, index, arr) =>
+    //     !isPointOutsideBBox(it.geometry, area) ||
+    //     (arr[index - 1] &&
+    //       turf.lineIntersect(
+    //         turf.lineString([
+    //           arr[index - 1].geometry.coordinates,
+    //           it.geometry.coordinates,
+    //         ]),
+    //         turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
+    //       ).features[0])
+    // );
+    for (let lastInlierIndex of allLastInliers) {
+      if (lastInlierIndex === 0) {
+        !currentMigrationRes.stop && currentMigrationRes.stop++;
         continue;
-        console.log("INTERSECTION not FOUND", area);
       }
-    }
-    total++;
 
-    if (lastInlierIndex === 0) {
-      res.stop++;
-      continue;
-    }
-
-    const inlier = reversedFeatures[lastInlierIndex];
-    const outlier = reversedFeatures[lastInlierIndex - 1];
-    const line = getLineFunction(inlier.geometry, outlier.geometry);
-    const outlierX = outlier.geometry.coordinates[0];
-    const outlierY = outlier.geometry.coordinates[1];
-    if (outlierX < area[0]) {
-      const leftEdgeIntersectionY = line(area[0]);
-      if (leftEdgeIntersectionY < area[1]) {
-        res.bottom++;
-      } else {
-        if (leftEdgeIntersectionY >= area[3]) {
-          res.top++;
+      const inlier = reversedFeatures[lastInlierIndex];
+      const outlier = reversedFeatures[lastInlierIndex - 1];
+      const line = getLineFunction(inlier.geometry, outlier.geometry);
+      const outlierX = outlier.geometry.coordinates[0];
+      const outlierY = outlier.geometry.coordinates[1];
+      if (outlierX < area[0]) {
+        const leftEdgeIntersectionY = line(area[0]);
+        if (leftEdgeIntersectionY < area[1]) {
+          !currentMigrationRes.bottom && currentMigrationRes.bottom++;
         } else {
-          res.left++;
-        }
-      }
-    } else {
-      if (outlierX > area[2]) {
-        const rightEdgeIntersectionY = line(area[2]);
-        if (rightEdgeIntersectionY < area[1]) {
-          res.bottom++;
-        } else {
-          if (rightEdgeIntersectionY > area[3]) {
-            res.top++;
+          if (leftEdgeIntersectionY >= area[3]) {
+            !currentMigrationRes.top && currentMigrationRes.top++;
           } else {
-            res.right++;
+            !currentMigrationRes.left && currentMigrationRes.left++;
           }
         }
       } else {
-        if (outlierY < area[1]) {
-          res.bottom++;
+        if (outlierX > area[2]) {
+          const rightEdgeIntersectionY = line(area[2]);
+          if (rightEdgeIntersectionY < area[1]) {
+            !currentMigrationRes.bottom && currentMigrationRes.bottom++;
+          } else {
+            if (rightEdgeIntersectionY > area[3]) {
+              !currentMigrationRes.top && currentMigrationRes.top++;
+            } else {
+              !currentMigrationRes.right && currentMigrationRes.right++;
+            }
+          }
         } else {
-          res.top++;
+          if (outlierY < area[1]) {
+            !currentMigrationRes.bottom && currentMigrationRes.bottom++;
+          } else {
+            !currentMigrationRes.top && currentMigrationRes.top++;
+          }
         }
       }
     }
+    total += Object.values(currentMigrationRes).filter((it) => it).length
+      ? 1
+      : 0;
+    res.top += currentMigrationRes.top;
+    res.bottom += currentMigrationRes.bottom;
+    res.left += currentMigrationRes.left;
+    res.right += currentMigrationRes.right;
+    res.stop += currentMigrationRes.stop;
   }
-  if (total) {
-    res.top = res.top / total;
-    res.bottom = res.bottom / total;
-    res.left = res.left / total;
-    res.right = res.right / total;
-    res.stop = res.stop / total;
-  }
+  // if (total) {
+  //   res.top = res.top / total;
+  //   res.bottom = res.bottom / total;
+  //   res.left = res.left / total;
+  //   res.right = res.right / total;
+  //   res.stop = res.stop / total;
+  // }
   return res;
 };
 export const randomlyChooseDirection = (
@@ -154,7 +156,8 @@ export const randomlyChooseDirection = (
     intervals[Directions.RIGHT][1],
     intervals[Directions.RIGHT][1] + probabiities.stop,
   ];
-  const randomNumber = Math.random();
+  const randomNumber =
+    Math.random() * Object.values(probabiities).reduce((a, b) => a + b, 0);
 
   for (let [direction, interval] of Object.entries(intervals)) {
     console.log(randomNumber, interval);
@@ -201,7 +204,7 @@ export const findNeighbourAreaIndex = (
   }
 };
 const isNumberInInterval = (number: number, interval: [number, number]) =>
-  interval[0] <= number && interval[1] >= number;
+  interval[0] !== interval[1] && interval[0] <= number && interval[1] >= number;
 
 export const isPointOutsideBBox = (point: GeoJSON.Point, bbox: GeoJSON.BBox) =>
   bbox[0] > point.coordinates[0] ||

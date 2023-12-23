@@ -1,5 +1,6 @@
 import { evaluatePromisify } from "../../utils/ee-image";
 import { EEFeature } from "../../types";
+import { getAreaMigrationProbabilities } from "../../services/migrations/area-probabilities";
 
 export type SplitMigrationAreaConfigType = {
   migrations: { geojson: GeoJSON.FeatureCollection<GeoJSON.Point> }[];
@@ -35,10 +36,29 @@ export const SplitMigrationsArea = async (
       size: featureCollections.filterBounds(square.geometry()).size(),
     })
   );
+  const evaluatedIntersections = (
+    await evaluatePromisify(intersections)
+  ).features.map((it: any) => it.properties.size);
+  const evaluatedGrid = await evaluatePromisify(
+    coveringGrid.map((it: any) => it.bounds())
+  );
+  console.log(evaluatedGrid.features[0]);
   return {
-    intersections: (await evaluatePromisify(intersections)).features.map(
-      (it: any) => it.properties.size
+    intersections: evaluatedIntersections,
+    probabilities: evaluatedIntersections.map(
+      //@ts-ignore
+      (it, index) =>
+        it &&
+        getAreaMigrationProbabilities({
+          area: [
+            evaluatedGrid.features[index].geometry.coordinates[0][0][0],
+            evaluatedGrid.features[index].geometry.coordinates[0][0][1],
+            evaluatedGrid.features[index].geometry.coordinates[0][2][0],
+            evaluatedGrid.features[index].geometry.coordinates[0][2][1],
+          ] as GeoJSON.BBox, //@ts-ignore
+          migrations: config.migrations.map((it) => it.geojson),
+        })
     ),
-    grid: await evaluatePromisify(coveringGrid.map((it: any) => it.bounds())),
+    grid: evaluatedGrid,
   };
 };

@@ -1,6 +1,7 @@
 import { evaluatePromisify } from "../../utils/ee-image";
 import { EEFeature } from "../../types";
 import { getAreaMigrationProbabilities } from "../../services/migrations/area-probabilities";
+import { inspect } from "util";
 
 export type SplitMigrationAreaConfigType = {
   migrations: { geojson: GeoJSON.FeatureCollection<GeoJSON.Point> }[];
@@ -8,16 +9,21 @@ export type SplitMigrationAreaConfigType = {
 export const SplitMigrationsArea = async (
   config: SplitMigrationAreaConfigType
 ) => {
+  const migrations = config.migrations.map((it) => ({
+    ...it,
+    geojson: { ...it.geojson, features: [...it.geojson.features] },
+  }));
+
   const featureCollections = ee.FeatureCollection(
-    config.migrations.map(({ geojson }) =>
+    migrations.map(({ geojson }) =>
       ee.Feature(ee.FeatureCollection(geojson).geometry())
     )
   );
   const allFeaturesCollection = ee.FeatureCollection(
-    config.migrations.reduce(
+    migrations.reduce(
       (acc, { geojson }) => {
         if (!acc.geojson) {
-          acc.geojson = geojson;
+          acc.geojson = geojson; //fixme WARNING assertion by pointer!!!! breaks below
         } else {
           acc.geojson.features.push(...geojson.features);
         }
@@ -43,19 +49,25 @@ export const SplitMigrationsArea = async (
     coveringGrid.map((it: any) => it.bounds())
   );
   console.log(evaluatedGrid.features[0]);
+  console.log(
+    "LENGTH",
+    config.migrations.map((it) => it.geojson.features.length)
+  );
   return {
     intersections: evaluatedIntersections,
-    probabilities: evaluatedIntersections.map(
+    probabilities: evaluatedGrid.features.map(
       //@ts-ignore
       (it, index) =>
         it &&
         getAreaMigrationProbabilities({
-          area: [
-            evaluatedGrid.features[index].geometry.coordinates[0][0][0],
-            evaluatedGrid.features[index].geometry.coordinates[0][0][1],
-            evaluatedGrid.features[index].geometry.coordinates[0][2][0],
-            evaluatedGrid.features[index].geometry.coordinates[0][2][1],
-          ] as GeoJSON.BBox, //@ts-ignore
+          area:
+            it.bbox ||
+            ([
+              it.geometry.coordinates[0][0][0],
+              it.geometry.coordinates[0][0][1],
+              it.geometry.coordinates[0][2][0],
+              it.geometry.coordinates[0][2][1],
+            ] as GeoJSON.BBox), //@ts-ignore
           migrations: config.migrations.map((it) => it.geojson),
         })
     ),

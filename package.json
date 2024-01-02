@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
+  "exports": {
+    "./src/":"./dist/src/"
+  },
   "scripts": {
     "karatau-old-rf-cv": "tsc && node dist/for-papers/karatau-old/karatau-old-cv-rf.js",
     "karatau-old-rf-bests": "tsc && node dist/for-papers/karatau-old/karatau-old-best-mean-rf.js",

@@ -13,6 +13,7 @@ import {
   getAreaMigrationProbabilities,
   isPointOutsideBBox,
   oppositeDirections,
+  randomlyChooseAltitude,
   randomlyChooseDirection,
 } from "../../../services/migrations/area-probabilities";
 import { all } from "axios";
@@ -76,7 +77,7 @@ export const generateMigrationTracks = async ({
   const generatedTracks: GeneratedTrack[] = initPoints.features.map(
     (it, index) => ({
       id: index,
-      points: [{ id: index, trackId: index, point: it.geometry, areaId: 0 }],
+      points: [{ id: index, trackId: index, point: it, areaId: 0 }],
     })
   );
 
@@ -88,7 +89,7 @@ export const generateMigrationTracks = async ({
     const area = allAreas[initAreaIndex];
 
     const areaInitPoints = indexedInitPoints.filter(
-      (it) => !isPointOutsideBBox(it.point!, area)
+      (it) => !isPointOutsideBBox(it.point!.geometry, area)
     );
     areaInitPoints.forEach((it) => {
       it.areaId = initAreaIndex;
@@ -286,7 +287,13 @@ export const generateMigrationTracks = async ({
 
         if (!point.point) {
           //TODO refactor to plain geojson models
-          point.point = randomPoint(1, bboxPolygon(area)).features[0].geometry;
+          point.point = randomPoint(1, bboxPolygon(area)).features[0];
+          if (!point.point.properties) {
+            point.point.properties = {};
+          }
+          point.point.properties.altitude = randomlyChooseAltitude(
+            indexedAreas[id].probabilities
+          );
         }
         if (exitDirection === from) {
           continue;
@@ -348,32 +355,4 @@ export const generateMigrationTracks = async ({
     nextAreasToIndex = newNextAreasToIndex;
   }
   return generatedTracks;
-};
-const generateEdgePoint = (
-  area: GeoJSON.BBox,
-  direction: Directions
-): GeoJSON.Point | undefined => {
-  const randomNumber = Math.random();
-  let coordinates;
-  switch (direction) {
-    case Directions.TOP: {
-      coordinates = [area[0] + randomNumber * (area[2] - area[0]), area[3]];
-      break;
-    }
-    case Directions.LEFT: {
-      coordinates = [area[0], area[1] + randomNumber * (area[3] - area[1])];
-      break;
-    }
-    case Directions.RIGHT: {
-      coordinates = [area[2], area[1] + randomNumber * (area[3] - area[1])];
-      break;
-    }
-    case Directions.BOTTOM: {
-      coordinates = [area[0] + randomNumber * (area[2] - area[0]), area[1]];
-      break;
-    }
-    default:
-      return undefined;
-  }
-  return { type: "Point", coordinates: coordinates };
 };

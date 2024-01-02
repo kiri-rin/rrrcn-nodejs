@@ -23,13 +23,23 @@ export type MigrationYear = {
   [SEASONS.WINTER]?: [number, number];
   [SEASONS.SPRING]?: [number, number];
 };
+export type MigrationPointProperties = {
+  date: Date;
+  altitude?: number;
+  index?: number;
+  description?: { value?: string };
+};
+export type MigrationPath = GeoJSON.FeatureCollection<
+  Point,
+  MigrationPointProperties
+>;
+
 export type IndexedMigration = {
   meta?: {};
   title: string;
   geojson: MigrationPath;
   years: { [year: string]: MigrationYear };
 };
-export type MigrationPath = GeoJSON.FeatureCollection<Point, { date: Date }>;
 export type MigrationGenerationConfigType = {
   migrations: MigrationPath[];
   allAreas: GeoJSON.FeatureCollection<GeoJSON.Polygon>;
@@ -59,7 +69,7 @@ export type GeneratedTrack = {
 };
 export type TrackPoint = {
   trackId: IdType;
-  point?: GeoJSON.Point;
+  point?: GeoJSON.Feature<Point>;
   id: IdType;
   areaId: IdType;
 };

@@ -9,7 +9,9 @@ export type FindFirsOutlierArgs = {
   migration: MigrationPath;
 };
 export type GetAreaMigrationProbabilitiesReturn = {
-  [p in Directions]: number;
+  probabilities: { [p in Directions]: number };
+  altitudes: { count: number; value: number }[];
+  total: number;
 };
 export enum Directions {
   TOP = "top",
@@ -23,13 +25,16 @@ export const getAreaMigrationProbabilities = ({
   area,
 }: GetAreaMigrationProbabilitiesArgs): GetAreaMigrationProbabilitiesReturn => {
   const res: GetAreaMigrationProbabilitiesReturn = {
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    stop: 0,
+    probabilities: {
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      stop: 0,
+    },
+    total: 0,
+    altitudes: [],
   };
-  let total = 0;
   let intersection: GeoJSON.Feature<GeoJSON.Point> | undefined;
 
   for (let migration of migrations) {
@@ -80,6 +85,14 @@ export const getAreaMigrationProbabilities = ({
       }
 
       const inlier = reversedFeatures[lastInlierIndex];
+      const altitude = inlier.properties.altitude;
+      if (altitude !== undefined) {
+        if (res.altitudes.find((it) => it.value === altitude)) {
+          res.altitudes.find((it) => it.value === altitude)!.count++;
+        } else {
+          res.altitudes.push({ value: altitude, count: 1 });
+        }
+      }
       const outlier = reversedFeatures[lastInlierIndex - 1];
       const line = getLineFunction(inlier.geometry, outlier.geometry);
       const outlierX = outlier.geometry.coordinates[0];
@@ -116,14 +129,14 @@ export const getAreaMigrationProbabilities = ({
         }
       }
     }
-    total += Object.values(currentMigrationRes).filter((it) => it).length
+    res.total += Object.values(currentMigrationRes).filter((it) => it).length
       ? 1
       : 0;
-    res.top += currentMigrationRes.top;
-    res.bottom += currentMigrationRes.bottom;
-    res.left += currentMigrationRes.left;
-    res.right += currentMigrationRes.right;
-    res.stop += currentMigrationRes.stop;
+    res.probabilities.top += currentMigrationRes.top;
+    res.probabilities.bottom += currentMigrationRes.bottom;
+    res.probabilities.left += currentMigrationRes.left;
+    res.probabilities.right += currentMigrationRes.right;
+    res.probabilities.stop += currentMigrationRes.stop;
   }
   // if (total) {
   //   res.top = res.top / total;
@@ -132,32 +145,33 @@ export const getAreaMigrationProbabilities = ({
   //   res.right = res.right / total;
   //   res.stop = res.stop / total;
   // }
+  res.altitudes.sort((a, b) => (a.value < b.value ? -1 : 1));
   return res;
 };
-export const randomlyChooseDirection = (
-  probabiities: GetAreaMigrationProbabilitiesReturn
-) => {
-  console.log({ probabiities });
+export const randomlyChooseDirection = ({
+  probabilities,
+}: GetAreaMigrationProbabilitiesReturn) => {
+  console.log({ probabiities: probabilities });
   const intervals: { [p in Directions]?: [number, number] } = {};
-  intervals[Directions.TOP] = [0, probabiities.top];
+  intervals[Directions.TOP] = [0, probabilities.top];
   intervals[Directions.LEFT] = [
     intervals[Directions.TOP][1],
-    intervals[Directions.TOP][1] + probabiities.left,
+    intervals[Directions.TOP][1] + probabilities.left,
   ];
   intervals[Directions.BOTTOM] = [
     intervals[Directions.LEFT][1],
-    intervals[Directions.LEFT][1] + probabiities.bottom,
+    intervals[Directions.LEFT][1] + probabilities.bottom,
   ];
   intervals[Directions.RIGHT] = [
     intervals[Directions.BOTTOM][1],
-    intervals[Directions.BOTTOM][1] + probabiities.right,
+    intervals[Directions.BOTTOM][1] + probabilities.right,
   ];
   intervals[Directions.STOP] = [
     intervals[Directions.RIGHT][1],
-    intervals[Directions.RIGHT][1] + probabiities.stop,
+    intervals[Directions.RIGHT][1] + probabilities.stop,
   ];
   const randomNumber =
-    Math.random() * Object.values(probabiities).reduce((a, b) => a + b, 0);
+    Math.random() * Object.values(probabilities).reduce((a, b) => a + b, 0);
 
   for (let [direction, interval] of Object.entries(intervals)) {
     console.log(randomNumber, interval);
@@ -166,6 +180,25 @@ export const randomlyChooseDirection = (
     }
   }
 };
+export function randomlyChooseAltitude({
+  altitudes,
+}: GetAreaMigrationProbabilitiesReturn) {
+  const altitudesTotal = altitudes.reduce((acc, it) => acc + it.count, 0);
+  const randomNumber = Math.random() * altitudesTotal;
+  let res;
+  [...altitudes].reduce((acc, it, index, arr) => {
+    const newAcc = acc + it.count;
+    if (randomNumber <= newAcc && randomNumber >= acc) {
+      res =
+        (it.value * (newAcc - randomNumber) -
+          arr[index - 1].value * (randomNumber - newAcc)) /
+        (newAcc - acc);
+      arr.splice(index, 1);
+    }
+    return newAcc;
+  }, 0);
+  return res;
+}
 export const oppositeDirections: { [p in Directions]: Directions } = {
   [Directions.RIGHT]: Directions.LEFT,
   [Directions.TOP]: Directions.BOTTOM,

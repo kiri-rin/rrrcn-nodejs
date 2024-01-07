@@ -66,18 +66,7 @@ export const getAreaMigrationProbabilities = ({
       }
       return acc;
     }, [] as number[]);
-    // let lastInlierIndex = reversedFeatures.findIndex(
-    //   (it, index, arr) =>
-    //     !isPointOutsideBBox(it.geometry, area) ||
-    //     (arr[index - 1] &&
-    //       turf.lineIntersect(
-    //         turf.lineString([
-    //           arr[index - 1].geometry.coordinates,
-    //           it.geometry.coordinates,
-    //         ]),
-    //         turf.lineString(turf.bboxPolygon(area).geometry.coordinates[0])
-    //       ).features[0])
-    // );
+
     for (let lastInlierIndex of allLastInliers) {
       if (lastInlierIndex === 0) {
         !currentMigrationRes.stop && currentMigrationRes.stop++;
@@ -148,10 +137,9 @@ export const getAreaMigrationProbabilities = ({
   res.altitudes.sort((a, b) => (a.value < b.value ? -1 : 1));
   return res;
 };
-export const randomlyChooseDirection = ({
-  probabilities,
-}: GetAreaMigrationProbabilitiesReturn) => {
-  console.log({ probabiities: probabilities });
+export const randomlyChooseDirection = (
+  probabilities: GetAreaMigrationProbabilitiesReturn["probabilities"]
+) => {
   const intervals: { [p in Directions]?: [number, number] } = {};
   intervals[Directions.TOP] = [0, probabilities.top];
   intervals[Directions.LEFT] = [
@@ -174,21 +162,20 @@ export const randomlyChooseDirection = ({
     Math.random() * Object.values(probabilities).reduce((a, b) => a + b, 0);
 
   for (let [direction, interval] of Object.entries(intervals)) {
-    console.log(randomNumber, interval);
     if (isNumberInInterval(randomNumber, interval)) {
       return direction as Directions;
     }
   }
 };
-export function randomlyChooseAltitude({
-  altitudes,
-}: GetAreaMigrationProbabilitiesReturn) {
+export function randomlyChooseAltitude(
+  altitudes: GetAreaMigrationProbabilitiesReturn["altitudes"]
+) {
   const altitudesTotal = altitudes.reduce((acc, it) => acc + it.count, 0);
   const randomNumber = Math.random() * altitudesTotal;
   let res;
   [...altitudes].reduce((acc, it, index, arr) => {
     const newAcc = acc + it.count;
-    if (randomNumber <= newAcc && randomNumber >= acc) {
+    if (randomNumber <= newAcc && randomNumber >= acc && index) {
       res =
         (it.value * (newAcc - randomNumber) -
           arr[index - 1].value * (randomNumber - newAcc)) /

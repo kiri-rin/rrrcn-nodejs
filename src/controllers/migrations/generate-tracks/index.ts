@@ -11,27 +11,25 @@ import {
   Directions,
   findNeighbourAreaIndex,
   getAreaMigrationProbabilities,
+  GetAreaMigrationProbabilitiesReturn,
   isPointOutsideBBox,
   oppositeDirections,
   randomlyChooseAltitude,
   randomlyChooseDirection,
 } from "../../../services/migrations/area-probabilities";
-import { all } from "axios";
-import { getRFClassifier } from "../../random-forest/utils";
-import { randomForest } from "../../random-forest/random-forest";
-import * as path from "path";
-import { maxent } from "../../maxent/maxent";
 import { area, bboxPolygon, pointOnFeature, randomPoint } from "@turf/turf";
+import { SplitMigrationsArea } from "../split-area";
+import { GeoJSON } from "geojson";
 
 export const generateMigrationTracks = async ({
   migrations,
-  allAreas: allAreasFeatureCollection,
-  selectedAreasIndices,
-  initAreasIndices: _,
   initCount = 10,
-  params,
   outputs,
 }: MigrationGenerationConfigType) => {
+  const {
+    grid: allAreasFeatureCollection,
+  }: { grid: GeoJSON.FeatureCollection<GeoJSON.Polygon> } =
+    await SplitMigrationsArea({ migrations });
   const initAreasIndices: number[] = [];
   allAreasFeatureCollection.features.forEach((it, index) => {
     if (
@@ -71,7 +69,6 @@ export const generateMigrationTracks = async ({
     area: ee.FeatureCollection(targetAreas).geometry(),
     count: initCount,
   });
-  console.log(initPoints.features.length, "INIT SIZE");
   const indexedAreas: { [p: string]: IndexedArea } = {};
 
   const generatedTracks: GeneratedTrack[] = initPoints.features.map(
@@ -84,7 +81,6 @@ export const generateMigrationTracks = async ({
   const indexedInitPoints = generatedTracks.map((it) => it.points[0]!);
 
   let nextAreasToIndex: { [p: number]: NextAreaToIndex } = {};
-  console.log({ initAreasIndices });
   for (let initAreaIndex of initAreasIndices) {
     const area = allAreas[initAreaIndex];
 
@@ -104,61 +100,7 @@ export const generateMigrationTracks = async ({
       })),
     };
   }
-  // const rfJobs = [];
-  // let rfProgress = 0;
-  // for (let selectedAreaIndex of selectedAreasIndices) {
-  //   const regionOfInterestBBox = allAreas[selectedAreaIndex];
-  //   const points = migrations.flatMap((it) =>
-  //     it.features.filter(
-  //       (it) => !isPointOutsideBBox(it.geometry, regionOfInterestBBox)
-  //     )
-  //   );
-  //   const promise = maxent({
-  //     params,
-  //     trainingPoints: {
-  //       type: "separate-points",
-  //       presencePoints: {
-  //         type: "geojson",
-  //         json: {
-  //           type: "FeatureCollection",
-  //           features: points,
-  //         },
-  //       },
-  //     },
-  //     regionOfInterest: {
-  //       type: "geojson",
-  //       json: {
-  //         type: "FeatureCollection",
-  //         features: [
-  //           {
-  //             type: "Feature",
-  //             properties: {},
-  //             geometry: {
-  //               type: "Polygon",
-  //               coordinates: [
-  //                 [
-  //                   [regionOfInterestBBox[0], regionOfInterestBBox[1]],
-  //                   [regionOfInterestBBox[0], regionOfInterestBBox[3]],
-  //                   [regionOfInterestBBox[2], regionOfInterestBBox[3]],
-  //                   [regionOfInterestBBox[2], regionOfInterestBBox[1]],
-  //                 ],
-  //               ],
-  //             },
-  //           },
-  //         ],
-  //       },
-  //     },
-  //     outputs: path.join(outputs || "", String(selectedAreaIndex)),
-  //     validation: { split: 0.2, type: "split" },
-  //   }).then((res) => {
-  //     rfProgress++;
-  //     return res;
-  //   });
-  //   rfJobs.push(promise);
-  // }
-  // const processedAreas = (await Promise.all(rfJobs)).map(
-  //   ({ classified_image }) => classified_image
-  // );
+
   const tracksDeadEnds = new Map(
     generatedTracks.map((it) => [it.id, new Set()])
   );
@@ -183,12 +125,20 @@ export const generateMigrationTracks = async ({
           neighboursAreasIds: {},
         };
       }
+      for (let [direction, prob] of Object.entries(
+        indexedAreas[id].probabilities
+      ) as [Directions, number][]) {
+        if (prob && !indexedAreas[id].neighboursAreasIds[direction]) {
+          indexedAreas[id].neighboursAreasIds[direction] =
+            findNeighbourAreaIndex(allAreas, area, direction);
+        }
+      }
       for (let { point, from } of areaToIndex.points) {
         const currentPointTrack = generatedTracks[point.trackId];
 
         const isDeadEnd =
           tracksDeadEnds.get(point.trackId)?.has(id) ||
-          Object.entries(indexedAreas[id].probabilities).every(
+          Object.entries(indexedAreas[id].probabilities.probabilities).every(
             ([direct, prob]) =>
               !prob ||
               tracksDeadEnds
@@ -197,42 +147,36 @@ export const generateMigrationTracks = async ({
                   indexedAreas[id]?.neighboursAreasIds[direct as Directions] ??
                     -1
                 ) ||
-              direct === from
+              direct === from ||
+              generatedTracks[point.trackId].points.filter(
+                (it) =>
+                  it.areaId ===
+                  indexedAreas[id]?.neighboursAreasIds[direct as Directions]
+              ).length
           );
+        if (id === 1324) {
+          console.log({
+            from,
+            probabilities: indexedAreas[id].probabilities,
+            isDeadEnd,
+          });
+        }
         if (isDeadEnd) {
           tracksDeadEnds.get(point.trackId)?.add(id);
         }
         let shouldRollback = isDeadEnd;
-        if (
-          currentPointTrack.points.filter((it) => it.areaId === id).length > 1
-        ) {
-          shouldRollback = true;
-          tracksDeadEnds
-            .get(point.trackId)
-            ?.add(indexedAreas[id].neighboursAreasIds[from]);
-        }
+
         if (shouldRollback) {
-          console.log({ shouldRollback }, id);
           const fromAreaId = indexedAreas[id].neighboursAreasIds[from];
           if (fromAreaId !== undefined) {
-            const pointTrack = generatedTracks[point.trackId];
-            console.log(
-              "POINT TRACK",
-              pointTrack.points.length,
-              pointTrack.points.findIndex((it) => it.id === point.id) //TODO something wrong with ids
-            );
-
-            pointTrack.points = pointTrack.points.slice(
-              0,
-              pointTrack?.points.length - 1
-            );
+            currentPointTrack.points.pop();
 
             const prevTrackPoint =
-              pointTrack.points[pointTrack?.points.length - 1];
+              currentPointTrack.points[currentPointTrack?.points.length - 1];
             if (prevTrackPoint) {
               const prevTrackPointArea = prevTrackPoint.areaId;
               const prevTrackPointFromPoint =
-                pointTrack.points[pointTrack?.points.length - 2];
+                currentPointTrack.points[currentPointTrack?.points.length - 2];
               if (prevTrackPointFromPoint) {
                 const prevTrackPointFromPointArea =
                   prevTrackPointFromPoint.areaId;
@@ -280,7 +224,7 @@ export const generateMigrationTracks = async ({
           .map(([dir]) => [dir, 0]);
         //TODO Rename areaToIndex
         const exitDirection = randomlyChooseDirection({
-          ...indexedAreas[id].probabilities,
+          ...indexedAreas[id].probabilities.probabilities,
           ...Object.fromEntries(deadEndDirections),
           ...(from && { [from]: 0 }),
         });
@@ -292,7 +236,7 @@ export const generateMigrationTracks = async ({
             point.point.properties = {};
           }
           point.point.properties.altitude = randomlyChooseAltitude(
-            indexedAreas[id].probabilities
+            indexedAreas[id].probabilities.altitudes
           );
         }
         if (exitDirection === from) {
@@ -354,5 +298,5 @@ export const generateMigrationTracks = async ({
     }
     nextAreasToIndex = newNextAreasToIndex;
   }
-  return generatedTracks;
+  return { generatedTracks, indexedAreas, grid: allAreasFeatureCollection };
 };

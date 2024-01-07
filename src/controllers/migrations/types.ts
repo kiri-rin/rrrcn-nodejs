@@ -35,6 +35,7 @@ export type MigrationPath = GeoJSON.FeatureCollection<
 >;
 
 export type IndexedMigration = {
+  id: string;
   meta?: {};
   title: string;
   geojson: MigrationPath;
@@ -42,11 +43,7 @@ export type IndexedMigration = {
 };
 export type MigrationGenerationConfigType = {
   migrations: MigrationPath[];
-  allAreas: GeoJSON.FeatureCollection<GeoJSON.Polygon>;
-  selectedAreasIndices: number[];
-  initAreasIndices: number[];
   initCount: number;
-  params: RandomForestParamsConfig;
 } & CommonConfig;
 export type IdType = number;
 export type IndexedArea = {

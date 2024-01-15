@@ -66,6 +66,18 @@ export const getAreaMigrationProbabilities = ({
       }
       return acc;
     }, [] as number[]);
+    reversedFeatures
+      .filter((it) => !isPointOutsideBBox(it.geometry, area))
+      .forEach((inlier) => {
+        const altitude = inlier.properties.altitude;
+        if (altitude) {
+          if (res.altitudes.find((it) => it.value === altitude)) {
+            res.altitudes.find((it) => it.value === altitude)!.count++;
+          } else {
+            res.altitudes.push({ value: altitude, count: 1 });
+          }
+        }
+      }, {});
 
     for (let lastInlierIndex of allLastInliers) {
       if (lastInlierIndex === 0) {
@@ -74,14 +86,7 @@ export const getAreaMigrationProbabilities = ({
       }
 
       const inlier = reversedFeatures[lastInlierIndex];
-      const altitude = inlier.properties.altitude;
-      if (altitude !== undefined) {
-        if (res.altitudes.find((it) => it.value === altitude)) {
-          res.altitudes.find((it) => it.value === altitude)!.count++;
-        } else {
-          res.altitudes.push({ value: altitude, count: 1 });
-        }
-      }
+
       const outlier = reversedFeatures[lastInlierIndex - 1];
       const line = getLineFunction(inlier.geometry, outlier.geometry);
       const outlierX = outlier.geometry.coordinates[0];

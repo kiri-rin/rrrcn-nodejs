@@ -1,6 +1,7 @@
 import { generateRandomPoints } from "../../../services/migrations/random-points";
 import {
   GeneratedTrack,
+  GenerateTracksResponse,
   IdType,
   IndexedArea,
   MigrationGenerationConfigType,
@@ -17,15 +18,26 @@ import {
   randomlyChooseAltitude,
   randomlyChooseDirection,
 } from "../../../services/migrations/area-probabilities";
-import { area, bboxPolygon, pointOnFeature, randomPoint } from "@turf/turf";
+import {
+  area,
+  bboxPolygon,
+  feature,
+  featureCollection,
+  pointOnFeature,
+  randomPoint,
+} from "@turf/turf";
 import { SplitMigrationsArea } from "../split-area";
 import { GeoJSON } from "geojson";
+import { elevationScript } from "../../../services/ee-data/scripts/elevation";
+import { evaluateFeatures } from "../../../utils/gee-api";
+import { getFeatures } from "../../../utils/ee-image";
+import { reduceRegionsFromImageOrCollection } from "../../../utils/io";
 
 export const generateMigrationTracks = async ({
   migrations,
   initCount = 10,
   outputs,
-}: MigrationGenerationConfigType) => {
+}: MigrationGenerationConfigType): Promise<GenerateTracksResponse> => {
   const {
     grid: allAreasFeatureCollection,
   }: { grid: GeoJSON.FeatureCollection<GeoJSON.Polygon> } =
@@ -50,6 +62,25 @@ export const generateMigrationTracks = async ({
       initAreasIndices.push(index);
     }
   });
+  for (let migration of migrations) {
+    const elevations = await getFeatures(
+      await reduceRegionsFromImageOrCollection(
+        ee.FeatureCollection(migration.features),
+        elevationScript({ regions: ee.FeatureCollection(migration.features) })
+          .elevation,
+        undefined,
+        ["elevation"]
+      )
+    );
+    console.log(elevations);
+    migration.features.forEach((point, index) => {
+      point.properties.altitude = Math.max(
+        (point?.properties?.altitude || 0) -
+          elevations[index].properties.elevation,
+        0
+      );
+    });
+  }
 
   const targetAreas = allAreasFeatureCollection.features.filter((it, index) =>
     initAreasIndices.includes(index)
@@ -74,21 +105,28 @@ export const generateMigrationTracks = async ({
   const generatedTracks: GeneratedTrack[] = initPoints.features.map(
     (it, index) => ({
       id: index,
-      points: [{ id: index, trackId: index, point: it, areaId: 0 }],
+      points: featureCollection([
+        feature(it.geometry, {
+          ...it.properties,
+          id: index,
+          trackId: index,
+          areaId: 0,
+        }),
+      ]),
     })
   );
 
-  const indexedInitPoints = generatedTracks.map((it) => it.points[0]!);
+  const indexedInitPoints = generatedTracks.map((it) => it.points.features[0]!);
 
   let nextAreasToIndex: { [p: number]: NextAreaToIndex } = {};
   for (let initAreaIndex of initAreasIndices) {
     const area = allAreas[initAreaIndex];
 
     const areaInitPoints = indexedInitPoints.filter(
-      (it) => !isPointOutsideBBox(it.point!.geometry, area)
+      (it) => !isPointOutsideBBox(it!.geometry!, area)
     );
     areaInitPoints.forEach((it) => {
-      it.areaId = initAreaIndex;
+      it.properties.areaId = initAreaIndex;
     });
     console.log({ areaInitPoints: areaInitPoints.length });
 
@@ -134,23 +172,23 @@ export const generateMigrationTracks = async ({
         }
       }
       for (let { point, from } of areaToIndex.points) {
-        const currentPointTrack = generatedTracks[point.trackId];
+        const currentPointTrack = generatedTracks[point.properties.trackId!];
 
         const isDeadEnd =
-          tracksDeadEnds.get(point.trackId)?.has(id) ||
+          tracksDeadEnds.get(point.properties.trackId!)?.has(id) ||
           Object.entries(indexedAreas[id].probabilities.probabilities).every(
             ([direct, prob]) =>
               !prob ||
               tracksDeadEnds
-                .get(point.trackId)
+                .get(point.properties.trackId!)
                 ?.has(
                   indexedAreas[id]?.neighboursAreasIds[direct as Directions] ??
                     -1
                 ) ||
               direct === from ||
-              generatedTracks[point.trackId].points.filter(
+              generatedTracks[point.properties.trackId!].points.features.filter(
                 (it) =>
-                  it.areaId ===
+                  it.properties.areaId ===
                   indexedAreas[id]?.neighboursAreasIds[direct as Directions]
               ).length
           );
@@ -162,29 +200,33 @@ export const generateMigrationTracks = async ({
           });
         }
         if (isDeadEnd) {
-          tracksDeadEnds.get(point.trackId)?.add(id);
+          tracksDeadEnds.get(point.properties.trackId!)?.add(id);
         }
         let shouldRollback = isDeadEnd;
 
         if (shouldRollback) {
           const fromAreaId = indexedAreas[id].neighboursAreasIds[from];
           if (fromAreaId !== undefined) {
-            currentPointTrack.points.pop();
+            currentPointTrack.points.features.pop();
 
             const prevTrackPoint =
-              currentPointTrack.points[currentPointTrack?.points.length - 1];
+              currentPointTrack.points.features[
+                currentPointTrack?.points.features.length - 1
+              ];
             if (prevTrackPoint) {
-              const prevTrackPointArea = prevTrackPoint.areaId;
+              const prevTrackPointArea = prevTrackPoint.properties.areaId;
               const prevTrackPointFromPoint =
-                currentPointTrack.points[currentPointTrack?.points.length - 2];
+                currentPointTrack.points.features[
+                  currentPointTrack?.points.features.length - 2
+                ];
               if (prevTrackPointFromPoint) {
                 const prevTrackPointFromPointArea =
-                  prevTrackPointFromPoint.areaId;
+                  prevTrackPointFromPoint.properties.areaId;
                 const prevTrackPointFrom = Object.keys(
-                  indexedAreas[prevTrackPointArea].neighboursAreasIds
+                  indexedAreas[prevTrackPointArea!].neighboursAreasIds
                 ).find(
                   (it, arr) =>
-                    indexedAreas[prevTrackPointArea].neighboursAreasIds[
+                    indexedAreas[prevTrackPointArea!].neighboursAreasIds[
                       it as Directions
                     ] === prevTrackPointFromPointArea
                 ) as Directions;
@@ -219,7 +261,7 @@ export const generateMigrationTracks = async ({
           indexedAreas[id].neighboursAreasIds
         )
           .filter(([dir, neighId]) =>
-            tracksDeadEnds.get(point.trackId)?.has(neighId)
+            tracksDeadEnds.get(point.properties.trackId!)?.has(neighId)
           )
           .map(([dir]) => [dir, 0]);
         //TODO Rename areaToIndex
@@ -229,13 +271,16 @@ export const generateMigrationTracks = async ({
           ...(from && { [from]: 0 }),
         });
 
-        if (!point.point) {
+        if (!point.geometry) {
           //TODO refactor to plain geojson models
-          point.point = randomPoint(1, bboxPolygon(area)).features[0];
-          if (!point.point.properties) {
-            point.point.properties = {};
+          point.geometry = randomPoint(
+            1,
+            bboxPolygon(area)
+          ).features[0].geometry;
+          if (!point.properties) {
+            point.properties = {};
           }
-          point.point.properties.altitude = randomlyChooseAltitude(
+          point.properties.altitude = randomlyChooseAltitude(
             indexedAreas[id].probabilities.altitudes
           );
         }
@@ -274,12 +319,15 @@ export const generateMigrationTracks = async ({
               }
             }
           }
-          const nextPoint: TrackPoint = {
+          const nextPoint: TrackPoint = feature(null, {
             areaId: neighbourIndex,
-            id: generatedTracks[point.trackId].points.length,
-            trackId: point.trackId,
-          };
-          generatedTracks[point.trackId].points.push(nextPoint);
+            id: generatedTracks[point.properties.trackId!].points.features
+              .length,
+            trackId: point.properties.trackId,
+          });
+          generatedTracks[point.properties.trackId!].points.features.push(
+            nextPoint
+          );
           if (newNextAreasToIndex[neighbourIndex]) {
             newNextAreasToIndex[neighbourIndex].points.push({
               point: nextPoint,

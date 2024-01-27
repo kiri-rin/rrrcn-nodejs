@@ -4,7 +4,7 @@ const { stringify } = require("csv-stringify");
 export type JSCSVTable = { [colName: string]: any }[];
 
 export async function exportFeatureCollectionsToCsv(
-  collection: EEFeatureCollection
+  collection: GeoJSON.Feature<any, { id: any } & { [p: string]: any }>[]
 ): Promise<string> {
   console.log("READY TO PROCESS TABLE");
   strapiLogger("READY TO PROCESS TABLE");

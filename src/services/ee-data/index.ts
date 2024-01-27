@@ -14,6 +14,7 @@ import { worldCoverScript } from "./scripts/world-cover";
 import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
 import { alosScript } from "./scripts/alos";
 import { landsatScript } from "./scripts/landsat";
+import { era5HourlyScript } from "./scripts/era5_hourly_new";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };
@@ -31,6 +32,7 @@ const scripts = {
   geomorph: geomorphScript,
   // era5_hourly: require("./era5_hourly"),
   era5_monthly: era5MounthlyScript,
+  era5_hourly: era5HourlyScript,
   global_habitat: globalHabitatScript,
   dynamic_world: dynamicWorldScript,
   dynamic_world_means: dynamicWorldMeansScript,

@@ -4,6 +4,7 @@
   "compilerOptions": {
     "allowJs": true,
     "outDir": "dist",
+    "downlevelIteration": true,
     "composite": true
   }
 }

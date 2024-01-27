@@ -346,5 +346,9 @@ export const generateMigrationTracks = async ({
     }
     nextAreasToIndex = newNextAreasToIndex;
   }
-  return { generatedTracks, indexedAreas, grid: allAreasFeatureCollection };
+  return {
+    generatedTracks: generatedTracks as GeneratedTrack<GeoJSON.Point>[],
+    indexedAreas,
+    grid: allAreasFeatureCollection,
+  };
 };

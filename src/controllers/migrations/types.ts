@@ -60,9 +60,11 @@ export type NextAreaToIndex = {
     from: Directions;
   }[];
 };
-export type GeneratedTrack = {
+export type GeneratedTrack<
+  PointType extends GeoJSON.Point | null = GeoJSON.Point | null
+> = {
   id: IdType;
-  points: GeoJSON.FeatureCollection<GeoJSON.Point | null, TrackPointProperties>;
+  points: GeoJSON.FeatureCollection<PointType, TrackPointProperties>;
 };
 export type TrackPointProperties = {
   trackId?: IdType;
@@ -75,7 +77,7 @@ export type TrackPoint = GeoJSON.Feature<
   TrackPointProperties
 >;
 export type GenerateTracksResponse = {
-  generatedTracks: GeneratedTrack[];
+  generatedTracks: GeneratedTrack<GeoJSON.Point>[];
   indexedAreas: { [p: string]: IndexedArea };
   grid: GeoJSON.FeatureCollection<GeoJSON.Polygon, GeoJSON.GeoJsonProperties>;
 };

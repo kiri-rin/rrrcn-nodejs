@@ -72,7 +72,6 @@ export const generateMigrationTracks = async ({
         ["elevation"]
       )
     );
-    console.log(elevations);
     migration.features.forEach((point, index) => {
       point.properties.altitude = Math.max(
         (point?.properties?.altitude || 0) -

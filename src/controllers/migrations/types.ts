@@ -52,6 +52,8 @@ export type IndexedArea = {
   probabilities: GetAreaMigrationProbabilitiesReturn;
   area: GeoJSON.BBox;
   isDeadEnd?: boolean;
+  tracksCount: number;
+  altitudeStatistics: { [p: string | number]: number };
 };
 export type NextAreaToIndex = {
   id: IdType;

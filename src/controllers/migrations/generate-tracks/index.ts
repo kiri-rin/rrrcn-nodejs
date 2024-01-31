@@ -159,6 +159,8 @@ export const generateMigrationTracks = async ({
           id: id,
           area: allAreas[id],
           probabilities,
+          tracksCount: 0,
+          altitudeStatistics: {},
           neighboursAreasIds: {},
         };
       }
@@ -304,6 +306,8 @@ export const generateMigrationTracks = async ({
                   neighboursAreasIds: {
                     [oppositeDirections[exitDirection]]: id,
                   },
+                  tracksCount: 0,
+                  altitudeStatistics: {},
                   id: neighbourIndex,
                   probabilities: getAreaMigrationProbabilities({
                     area: allAreas[neighbourIndex],
@@ -344,6 +348,23 @@ export const generateMigrationTracks = async ({
       }
     }
     nextAreasToIndex = newNextAreasToIndex;
+    generatedTracks.forEach((track) => {
+      track.points.features.forEach((point) => {
+        indexedAreas[point.properties.areaId!]!.tracksCount++;
+        if (
+          !indexedAreas[point.properties.areaId!].altitudeStatistics[
+            point.properties.altitude!
+          ]
+        ) {
+          indexedAreas[point.properties.areaId!].altitudeStatistics[
+            point.properties.altitude!
+          ] = 0;
+        }
+        indexedAreas[point.properties.areaId!].altitudeStatistics[
+          point.properties.altitude!
+        ]++;
+      });
+    });
   }
   return {
     generatedTracks: generatedTracks as GeneratedTrack<GeoJSON.Point>[],

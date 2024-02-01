@@ -70,7 +70,7 @@ export const getAreaMigrationProbabilities = ({
       .filter((it) => !isPointOutsideBBox(it.geometry, area))
       .forEach((inlier) => {
         const altitude = inlier.properties.altitude;
-        if (altitude) {
+        if (altitude !== undefined) {
           if (res.altitudes.find((it) => it.value === altitude)) {
             res.altitudes.find((it) => it.value === altitude)!.count++;
           } else {
@@ -175,20 +175,28 @@ export const randomlyChooseDirection = (
 export function randomlyChooseAltitude(
   altitudes: GetAreaMigrationProbabilitiesReturn["altitudes"]
 ) {
-  const altitudesTotal = altitudes.reduce((acc, it) => acc + it.count, 0);
+  const altitudesTotal = altitudes
+    .filter((it) => it.value)
+    .reduce((acc, it) => (it.value ? acc + it.count : acc), 0);
+  if (!altitudesTotal) {
+    return undefined;
+  }
   const randomNumber = Math.random() * altitudesTotal;
   let res;
-  [...altitudes].reduce((acc, it, index, arr) => {
-    const newAcc = acc + it.count;
-    if (randomNumber <= newAcc && randomNumber >= acc && index) {
-      res =
-        (it.value * (newAcc - randomNumber) -
-          arr[index - 1].value * (randomNumber - newAcc)) /
-        (newAcc - acc);
-      arr.splice(index, 1);
-    }
-    return newAcc;
-  }, 0);
+  [...altitudes]
+    .filter((it) => it.value)
+    .reduce((acc, it, index, arr) => {
+      const newAcc = acc + it.count;
+
+      if (randomNumber <= newAcc && randomNumber >= acc && index) {
+        res =
+          (it.value * (newAcc - randomNumber) -
+            arr[index - 1].value * (randomNumber - newAcc)) /
+          (newAcc - acc);
+        arr.splice(index, 1);
+      }
+      return newAcc;
+    }, 0);
   return res;
 }
 export const oppositeDirections: { [p in Directions]: Directions } = {

@@ -127,7 +127,6 @@ export const generateMigrationTracks = async ({
     areaInitPoints.forEach((it) => {
       it.properties.areaId = initAreaIndex;
     });
-    console.log({ areaInitPoints: areaInitPoints.length });
 
     nextAreasToIndex[initAreaIndex] = {
       id: initAreaIndex,
@@ -141,6 +140,7 @@ export const generateMigrationTracks = async ({
   const tracksDeadEnds = new Map(
     generatedTracks.map((it) => [it.id, new Set()])
   );
+  let firstArea = false;
 
   while (Object.values(nextAreasToIndex).length) {
     const newNextAreasToIndex: typeof nextAreasToIndex = {};
@@ -167,7 +167,10 @@ export const generateMigrationTracks = async ({
       for (let [direction, prob] of Object.entries(
         indexedAreas[id].probabilities
       ) as [Directions, number][]) {
-        if (prob && !indexedAreas[id].neighboursAreasIds[direction]) {
+        if (
+          prob &&
+          indexedAreas[id].neighboursAreasIds[direction] === undefined
+        ) {
           indexedAreas[id].neighboursAreasIds[direction] =
             findNeighbourAreaIndex(allAreas, area, direction);
         }
@@ -193,12 +196,23 @@ export const generateMigrationTracks = async ({
                   indexedAreas[id]?.neighboursAreasIds[direct as Directions]
               ).length
           );
-        if (id === 1324) {
-          console.log({
-            from,
-            probabilities: indexedAreas[id].probabilities,
-            isDeadEnd,
-          });
+
+        if (!point.geometry) {
+          point.geometry = randomPoint(
+            1,
+            bboxPolygon(area)
+          ).features[0].geometry;
+        }
+        if (!point.properties) {
+          point.properties = {};
+        }
+
+        point.properties.altitude = randomlyChooseAltitude(
+          indexedAreas[id].probabilities.altitudes
+        );
+        if (!firstArea) {
+          console.log(point, id, indexedAreas[id].probabilities.altitudes);
+          firstArea = true;
         }
         if (isDeadEnd) {
           tracksDeadEnds.get(point.properties.trackId!)?.add(id);
@@ -272,19 +286,6 @@ export const generateMigrationTracks = async ({
           ...(from && { [from]: 0 }),
         });
 
-        if (!point.geometry) {
-          //TODO refactor to plain geojson models
-          point.geometry = randomPoint(
-            1,
-            bboxPolygon(area)
-          ).features[0].geometry;
-          if (!point.properties) {
-            point.properties = {};
-          }
-          point.properties.altitude = randomlyChooseAltitude(
-            indexedAreas[id].probabilities.altitudes
-          );
-        }
         if (exitDirection === from) {
           continue;
         }
@@ -348,24 +349,23 @@ export const generateMigrationTracks = async ({
       }
     }
     nextAreasToIndex = newNextAreasToIndex;
-    generatedTracks.forEach((track) => {
-      track.points.features.forEach((point) => {
+  }
+  generatedTracks.forEach((track) => {
+    track.points.features.forEach((point, index) => {
+      if (point.properties.altitude !== undefined) {
+        const altitude = Math.round(point.properties.altitude!);
         indexedAreas[point.properties.areaId!]!.tracksCount++;
         if (
-          !indexedAreas[point.properties.areaId!].altitudeStatistics[
-            point.properties.altitude!
-          ]
+          !indexedAreas[point.properties.areaId!].altitudeStatistics[altitude]
         ) {
           indexedAreas[point.properties.areaId!].altitudeStatistics[
-            point.properties.altitude!
+            altitude
           ] = 0;
         }
-        indexedAreas[point.properties.areaId!].altitudeStatistics[
-          point.properties.altitude!
-        ]++;
-      });
+        indexedAreas[point.properties.areaId!].altitudeStatistics[altitude]++;
+      }
     });
-  }
+  });
   return {
     generatedTracks: generatedTracks as GeneratedTrack<GeoJSON.Point>[],
     indexedAreas,

@@ -30,10 +30,12 @@ export const getMonthLightDayLength = (
     res.dayHours += currentDayLightHours;
     res.nightHours += 24 - currentDayLightHours;
     currentDay++;
-    date = new Date(new Date().getFullYear(), month, currentDay);
+    date = new Date(2021, month, currentDay);
   }
   return res;
 };
 export const getLightDayLengthPerMonth = (point: GeoJSON.Point) => {
-  return new Array(12).fill(0).map((it) => getMonthLightDayLength(point, it));
+  return new Array(12)
+    .fill(0)
+    .map((it, index) => getMonthLightDayLength(point, index));
 };

@@ -11,6 +11,7 @@ export type FindFirsOutlierArgs = {
 export type GetAreaMigrationProbabilitiesReturn = {
   probabilities: { [p in Directions]: number };
   altitudes: { count: number; value: number }[];
+  months: number[];
   total: number;
 };
 export enum Directions {
@@ -34,6 +35,7 @@ export const getAreaMigrationProbabilities = ({
     },
     total: 0,
     altitudes: [],
+    months: [],
   };
   let intersection: GeoJSON.Feature<GeoJSON.Point> | undefined;
 
@@ -88,6 +90,20 @@ export const getAreaMigrationProbabilities = ({
       const inlier = reversedFeatures[lastInlierIndex];
 
       const outlier = reversedFeatures[lastInlierIndex - 1];
+      const inlierMonth = inlier.properties.date
+        ? new Date(inlier.properties.date).getMonth()
+        : undefined;
+      const outlierMonth = outlier.properties.date
+        ? new Date(outlier.properties.date).getMonth()
+        : undefined;
+      if (inlierMonth !== undefined) {
+        if (inlierMonth === outlierMonth) {
+          res.months[inlierMonth]++;
+        } else {
+          res.months[inlierMonth] += 0.5;
+          res.months[outlierMonth!] += 0.5;
+        }
+      }
       const line = getLineFunction(inlier.geometry, outlier.geometry);
       const outlierX = outlier.geometry.coordinates[0];
       const outlierY = outlier.geometry.coordinates[1];
@@ -132,13 +148,6 @@ export const getAreaMigrationProbabilities = ({
     res.probabilities.right += currentMigrationRes.right;
     res.probabilities.stop += currentMigrationRes.stop;
   }
-  // if (total) {
-  //   res.top = res.top / total;
-  //   res.bottom = res.bottom / total;
-  //   res.left = res.left / total;
-  //   res.right = res.right / total;
-  //   res.stop = res.stop / total;
-  // }
   res.altitudes.sort((a, b) => (a.value < b.value ? -1 : 1));
   return res;
 };
@@ -191,7 +200,7 @@ export function randomlyChooseAltitude(
       if (randomNumber <= newAcc && randomNumber >= acc && index) {
         res =
           (it.value * (newAcc - randomNumber) -
-            arr[index - 1].value * (randomNumber - newAcc)) /
+            arr[index - 1].value * (randomNumber - acc)) /
           (newAcc - acc);
         arr.splice(index, 1);
       }
@@ -256,72 +265,3 @@ const getLineFunction =
       point1.coordinates[1]
     );
   };
-// const getLineFunctionY =
-//   (point1: GeoJSON.Point, point2: GeoJSON.Point) =>
-//   (y: number): number => {
-//     const c =
-//       (y - point1.coordinates[1]) /
-//       (point2.coordinates[1] - point1.coordinates[1]);
-//     return (
-//       (point2.coordinates[0] - point1.coordinates[0]) * c +
-//       point1.coordinates[0]
-//     );
-//   };
-//
-// const isIntervalIntersectsBBox = (
-//   interval: [GeoJSON.Point, GeoJSON.Point],
-//   area: GeoJSON.BBox
-// ): false | GeoJSON.Feature<GeoJSON.Point> => {
-//   const [x1, y1] = interval[0].coordinates;
-//   const [x2, y2] = interval[1].coordinates;
-//   const [a_x1, a_y1, a_x2, a_y2] = area;
-//   if (
-//     (x1 - a_x1) * (x1 - a_x2) > 0 &&
-//     (x2 - a_x1) * (x2 - a_x2) > 0 &&
-//     (x1 - a_x1) * (x2 - a_x1) > 0
-//   ) {
-//     return false;
-//   }
-//   if (
-//     (y1 - a_y1) * (y1 - a_y2) > 0 &&
-//     (y2 - a_y1) * (y2 - a_y2) > 0 &&
-//     (y1 - a_y1) * (y2 - a_y1) > 0
-//   ) {
-//     return false;
-//   }
-//   const line = getLineFunction(interval[0], interval[1]);
-//   const leftIntersectionY = line(a_x1);
-//   if ((leftIntersectionY - a_y1) * (leftIntersectionY - a_y2) < 0) {
-//     return {
-//       type: "Feature",
-//       properties: {},
-//       geometry: { type: "Point", coordinates: [a_x1, leftIntersectionY] },
-//     };
-//   }
-//   const rightIntersectionY = line(a_x2);
-//   if ((rightIntersectionY - a_y1) * (rightIntersectionY - a_y2) < 0) {
-//     return {
-//       type: "Feature",
-//       properties: {},
-//       geometry: { type: "Point", coordinates: [a_x2, rightIntersectionY] },
-//     };
-//   }
-//   const lineY = getLineFunctionY(interval[0], interval[1]);
-//   const topIntersectionX = lineY(a_y1);
-//   if ((topIntersectionX - a_x1) * (topIntersectionX - a_x2) < 0) {
-//     return {
-//       type: "Feature",
-//       properties: {},
-//       geometry: { type: "Point", coordinates: [a_y1, leftIntersectionY] },
-//     };
-//   }
-//   const bottomIntersectionX = line(a_y2);
-//   if ((bottomIntersectionX - a_x1) * (bottomIntersectionX - a_x2) < 0) {
-//     return {
-//       type: "Feature",
-//       properties: {},
-//       geometry: { type: "Point", coordinates: [a_y2, rightIntersectionY] },
-//     };
-//   }
-//   return false;
-// };

@@ -86,8 +86,7 @@ export const randomForestCV = async (config: RandomForestConfig) => {
         console.log(i, " success");
         strapiLogger(
           `Processed ${
-            (100 * images.length) /
-            (iterationNumber === true ? 10 : iterationNumber)
+            (100 * images.length) / (iterationNumber ? 10 : iterationNumber)
           }%`
         );
       })()

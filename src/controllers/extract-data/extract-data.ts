@@ -29,6 +29,7 @@ export const setDefaultsToScriptsConfig = (
 
 export const extractData = async (config: DataExtractionConfig) => {
   const { points: pointsConfig } = config;
+  let processedResults = {};
 
   const points = await importGeometries(pointsConfig);
 
@@ -66,18 +67,19 @@ export const extractData = async (config: DataExtractionConfig) => {
     results = Object.assign(results, scriptResults);
 
     if (!config.inOneFile) {
-      await writeScriptFeaturesResult(
+      const processedScriptResults = await writeScriptFeaturesResult(
         scriptResults,
         `${outputs || config.outputs}/${filename || script}.csv`
       );
+      Object.assign(processedResults, processedScriptResults);
     }
   }
   await mkdir(`${config.outputs}`, { recursive: true });
   if (config.inOneFile) {
-    await writeScriptFeaturesResult(
+    processedResults = await writeScriptFeaturesResult(
       results,
       `${config.outputs}/${config.inOneFile}.csv`
     );
   }
-  return results;
+  return processedResults;
 };

@@ -44,16 +44,16 @@ export const reduceRegionsFromImageOrCollection = async (
 export const writeScriptFeaturesResult = async (
   features: { [p: string]: EEFeatureCollection },
   fileName: string
-) => {
+): Promise<any> => {
   //@ts-ignore
   const dirName = path.dirname(fileName);
   await fs.mkdir(`${dirName}`, {
     recursive: true,
   });
   const stream = fsCommon.createWriteStream(`${fileName}`);
-  const res = await exportFeatureCollectionsToCsv(
-    await evaluateScriptResultsToFeaturesArray(features)
-  );
+  const fc = await evaluateScriptResultsToFeaturesArray(features);
+
+  const res = await exportFeatureCollectionsToCsv(fc);
   for (let chank of res.match(/(.|[\r\n]){1,100}/g) || []) {
     stream.write(chank);
   }
@@ -61,7 +61,7 @@ export const writeScriptFeaturesResult = async (
     stream.end("", "utf-8", () => {
       console.log("finish", fileName);
       strapiLogger("finish", fileName);
-      resolve(true);
+      resolve(fc);
     });
   });
 };

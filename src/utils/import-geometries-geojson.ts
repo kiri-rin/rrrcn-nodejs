@@ -83,10 +83,15 @@ export function importGeojsonPointsFromCsv({
   long_key?: string;
   id_key?: string;
   inheritProps?: string[];
+  inheritStringProps?: string[];
 }) {
   return featureCollection(
     csv.map((row) =>
       point([Number(row[long_key]), Number(row[lat_key])], {
+        ...Object.entries(row).reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {} as any),
         id: row[id_key],
         longitude: row[long_key],
         latitude: row[lat_key],

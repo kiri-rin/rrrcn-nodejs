@@ -4,7 +4,13 @@ import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "./points";
 import { EEFeatureCollection } from "../types";
-import { feature, featureCollection, point, polygon } from "@turf/helpers";
+import {
+  feature,
+  FeatureCollection,
+  featureCollection,
+  point,
+  polygon,
+} from "@turf/helpers";
 import { parse as parseDate, parseISO } from "date-fns";
 
 export const importGeometriesGeojson = async (
@@ -12,6 +18,10 @@ export const importGeometriesGeojson = async (
   geometryType: "points" | "polygon" = "points",
   inheritProps = [] as string[]
 ): Promise<EEFeatureCollection> => {
+  // | GeoJSON.FeatureCollection
+  // | GeoJSON.FeatureCollection[]
+  // | GeoJSON.Feature
+  // | undefined
   switch (conf.type) {
     case "csv": {
       const pointsFile = await fsPromises.readFile(conf.path);

@@ -1,16 +1,17 @@
 import {
   generalizeAreaPointsService,
   GeneralizeAreaPointsServiceArgs,
-} from "../../services/generalize-area-points";
+} from "../../../services/spatial-services/generalize-area-points";
 import * as turf from "@turf/turf";
-import { GeometriesImportConfig } from "../../analytics_config_types";
-import { importGeometriesGeojson } from "../../utils/import-geometries-geojson";
+import { GeometriesImportConfig } from "../../../analytics_config_types";
+import { importGeometriesGeojson } from "../../../utils/import-geometries-geojson";
 import { FeatureCollection, Point } from "@turf/turf";
 import { writeFile } from "fs/promises";
 export type GeneralizeAreaPointsControllerArgs = {
   area?: GeoJSON.Polygon;
   points: GeometriesImportConfig;
   cellSide: number;
+  outputs: string;
 };
 export const generalizeAreaPointsController = async (
   args: GeneralizeAreaPointsControllerArgs
@@ -29,7 +30,7 @@ export const generalizeAreaPointsController = async (
   });
   console.log(res.length, "res length");
   await writeFile(
-    `${__dirname}/generalize_${args.cellSide}.json`,
+    `${args.outputs}/generalize_${args.cellSide}.json`,
     JSON.stringify(res, null, 4)
   );
   // }

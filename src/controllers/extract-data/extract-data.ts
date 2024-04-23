@@ -9,7 +9,7 @@ import {
 } from "../../utils/io";
 import { EEFeature } from "../../types";
 import allScripts, { scriptKey } from "../../services/ee-data";
-import { getParamsImage } from "../random-forest/utils";
+import { getParamsImage } from "../classifications/random-forest/utils";
 import { mkdir } from "fs/promises";
 import { evaluatePromisify } from "../../utils/ee-image";
 export const setDefaultsToScriptsConfig = (

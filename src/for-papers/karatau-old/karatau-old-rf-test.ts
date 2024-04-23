@@ -1,5 +1,5 @@
 import { withGEE } from "../../index";
-import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest";
+import { randomForestCV } from "../../controllers/classifications/random-forest/cross-validation-random-forest";
 import {
   karatauOldProbRFConfigAll,
   karatauOldProbRFConfigDFR,
@@ -10,7 +10,7 @@ import {
   karatauOldRegrRFConfigInModel,
   karatauOldRegrRFConfigInModelDFR,
 } from "./configs/RF-configs-NEOPHRON";
-import { randomForest } from "../../controllers/random-forest/random-forest";
+import { randomForest } from "../../controllers/classifications/random-forest/random-forest";
 const configs = [
   karatauOldProbRFConfigAll,
   karatauOldProbRFConfigDFR,

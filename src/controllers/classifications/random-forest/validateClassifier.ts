@@ -1,7 +1,7 @@
-import { ValidateClassifiedImageConfig } from "../../analytics_config_types";
+import { ValidateClassifiedImageConfig } from "../../../analytics_config_types";
 import { getAllPoints } from "./utils";
-import { validateClassifier } from "../../services/random-forest/all-validations";
-import { printRandomForestCharts } from "../../services/random-forest/charts";
+import { validateClassifier } from "../../../services/random-forest/all-validations";
+import { printRandomForestCharts } from "../../../services/random-forest/charts";
 import { mkdir } from "fs/promises";
 export const getClassifiedImage = (
   congif: ValidateClassifiedImageConfig["classified_image"]

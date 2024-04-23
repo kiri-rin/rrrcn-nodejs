@@ -1,19 +1,19 @@
-import { EEFeatureCollection, EEImage } from "../../types";
+import { EEFeatureCollection, EEImage } from "../../../types";
 import {
   MaxentConfig,
   RandomForestConfig,
   RandomForestParamsConfig,
-} from "../../analytics_config_types";
-import { setDefaultsToScriptsConfig } from "../extract-data/extract-data";
-import allScripts, { scriptKey } from "../../services/ee-data";
-import { DatesConfig } from "../../utils/dates";
-import { importGeometries } from "../../utils/import-geometries";
+} from "../../../analytics_config_types";
+import { setDefaultsToScriptsConfig } from "../../extract-data/extract-data";
+import allScripts, { scriptKey } from "../../../services/ee-data";
+import { DatesConfig } from "../../../utils/dates";
+import { importGeometries } from "../../../utils/import-geometries";
 import {
   evaluatePromisify,
   getThumbUrl,
   getTiffUrl,
-} from "../../utils/ee-image";
-import { downloadFile } from "../../utils/io";
+} from "../../../utils/ee-image";
+import { downloadFile } from "../../../utils/io";
 import { mkdir, writeFile } from "fs/promises";
 
 export const getAllPoints = async (

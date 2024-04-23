@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
-import { printRandomForestCharts } from "../../services/random-forest/charts";
-import { importGeometries } from "../../utils/import-geometries";
-import { RandomForestConfig } from "../../analytics_config_types";
+import { printRandomForestCharts } from "../../../services/random-forest/charts";
+import { importGeometries } from "../../../utils/import-geometries";
+import { RandomForestConfig } from "../../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
@@ -11,16 +11,19 @@ import {
 import {
   randomForestAndValidateService,
   RandomForestServiceParams,
-} from "../../services/random-forest";
+} from "../../../services/random-forest";
 import { randomForestCV } from "./cross-validation-random-forest";
 import { cloneDeep } from "lodash";
 import {
   classifierValidationType,
   validateClassifier,
-} from "../../services/random-forest/all-validations";
-import { EEImage } from "../../types";
+} from "../../../services/random-forest/all-validations";
+import { EEImage } from "../../../types";
+import { ClassificationControllerResult } from "../types";
 
-export const randomForest = async (config: RandomForestConfig) => {
+export const randomForest = async (
+  config: RandomForestConfig
+): Promise<ClassificationControllerResult | undefined> => {
   if (!config.outputs) {
     return;
   }
@@ -89,7 +92,12 @@ export const randomForest = async (config: RandomForestConfig) => {
       validationPoints,
       regionOfInterest,
     });
-    res = { classifier: {}, classified_image: meanImage, regionOfInterest };
+    res = {
+      classifier: {},
+      classified_image: meanImage,
+      regionOfInterest,
+      geojson_geometries: [],
+    };
   } else {
     const { classifier, classified_image } = await trainRFAndDownloadResults({
       outputs: outputs,
@@ -99,7 +107,12 @@ export const randomForest = async (config: RandomForestConfig) => {
       outputMode,
       validationPoints,
     });
-    res = { classifier, classified_image, regionOfInterest };
+    res = {
+      classifier,
+      classified_image,
+      regionOfInterest,
+      geojson_geometries: [],
+    };
   }
   if (config.classificationSplits?.length && outputMode !== "CLASSIFICATION") {
     for (let split of config.classificationSplits) {

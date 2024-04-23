@@ -1,17 +1,20 @@
 import { mkdir, writeFile } from "fs/promises";
-import { printMaxentCharts } from "../../services/maxent/charts";
-import { importGeometries } from "../../utils/import-geometries";
-import { MaxentConfig } from "../../analytics_config_types";
+import { printMaxentCharts } from "../../../services/maxent/charts";
+import { importGeometries } from "../../../utils/import-geometries";
+import { MaxentConfig } from "../../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
   getParamsImage,
   getTrainingValidationPointsPare,
 } from "../random-forest/utils";
-import { maxentAndValidateService } from "../../services/maxent";
+import { maxentAndValidateService } from "../../../services/maxent";
 import { maxentCV } from "./cross-validation-maxent";
+import { ClassificationControllerResult } from "../types";
 
-export const maxent = async (config: MaxentConfig) => {
+export const maxent = async (
+  config: MaxentConfig
+): Promise<ClassificationControllerResult | undefined> => {
   const {
     regionOfInterest: regionOfInterestConfig,
     trainingPoints: trainingPointsConfig,
@@ -108,5 +111,10 @@ export const maxent = async (config: MaxentConfig) => {
       }
     }
   }
-  return { classifier, classified_image, regionOfInterest };
+  return {
+    classifier,
+    classified_image,
+    regionOfInterest,
+    geojson_geometries: [],
+  };
 };

@@ -3,9 +3,9 @@ import {
   karatauOldRegrRFConfigInModel,
 } from "./configs/RF-configs-NEOPHRON";
 import { withGEE } from "../../index";
-import { meanClassifiedImages } from "../../controllers/random-forest/meanClassifiedImages";
-import { validateClassifiedImage } from "../../controllers/random-forest/validateClassifier";
-import { downloadClassifiedImage } from "../../controllers/random-forest/utils";
+import { meanClassifiedImages } from "../../controllers/classifications/random-forest/meanClassifiedImages";
+import { validateClassifiedImage } from "../../controllers/classifications/random-forest/validateClassifier";
+import { downloadClassifiedImage } from "../../controllers/classifications/random-forest/utils";
 import { mkdir } from "fs/promises";
 
 const bestProbModelConfig = { ...karatauOldProbRFConfigInModel };

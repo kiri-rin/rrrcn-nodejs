@@ -1,6 +1,6 @@
 import { withGEE } from "../../index";
-import { meanClassifiedImages } from "../../controllers/random-forest/meanClassifiedImages";
-import { downloadClassifiedImage } from "../../controllers/random-forest/utils";
+import { meanClassifiedImages } from "../../controllers/classifications/random-forest/meanClassifiedImages";
+import { downloadClassifiedImage } from "../../controllers/classifications/random-forest/utils";
 import {
   karatauOldFalcoAllParams,
   karatauOldFalcoProbRFConfigAll,

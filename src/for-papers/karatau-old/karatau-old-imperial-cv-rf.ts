@@ -1,5 +1,5 @@
 import { withGEE } from "../../index";
-import { randomForestCV } from "../../controllers/random-forest/cross-validation-random-forest";
+import { randomForestCV } from "../../controllers/classifications/random-forest/cross-validation-random-forest";
 import {
   karatauOldImperialProbRFConfigAll,
   karatauOldImperialProbRFConfigDFR,
@@ -10,8 +10,8 @@ import {
   karatauOldImperialRegrRFConfigInModel,
   karatauOldImperialRegrRFConfigInModelDFR,
 } from "./configs/RF-configs-IMPERIAL";
-import { downloadClassifiedImage } from "../../controllers/random-forest/utils";
-import { randomForest } from "../../controllers/random-forest/random-forest";
+import { downloadClassifiedImage } from "../../controllers/classifications/random-forest/utils";
+import { randomForest } from "../../controllers/classifications/random-forest/random-forest";
 
 const configs = [
   {

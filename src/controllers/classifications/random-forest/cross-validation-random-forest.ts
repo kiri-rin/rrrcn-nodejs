@@ -1,27 +1,35 @@
-import { classifierValidationType } from "../../services/random-forest/all-validations";
+import {
+  classifierValidationType,
+  validateClassifier,
+} from "../../../services/random-forest/all-validations";
 import { mkdirSync, writeFileSync } from "fs";
-import { getCsv } from "../../utils/points";
+import { getCsv } from "../../../utils/points";
 import {
   drawHistogramChart,
   drawMarkerChart,
   saveChart,
-} from "../../services/charts";
+} from "../../../services/charts";
+import { evaluatePromisify } from "../../../utils/ee-image";
 import { mkdir } from "fs/promises";
-import { MaxentConfig, RandomForestConfig } from "../../analytics_config_types";
+import { RandomForestConfig } from "../../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
   getParamsImage,
   getTrainingValidationPointsPare,
-} from "../random-forest/utils";
-import { importGeometries } from "../../utils/import-geometries";
-import { EEImage } from "../../types";
-import { maxentAndValidateService } from "../../services/maxent";
-import { printMaxentCharts } from "../../services/maxent/charts";
+} from "./utils";
+import { importGeometries } from "../../../utils/import-geometries";
+import { randomForestAndValidateService } from "../../../services/random-forest";
+import { EEImage } from "../../../types";
+import { printRandomForestCharts } from "../../../services/random-forest/charts";
+import { ClassificationControllerResult } from "../types";
 
-export const maxentCV = async (config: MaxentConfig) => {
+export const randomForestCV = async (
+  config: RandomForestConfig
+): Promise<ClassificationControllerResult | undefined> => {
   strapiLogger("Preparing data");
   const {
+    outputMode,
     regionOfInterest: regionOfInterestConfig,
     trainingPoints: trainingPointsConfig,
     validation: validationConfig,
@@ -64,9 +72,10 @@ export const maxentCV = async (config: MaxentConfig) => {
             i * i * i
           );
 
-        const res = await maxentAndValidateService({
+        const res = await randomForestAndValidateService({
           trainingPoints,
           validationPoints,
+          outputMode,
           paramsImage,
           regionOfInterest,
         });
@@ -80,8 +89,7 @@ export const maxentCV = async (config: MaxentConfig) => {
         console.log(i, " success");
         strapiLogger(
           `Processed ${
-            (100 * images.length) /
-            (iterationNumber === true ? 10 : iterationNumber)
+            (100 * images.length) / (iterationNumber ? 10 : iterationNumber)
           }%`
         );
       })()
@@ -113,7 +121,7 @@ export const maxentCV = async (config: MaxentConfig) => {
         validationConfig,
         (bestImageIndex + 1) * (bestImageIndex + 1) * (bestImageIndex + 1)
       );
-    await printMaxentCharts({
+    await printRandomForestCharts({
       classifiedImage: images[bestImageIndex],
       trainingData: trainingPoints,
       explainedClassifier:
@@ -141,6 +149,7 @@ export const maxentCV = async (config: MaxentConfig) => {
 
   await Promise.all(downloadPromises);
   return {
+    //@ts-ignore
     mean_image,
     best_image: images[bestImageIndex],
     regionOfInterest,
@@ -149,6 +158,7 @@ export const maxentCV = async (config: MaxentConfig) => {
       validationConfig.return_default === "mean"
         ? mean_image
         : images[bestImageIndex],
+    geojson_geometries: [],
   };
 };
 const validationTableKeys = [

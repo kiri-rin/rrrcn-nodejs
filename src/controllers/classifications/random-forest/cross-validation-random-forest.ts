@@ -26,7 +26,10 @@ import { ClassificationControllerResult } from "../types";
 
 export const randomForestCV = async (
   config: RandomForestConfig
-): Promise<ClassificationControllerResult | undefined> => {
+): Promise<
+  | (ClassificationControllerResult & { mean_image: any; best_image: any })
+  | undefined
+> => {
   strapiLogger("Preparing data");
   const {
     outputMode,
@@ -149,7 +152,6 @@ export const randomForestCV = async (
 
   await Promise.all(downloadPromises);
   return {
-    //@ts-ignore
     mean_image,
     best_image: images[bestImageIndex],
     regionOfInterest,

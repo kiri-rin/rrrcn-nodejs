@@ -10,7 +10,12 @@ import {
 } from "../random-forest/utils";
 import { maxentAndValidateService } from "../../../services/maxent";
 import { maxentCV } from "./cross-validation-maxent";
-import { ClassificationControllerResult } from "../types";
+import {
+  ClassificationControllerResult,
+  ClassificationGeojsonBuffer,
+  ClassificationGeojsonSplit,
+  ClassificationGeojsonTypes,
+} from "../types";
 
 export const maxent = async (
   config: MaxentConfig
@@ -22,6 +27,7 @@ export const maxent = async (
     params,
     outputs,
   } = config;
+  let res: ClassificationControllerResult | undefined;
   if (
     validationConfig.type === "split" &&
     (validationConfig?.cross_validation || 0) > 1
@@ -63,6 +69,12 @@ export const maxent = async (
       paramsImage,
       validationPoints,
     });
+  res = {
+    geojson_geometries: [],
+    classified_image,
+    classifier,
+    regionOfInterest,
+  };
 
   const outputDir = `${outputs}`;
   await mkdir(outputDir, { recursive: true });
@@ -86,35 +98,44 @@ export const maxent = async (
   if (config.classificationSplits?.length) {
     for (let split of config.classificationSplits) {
       const splittedImage = classified_image.gte(split);
-      await (
-        await downloadClassifiedImage({
-          classified_image: splittedImage,
-          output: `${outputs}/split${split}`,
-          regionOfInterest,
-          filename: `spit${split}`,
-          discrete: true,
-        })
-      ).promise;
+      const { promise, geojson } = await downloadClassifiedImage({
+        classified_image: splittedImage,
+        output: `${outputs}/split${split}`,
+        regionOfInterest,
+        filename: `spit${split}`,
+        discrete: true,
+      });
+      res.geojson_geometries.push({
+        meta: {
+          type: ClassificationGeojsonTypes.SPLIT,
+          split,
+          id: split,
+        },
+        polygon: geojson,
+      } as ClassificationGeojsonSplit);
+      await promise;
       for (let buffer of config.buffersPerAreaPoint || []) {
         const bufferedImage = splittedImage
           .convolve(ee.Kernel.circle(buffer, "meters", false, 1))
           .gt(0);
-        await (
-          await downloadClassifiedImage({
-            classified_image: bufferedImage,
-            output: `${outputs}/split${split}`,
-            regionOfInterest,
-            filename: `buffer${buffer}`,
-            discrete: true,
-          })
-        ).promise;
+        const { promise, geojson } = await downloadClassifiedImage({
+          classified_image: bufferedImage,
+          output: `${outputs}/split${split}`,
+          regionOfInterest,
+          filename: `buffer${buffer}`,
+          discrete: true,
+        });
+        await promise;
+        res.geojson_geometries.push({
+          meta: {
+            type: ClassificationGeojsonTypes.BUFFER,
+            buffer,
+            origId: split,
+          },
+          polygon: geojson,
+        } as ClassificationGeojsonBuffer);
       }
     }
   }
-  return {
-    classifier,
-    classified_image,
-    regionOfInterest,
-    geojson_geometries: [],
-  };
+  return res;
 };

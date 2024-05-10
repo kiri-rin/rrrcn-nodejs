@@ -13,13 +13,16 @@ import {
   RandomForestServiceParams,
 } from "../../../services/random-forest";
 import { randomForestCV } from "./cross-validation-random-forest";
-import { cloneDeep } from "lodash";
 import {
   classifierValidationType,
   validateClassifier,
 } from "../../../services/random-forest/all-validations";
-import { EEImage } from "../../../types";
-import { ClassificationControllerResult } from "../types";
+import {
+  ClassificationControllerResult,
+  ClassificationGeojsonBuffer,
+  ClassificationGeojsonSplit,
+  ClassificationGeojsonTypes,
+} from "../types";
 
 export const randomForest = async (
   config: RandomForestConfig
@@ -58,7 +61,7 @@ export const randomForest = async (
   );
   console.log("processing random forest");
   strapiLogger("processing random forest");
-  let res;
+  let res: ClassificationControllerResult | undefined;
   if (config.outputMode === "MEAN") {
     const { classifier: probClassifier, classified_image: probImage } =
       await trainRFAndDownloadResults({
@@ -117,28 +120,41 @@ export const randomForest = async (
   if (config.classificationSplits?.length && outputMode !== "CLASSIFICATION") {
     for (let split of config.classificationSplits) {
       const splittedImage = res.classified_image.gte(split);
-      await (
-        await downloadClassifiedImage({
-          classified_image: splittedImage,
-          output: `${outputs}/split${split}`,
-          regionOfInterest,
-          filename: `spit${split}`,
-          discrete: true,
-        })
-      ).promise;
+      const { promise, geojson } = await downloadClassifiedImage({
+        classified_image: splittedImage,
+        output: `${outputs}/split${split}`,
+        regionOfInterest,
+        filename: `spit${split}`,
+        discrete: true,
+      });
+      res.geojson_geometries.push({
+        polygon: geojson,
+        meta: {
+          type: ClassificationGeojsonTypes.SPLIT,
+          split: split,
+          id: split,
+        },
+      } as ClassificationGeojsonSplit);
+      await promise;
       for (let buffer of config.buffersPerAreaPoint || []) {
         const bufferedImage = splittedImage
           .convolve(ee.Kernel.circle(buffer, "meters", false, 1))
           .gt(0);
-        await (
-          await downloadClassifiedImage({
-            classified_image: bufferedImage,
-            output: `${outputs}/split${split}`,
-            regionOfInterest,
-            filename: `buffer${buffer}`,
-            discrete: true,
-          })
-        ).promise;
+        const { promise, geojson } = await downloadClassifiedImage({
+          classified_image: bufferedImage,
+          output: `${outputs}/split${split}`,
+          regionOfInterest,
+          filename: `buffer${buffer}`,
+          discrete: true,
+        });
+        res.geojson_geometries.push({
+          polygon: geojson,
+          meta: {
+            type: ClassificationGeojsonTypes.BUFFER,
+            origId: split,
+          },
+        } as ClassificationGeojsonBuffer);
+        await promise;
       }
     }
   }
@@ -147,15 +163,21 @@ export const randomForest = async (
       const bufferedImage = res.classified_image
         .convolve(ee.Kernel.circle(buffer, "meters", false, 1))
         .gt(0);
-      await (
-        await downloadClassifiedImage({
-          classified_image: bufferedImage,
-          output: `${outputs}`,
-          regionOfInterest,
-          filename: `buffer${buffer}`,
-          discrete: true,
-        })
-      ).promise;
+      const { promise, geojson } = await downloadClassifiedImage({
+        classified_image: bufferedImage,
+        output: `${outputs}`,
+        regionOfInterest,
+        filename: `buffer${buffer}`,
+        discrete: true,
+      });
+      res.geojson_geometries.push({
+        polygon: geojson,
+        meta: {
+          type: ClassificationGeojsonTypes.BUFFER,
+          origId: 0,
+        },
+      } as ClassificationGeojsonBuffer);
+      await promise;
     }
   }
 

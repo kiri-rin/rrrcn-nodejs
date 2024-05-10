@@ -202,6 +202,7 @@ export const downloadClassifiedImage = async ({
         ? writeFile(`${output}/${filename}.geojson`, JSON.stringify(geojson))
         : Promise.resolve(null),
     ]),
+    geojson: geojson,
     tiffUrl,
     thumbUrl,
   };

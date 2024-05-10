@@ -8,16 +8,42 @@ export enum ClassificationGeojsonTypes {
 export type ClassificationGeojsonCommon = {
   polygon: GeoJSON.Polygon;
   meta: {
+    id?: number | string;
     type: ClassificationGeojsonTypes;
   };
 };
 export interface ClassificationGeojsonMean extends ClassificationGeojsonCommon {
   meta: {
+    id: number;
     type: ClassificationGeojsonTypes.MEAN;
+    origId: number;
+  };
+}
+export interface ClassificationGeojsonSplit
+  extends ClassificationGeojsonCommon {
+  meta: {
+    id: number;
+    type: ClassificationGeojsonTypes.SPLIT;
+    split: number;
   };
 }
 export interface ClassificationGeojsonBuffer
-  extends ClassificationGeojsonCommon {}
+  extends ClassificationGeojsonCommon {
+  meta: {
+    id: number;
+    type: ClassificationGeojsonTypes.BUFFER;
+    buffer: number;
+    origId: number;
+  };
+}
+export interface ClassificationGeojsonClassification
+  extends ClassificationGeojsonCommon {
+  meta: {
+    id: number;
+    type: ClassificationGeojsonTypes.CLASSIFICATION;
+    seed?: number;
+  };
+}
 export interface ClassificationGeojsonMeanSplit
   extends ClassificationGeojsonCommon {}
 export type ClassificationGeojson =
@@ -25,7 +51,7 @@ export type ClassificationGeojson =
   | ClassificationGeojsonBuffer
   | ClassificationGeojsonMeanSplit;
 export type ClassificationControllerResult = {
-  classifier: any;
+  classifier?: any;
   classified_image: any;
   regionOfInterest: any;
   geojson_geometries: ClassificationGeojson[];

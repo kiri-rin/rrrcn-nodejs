@@ -3,6 +3,7 @@ const key = require(".local/ee-key.json");
 declare global {
   //@ts-ignore
   let ee: any;
+  //@ts-ignore
   let strapiLogger: (...log: any) => any;
 }
 //@ts-ignore

@@ -7,6 +7,7 @@ export async function exportFeatureCollectionsToCsv(
   collection: GeoJSON.Feature<any, { id: any } & { [p: string]: any }>[]
 ): Promise<string> {
   console.log("READY TO PROCESS TABLE");
+  //@ts-ignore
   strapiLogger("READY TO PROCESS TABLE");
   const pointsIndices = new Map();
   let keysIndices = new Map(
@@ -43,6 +44,7 @@ export const getCsv = async (table: any[][]) => {
         reject(error);
       } else {
         console.log("READY TO WRITE");
+        //@ts-ignore
         strapiLogger("READY TO WRITE");
         resolve(res);
       }

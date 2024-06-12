@@ -2,10 +2,6 @@
   "name": "@rrrcn/services",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
-  "exports": {
-    "./src/": "./dist/src/"
-  },
   "scripts": {
     "karatau-old-rf-cv": "tsc && node dist/for-papers/karatau-old/karatau-old-cv-rf.js",
     "karatau-old-rf-bests": "tsc && node dist/for-papers/karatau-old/karatau-old-best-mean-rf.js",
@@ -13,14 +9,12 @@
     "karatau-old-get-all-data": "tsc && node dist/for-papers/karatau-old/get-gee-data.js",
     "karatau-old-get-presence-data": "tsc && node dist/for-papers/karatau-old/karatau-old-presence-dataset.js"
   },
-  "installConfig": {
-    "hoistingLimits": "workspaces"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/earthengine": "^0.1.353",
+    "@rrrcn/common-types": "workspace:*",
     "@turf/helpers": "^6.5.0",
     "@turf/random": "^6.5.0",
     "@turf/turf": "^6.5.0",

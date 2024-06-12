@@ -17,11 +17,13 @@ export type BuffersCentroidsDistancesServiceResponse = {
     min: {
       distance: number | null;
       ["95_kernel_id"]: string | null;
+      lines: GeoJSON.Feature<GeoJSON.LineString>[];
     };
     max: {
       distance: number | null;
       ["50_kernel_id"]: string | null;
       ["95_kernel_id"]: string | null;
+      lines: GeoJSON.Feature<GeoJSON.LineString>[];
     };
   };
 };
@@ -50,11 +52,13 @@ export async function buffersCentroidsDistancesService(
     const min: BuffersCentroidsDistancesServiceResponse[string]["min"] = {
       distance: null,
       ["95_kernel_id"]: null,
+      lines: [],
     };
     const max: BuffersCentroidsDistancesServiceResponse[string]["max"] = {
       distance: null,
       ["50_kernel_id"]: null,
       ["95_kernel_id"]: null,
+      lines: [],
     };
     for (let buffer of buffers_95) {
       const centroid = turf.centroid(buffer);
@@ -62,6 +66,16 @@ export async function buffersCentroidsDistancesService(
         centroid.geometry,
         buffer.geometry.coordinates.flatMap((it) => it)
       );
+      point &&
+        min.lines.push(
+          turf.lineString(
+            [
+              centroid.geometry.coordinates,
+              Array.isArray(point) ? point : point.coordinates,
+            ],
+            { ["95_kernel_id"]: buffer.properties.id }
+          )
+        );
       if (min.distance === null || min.distance < distance) {
         min.distance = distance;
         min["95_kernel_id"] = buffer.properties.id;
@@ -74,6 +88,19 @@ export async function buffersCentroidsDistancesService(
           centroid.geometry,
           targetBuffer.geometry.coordinates.flatMap((it) => it)
         );
+        point &&
+          min.lines.push(
+            turf.lineString(
+              [
+                centroid.geometry.coordinates,
+                Array.isArray(point) ? point : point.coordinates,
+              ],
+              {
+                ["95_kernel_id"]: targetBuffer.properties.id,
+                ["50_kernel_id"]: buffer.properties.id,
+              }
+            )
+          );
         if (max.distance === null || max.distance < distance) {
           max.distance = distance;
           max["95_kernel_id"] = targetBuffer.properties.id;

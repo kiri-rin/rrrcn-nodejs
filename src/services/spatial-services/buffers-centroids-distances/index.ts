@@ -30,7 +30,15 @@ export type BuffersCentroidsDistancesServiceResponse = {
 export async function buffersCentroidsDistancesService(
   args: BuffersCentroidsDistancesServiceArgs
 ): Promise<BuffersCentroidsDistancesServiceResponse> {
-  const buffersByMonths = args.buffers.features.reduce(
+  const deduplicatedBuffers = Array.from(
+    args.buffers.features
+      .reduce((acc, it) => {
+        acc.set(String(it.properties.id!), it);
+        return acc;
+      }, new Map<string, Feature<Polygon, BuffersCentroidsDistancesBufferParameters>>())
+      .values()
+  );
+  const buffersByMonths = deduplicatedBuffers.reduce(
     (acc, it) => {
       if (!acc[it.properties.date_string]) {
         acc[it.properties.date_string] = [];
@@ -73,7 +81,7 @@ export async function buffersCentroidsDistancesService(
               centroid.geometry.coordinates,
               Array.isArray(point) ? point : point.coordinates,
             ],
-            { ["95_kernel_id"]: buffer.properties.id }
+            { ["95_kernel_id"]: buffer.properties.id, distance }
           )
         );
       if (min.distance === null || min.distance < distance) {
@@ -89,7 +97,7 @@ export async function buffersCentroidsDistancesService(
           targetBuffer.geometry.coordinates.flatMap((it) => it)
         );
         point &&
-          min.lines.push(
+          max.lines.push(
             turf.lineString(
               [
                 centroid.geometry.coordinates,
@@ -98,6 +106,7 @@ export async function buffersCentroidsDistancesService(
               {
                 ["95_kernel_id"]: targetBuffer.properties.id,
                 ["50_kernel_id"]: buffer.properties.id,
+                distance,
               }
             )
           );

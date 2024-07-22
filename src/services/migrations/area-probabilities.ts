@@ -1,5 +1,6 @@
 import { MigrationPath } from "../../controllers/migrations/types";
 import * as turf from "@turf/turf";
+import { sum } from "lodash";
 export type GetAreaMigrationProbabilitiesArgs = {
   area: GeoJSON.BBox;
   migrations: MigrationPath[];
@@ -35,7 +36,7 @@ export const getAreaMigrationProbabilities = ({
     },
     total: 0,
     altitudes: [],
-    months: [],
+    months: new Array(12).fill(0),
   };
   let intersection: GeoJSON.Feature<GeoJSON.Point> | undefined;
 
@@ -96,6 +97,7 @@ export const getAreaMigrationProbabilities = ({
       const outlierMonth = outlier.properties.date
         ? new Date(outlier.properties.date).getMonth()
         : undefined;
+      console.log({ inlierMonth, outlierMonth });
       if (inlierMonth !== undefined) {
         if (inlierMonth === outlierMonth) {
           res.months[inlierMonth]++;
@@ -172,8 +174,7 @@ export const randomlyChooseDirection = (
     intervals[Directions.RIGHT][1],
     intervals[Directions.RIGHT][1] + probabilities.stop,
   ];
-  const randomNumber =
-    Math.random() * Object.values(probabilities).reduce((a, b) => a + b, 0);
+  const randomNumber = Math.random() * sum(Object.values(probabilities));
 
   for (let [direction, interval] of Object.entries(intervals)) {
     if (isNumberInInterval(randomNumber, interval)) {
@@ -191,21 +192,25 @@ export function randomlyChooseAltitude(
     return undefined;
   }
   const randomNumber = Math.random() * altitudesTotal;
-  let res;
+  let res: number | undefined;
   [...altitudes]
     .filter((it) => it.value)
     .reduce((acc, it, index, arr) => {
       const newAcc = acc + it.count;
 
-      if (randomNumber <= newAcc && randomNumber >= acc && index) {
+      if (randomNumber <= newAcc && randomNumber > acc && index) {
         res =
-          (it.value * (newAcc - randomNumber) -
-            arr[index - 1].value * (randomNumber - acc)) /
-          (newAcc - acc);
-        arr.splice(index, 1);
+          arr[index - 1].value +
+          ((randomNumber - acc) * (it.value - arr[index - 1].value)) /
+            (newAcc - acc);
       }
       return newAcc;
     }, 0);
+  if (res! < 0) {
+    console.log({ altitudes, altitudesTotal, res });
+    throw new Error("ALTITUDE LESS THAN 0!!!");
+  }
+
   return res;
 }
 export const oppositeDirections: { [p in Directions]: Directions } = {

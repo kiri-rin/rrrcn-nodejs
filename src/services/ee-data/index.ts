@@ -5,7 +5,7 @@ import { globalHabitatScript } from "./scripts/global_habitat";
 import { era5MounthlyScript } from "./scripts/era5_monthly";
 import { dynamicWorldScript } from "./scripts/dynamic-world";
 import { ndviEviScript } from "./scripts/ndvi";
-import { DatesConfig } from "../../utils/dates";
+import { DatesConfig } from "@rrrcn/common/src/utils/dates";
 import { dynamicWorldMeansScript } from "./scripts/dynamic-world-means";
 import { globalWindAtlasScript } from "./scripts/global-wind-atlas";
 import { worldClimBioScript } from "./scripts/world_clim_bio";
@@ -15,6 +15,8 @@ import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
 import { alosScript } from "./scripts/alos";
 import { landsatScript } from "./scripts/landsat";
 import { era5HourlyScript } from "./scripts/era5_hourly_new";
+import { scriptKey } from "@rrrcn/common/src/types/services/analytics_config_types";
+
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };
@@ -27,7 +29,8 @@ export type AnalyticsScriptParams = {
 export type AnalyticsScript = (
   params: AnalyticsScriptParams
 ) => AnalyticsScriptResult;
-const scripts = {
+
+const scripts: { [p in scriptKey]: AnalyticsScript } = {
   elevation: elevationScript,
   geomorph: geomorphScript,
   // era5_hourly: require("./era5_hourly"),
@@ -52,6 +55,5 @@ const scripts = {
   evi: (({ regions, datesConfig }: AnalyticsScriptParams) =>
     ndviEviScript({ regions, datesConfig, bands: ["EVI"] })) as AnalyticsScript,
 };
-export type scriptKey = keyof typeof scripts;
 
 export default scripts;

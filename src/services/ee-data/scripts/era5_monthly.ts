@@ -1,6 +1,6 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "../index";
 import { EEFeatureCollection, EEImage } from "../../../types";
-import { dateIntervalsToConfig } from "../../../utils/dates";
+import { dateIntervalsToConfig } from "@rrrcn/common/src/utils/dates";
 import { uniq } from "lodash";
 
 const DATASET_ID = "ECMWF/ERA5_LAND/MONTHLY";

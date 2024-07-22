@@ -1,4 +1,4 @@
-import { PopulationDistanceConfigType } from "../../analytics_config_types";
+import { PopulationDistanceConfigType } from "@rrrcn/common/src/types/services/analytics_config_types";
 import axios from "axios";
 import fs, { writeFileSync } from "fs";
 import { writeFile } from "fs/promises";

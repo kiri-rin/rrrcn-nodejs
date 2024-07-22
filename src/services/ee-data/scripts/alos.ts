@@ -1,4 +1,7 @@
-import { dateIntervalsToConfig, DatesConfig } from "../../../utils/dates";
+import {
+  dateIntervalsToConfig,
+  DatesConfig,
+} from "@rrrcn/common/src/utils/dates";
 import { EEFeatureCollection, EEImage } from "../../../types";
 import { AnalyticsScriptResult } from "../index";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";

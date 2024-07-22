@@ -1,4 +1,4 @@
-import { populationEstimationType } from "../../../analytics_config_types";
+import { populationEstimationType } from "@rrrcn/common/src/types/services/analytics_config_types";
 
 export const populationEstimationKaratauFalcoThiessens: populationEstimationType =
   {

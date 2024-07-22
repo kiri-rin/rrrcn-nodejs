@@ -1,7 +1,7 @@
 import {
   PopulationDistanceConfigType,
   SurvivalNestConfig,
-} from "../../analytics_config_types";
+} from "@rrrcn/common/src/types/services/analytics_config_types";
 import axios from "axios";
 import fs, { writeFileSync } from "fs";
 import { writeFile } from "fs/promises";

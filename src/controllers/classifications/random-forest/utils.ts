@@ -3,10 +3,11 @@ import {
   MaxentConfig,
   RandomForestConfig,
   RandomForestParamsConfig,
-} from "../../../analytics_config_types";
+  scriptKey,
+} from "@rrrcn/common/src/types/services/analytics_config_types";
 import { setDefaultsToScriptsConfig } from "../../extract-data/extract-data";
-import allScripts, { scriptKey } from "../../../services/ee-data";
-import { DatesConfig } from "../../../utils/dates";
+import allScripts from "../../../services/ee-data";
+import { DatesConfig } from "@rrrcn/common/src/utils/dates";
 import { importGeometries } from "../../../utils/import-geometries";
 import {
   evaluatePromisify,

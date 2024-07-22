@@ -1,14 +1,15 @@
 import {
   DataExtractionConfig,
   ScriptConfig,
-} from "../../analytics_config_types";
+  scriptKey,
+} from "@rrrcn/common/src/types/services/analytics_config_types";
 import { importGeometries } from "../../utils/import-geometries";
 import {
   reduceRegionsFromImageOrCollection,
   writeScriptFeaturesResult,
 } from "../../utils/io";
 import { EEFeature } from "../../types";
-import allScripts, { scriptKey } from "../../services/ee-data";
+import allScripts from "../../services/ee-data";
 import { getParamsImage } from "../classifications/random-forest/utils";
 import { mkdir } from "fs/promises";
 import {

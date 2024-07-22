@@ -1,4 +1,4 @@
-import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
+import { PopulationRandomGenerationConfigType } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { mkdir } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../utils/ee-image";

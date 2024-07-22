@@ -1,5 +1,5 @@
 import { getRFClassifier } from "../../controllers/classifications/random-forest/utils";
-import { RandomForestConfig } from "../../analytics_config_types";
+import { RandomForestConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import {
   classifierValidationType,
   validateClassifier,

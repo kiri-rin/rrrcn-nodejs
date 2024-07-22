@@ -1,4 +1,4 @@
-import { GeometriesImportConfig } from "../analytics_config_types";
+import { GeometriesImportConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import fsPromises, { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
@@ -7,7 +7,7 @@ import { featureCollection } from "@turf/helpers";
 import {
   importGeojsonPointsFromCsv,
   importGeojsonPolygonFromCsv,
-} from "@rrrcn/common-types/src/utils/geometry/parsers/csv";
+} from "@rrrcn/common/src/utils/geometry/parsers/csv";
 
 export const importGeometriesGeojson = async (
   conf: GeometriesImportConfig,

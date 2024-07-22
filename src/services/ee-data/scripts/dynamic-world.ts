@@ -8,7 +8,7 @@ import {
   DatesConfig,
   getDateIntervals,
   getDefaultIntervalKey,
-} from "../../../utils/dates";
+} from "@rrrcn/common/src/utils/dates";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
 import { EEFeatureCollection } from "../../../types";
 

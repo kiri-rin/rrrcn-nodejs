@@ -10,7 +10,7 @@ import { mkdir } from "fs/promises";
 import {
   MaxentConfig,
   RandomForestConfig,
-} from "../../../analytics_config_types";
+} from "@rrrcn/common/src/types/services/analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,

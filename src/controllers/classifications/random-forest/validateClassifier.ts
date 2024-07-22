@@ -1,4 +1,4 @@
-import { ValidateClassifiedImageConfig } from "../../../analytics_config_types";
+import { ValidateClassifiedImageConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { getAllPoints } from "./utils";
 import { validateClassifier } from "../../../services/random-forest/all-validations";
 import { printRandomForestCharts } from "../../../services/random-forest/charts";

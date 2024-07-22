@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { printMaxentCharts } from "../../../services/maxent/charts";
 import { importGeometries } from "../../../utils/import-geometries";
-import { MaxentConfig } from "../../../analytics_config_types";
+import { MaxentConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,

@@ -6,7 +6,7 @@ import {
 import {
   CommonConfig,
   RandomForestParamsConfig,
-} from "../../analytics_config_types";
+} from "@rrrcn/common/src/types/services/analytics_config_types";
 export enum SEASONS {
   SPRING = "spring",
   SUMMER = "summer",

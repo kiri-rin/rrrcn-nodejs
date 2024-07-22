@@ -1,15 +1,17 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
-  "include": ["src"],
+  "include": ["src","src/**/*.json"],
   "references": [{
-    "path": "../common-types"
+    "path": "../common"
   }],
   "compilerOptions": {
     "allowJs": true,
     "outDir": "dist",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "downlevelIteration": true,
     "moduleResolution": "Node",
     "composite": true
-  }
+  },
 }

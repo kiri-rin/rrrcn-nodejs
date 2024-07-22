@@ -1,6 +1,6 @@
 import { EEFeatureCollection } from "../../../types";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
-import { DatesConfig } from "../../../utils/dates";
+import { DatesConfig } from "@rrrcn/common/src/utils/dates";
 import { AnalyticsScriptParams, AnalyticsScriptResult } from "../index";
 import fs from "fs/promises";
 import { JSCSVTable } from "../../../utils/points";

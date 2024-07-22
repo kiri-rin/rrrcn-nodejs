@@ -1,4 +1,4 @@
-import { PopulationConfig } from "../../analytics_config_types";
+import { PopulationConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { estimatePopulationRandomGeneration } from "./estimate-population-random-points";
 import { estimatePopulationDistance } from "./estimate-population-distance";
 import { estimatePopulationDensity } from "./estimate-population-density";

@@ -1,10 +1,10 @@
 import { getRFClassifier } from "../../controllers/classifications/random-forest/utils";
-import { RandomForestConfig } from "../../analytics_config_types";
 import {
   classifierValidationType,
   validateClassifier,
 } from "./all-validations";
 import { evaluatePromisify } from "../../utils/ee-image";
+import {RandomForestConfig} from "@rrrcn/common-types/services/api/classifications/random-forest";
 
 export type RandomForestServiceParams = {
   trainingPoints: any;

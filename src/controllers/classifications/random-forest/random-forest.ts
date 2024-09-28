@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
 import { printRandomForestCharts } from "../../../services/random-forest/charts";
 import { importGeometries } from "../../../utils/import-geometries";
-import { RandomForestConfig } from "../../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
@@ -22,7 +21,8 @@ import {
   ClassificationGeojsonBuffer,
   ClassificationGeojsonSplit,
   ClassificationGeojsonTypes,
-} from "../types";
+} from "@rrrcn/common-types/services/api/classifications/common-response";
+import {RandomForestConfig} from "@rrrcn/common-types/services/api/classifications/random-forest";
 
 export const randomForest = async (
   config: RandomForestConfig

@@ -1,4 +1,3 @@
-import { PopulationRandomGenerationConfigType } from "../../analytics_config_types";
 import { mkdir } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../utils/ee-image";
@@ -13,6 +12,7 @@ import {
   findBestDeviations,
 } from "../../services/population-extrapolation/find_best";
 import type { EstimatePopulationRandomGenerationResult } from "./estimate-population-random-points";
+import { PopulationRandomGenerationConfigType } from "../../../../common-types/services/api/population-estimation/configs";
 
 export type CrossValidationPopulationEstimationResult = {
   processed: EstimatePopulationRandomGenerationResult[];

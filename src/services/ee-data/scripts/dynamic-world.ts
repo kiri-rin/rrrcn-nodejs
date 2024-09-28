@@ -3,14 +3,9 @@ import {
   AnalyticsScriptParams,
   AnalyticsScriptResult,
 } from "../index";
-import {
-  dateIntervalsToConfig,
-  DatesConfig,
-  getDateIntervals,
-  getDefaultIntervalKey,
-} from "../../../utils/dates";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
 import { EEFeatureCollection } from "../../../types";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 
 var targets = [
   "Water",
@@ -26,7 +21,7 @@ var targets = [
 
 export const dynamicWorldScript = ({
   regions,
-  datesConfig = dateIntervalsToConfig([]),
+  datesConfig = {},
 }: {
   regions: EEFeatureCollection;
   datesConfig?: DatesConfig;

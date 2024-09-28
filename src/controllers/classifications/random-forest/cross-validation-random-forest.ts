@@ -11,7 +11,6 @@ import {
 } from "../../../services/charts";
 import { evaluatePromisify } from "../../../utils/ee-image";
 import { mkdir } from "fs/promises";
-import { RandomForestConfig } from "../../../analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
@@ -22,7 +21,8 @@ import { importGeometries } from "../../../utils/import-geometries";
 import { randomForestAndValidateService } from "../../../services/random-forest";
 import { EEImage } from "../../../types";
 import { printRandomForestCharts } from "../../../services/random-forest/charts";
-import { ClassificationControllerResult } from "../types";
+import { ClassificationControllerResult } from "@rrrcn/common-types/services/api/classifications/common-response";
+import {RandomForestConfig} from "@rrrcn/common-types/services/api/classifications/random-forest";
 
 export const randomForestCV = async (
   config: RandomForestConfig

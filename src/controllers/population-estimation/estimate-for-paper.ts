@@ -1,7 +1,4 @@
-import {
-  populationEstimationType,
-  PopulationRandomGenerationConfigType,
-} from "../../analytics_config_types";
+import { populationEstimationType } from "@rrrcn/common-types/services/api/common-body";
 import {
   crossValidationPopulationEstimation,
   CrossValidationPopulationEstimationResult,
@@ -17,6 +14,7 @@ import {
 } from "../../for-papers/karatau-old/configs/population_estimation_Karatau";
 import { estimatePopulationRandomGeneration } from "./estimate-population-random-points";
 import { getCsv } from "../../utils/points";
+import { PopulationRandomGenerationConfigType } from "../../../../common-types/services/api/population-estimation/configs";
 
 export const estimatePopulationFotPaper = async (
   thiessensConfig: PopulationRandomGenerationConfigType,

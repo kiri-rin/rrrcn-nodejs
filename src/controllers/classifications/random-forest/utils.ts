@@ -1,12 +1,6 @@
 import { EEFeatureCollection, EEImage } from "../../../types";
-import {
-  MaxentConfig,
-  RandomForestConfig,
-  RandomForestParamsConfig,
-} from "../../../analytics_config_types";
 import { setDefaultsToScriptsConfig } from "../../extract-data/extract-data";
 import allScripts, { scriptKey } from "../../../services/ee-data";
-import { DatesConfig } from "../../../utils/dates";
 import { importGeometries } from "../../../utils/import-geometries";
 import {
   evaluatePromisify,
@@ -15,6 +9,10 @@ import {
 } from "../../../utils/ee-image";
 import { downloadFile } from "../../../utils/io";
 import { mkdir, writeFile } from "fs/promises";
+import { MaxentConfig } from "../../../../../common-types/services/api/classifications/maxent";
+import { RandomForestConfig } from "@rrrcn/common-types/services/api/classifications/random-forest";
+import { RandomForestParamsConfig } from "@rrrcn/common-types/services/api/classifications/common-body";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 
 export const getAllPoints = async (
   trainingPointsConfig: MaxentConfig["trainingPoints"]

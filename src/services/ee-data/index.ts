@@ -5,7 +5,6 @@ import { globalHabitatScript } from "./scripts/global_habitat";
 import { era5MounthlyScript } from "./scripts/era5_monthly";
 import { dynamicWorldScript } from "./scripts/dynamic-world";
 import { ndviEviScript } from "./scripts/ndvi";
-import { DatesConfig } from "../../utils/dates";
 import { dynamicWorldMeansScript } from "./scripts/dynamic-world-means";
 import { globalWindAtlasScript } from "./scripts/global-wind-atlas";
 import { worldClimBioScript } from "./scripts/world_clim_bio";
@@ -15,6 +14,7 @@ import { worldCoverConvolveScript } from "./scripts/world-cover-convolve";
 import { alosScript } from "./scripts/alos";
 import { landsatScript } from "./scripts/landsat";
 import { era5HourlyScript } from "./scripts/era5_hourly_new";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 export type AnalyticsScriptResult = {
   [param: string]: EEImage;
 };

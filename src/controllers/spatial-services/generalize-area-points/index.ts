@@ -3,7 +3,7 @@ import {
   GeneralizeAreaPointsServiceArgs,
 } from "../../../services/spatial-services/generalize-area-points";
 import * as turf from "@turf/turf";
-import { GeometriesImportConfig } from "../../../analytics_config_types";
+import { GeometriesImportConfig } from "@rrrcn/common-types/services/api/common-body";
 import { importGeometriesGeojson } from "../../../utils/import-geometries-geojson";
 import { FeatureCollection, Point } from "@turf/turf";
 import { writeFile } from "fs/promises";

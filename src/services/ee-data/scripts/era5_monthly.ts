@@ -1,6 +1,5 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "../index";
 import { EEFeatureCollection, EEImage } from "../../../types";
-import { dateIntervalsToConfig } from "../../../utils/dates";
 import { uniq } from "lodash";
 
 const DATASET_ID = "ECMWF/ERA5_LAND/MONTHLY";
@@ -18,7 +17,7 @@ export const getEra5Script: (dataset: string) => AnalyticsScript = (
   (({
     regions,
     bands = ["temperature_2m", "total_precipitation", "winddir", "windspeed"],
-    datesConfig = dateIntervalsToConfig([]),
+    datesConfig = {},
   }) => {
     const collection = ee.ImageCollection(dataset).filterBounds(regions);
     const results: AnalyticsScriptResult = {};

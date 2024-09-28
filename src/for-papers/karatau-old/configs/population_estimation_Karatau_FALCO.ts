@@ -1,4 +1,4 @@
-import { populationEstimationType } from "../../../analytics_config_types";
+import { populationEstimationType } from "@rrrcn/common-types/services/api/common-body";
 
 export const populationEstimationKaratauFalcoThiessens: populationEstimationType =
   {

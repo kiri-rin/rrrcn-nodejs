@@ -1,7 +1,7 @@
 import {
   DataExtractionConfig,
   ScriptConfig,
-} from "../../analytics_config_types";
+} from "@rrrcn/common-types/services/api/common-body";
 import { importGeometries } from "../../utils/import-geometries";
 import {
   reduceRegionsFromImageOrCollection,

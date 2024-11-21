@@ -1,9 +1,9 @@
 import { mkdir } from "fs/promises";
 import { downloadFile } from "../../../utils/io";
 import { getThumbUrl, getTiffUrl } from "../../../utils/ee-image";
-import { RandomForestConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { randomForest } from "./random-forest";
 import { Console } from "inspector";
+import {RandomForestConfig} from "@rrrcn/common-types/services/api/classifications/random-forest";
 
 export const meanClassifiedImages = async (
   config1: RandomForestConfig,

@@ -1,8 +1,9 @@
-import { ValidateClassifiedImageConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { getAllPoints } from "./utils";
 import { validateClassifier } from "../../../services/random-forest/all-validations";
 import { printRandomForestCharts } from "../../../services/random-forest/charts";
 import { mkdir } from "fs/promises";
+
+import { ValidateClassifiedImageConfig } from "@rrrcn/common-types/services/api/classifications/validate-classified-image";
 export const getClassifiedImage = (
   congif: ValidateClassifiedImageConfig["classified_image"]
 ) => {

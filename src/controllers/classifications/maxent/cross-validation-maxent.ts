@@ -10,7 +10,7 @@ import { mkdir } from "fs/promises";
 import {
   MaxentConfig,
   RandomForestConfig,
-} from "@rrrcn/common/src/types/services/analytics_config_types";
+} from "@rrrcn/common-types/services/analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
@@ -21,7 +21,7 @@ import { importGeometries } from "../../../utils/import-geometries";
 import { EEImage } from "../../../types";
 import { maxentAndValidateService } from "../../../services/maxent";
 import { printMaxentCharts } from "../../../services/maxent/charts";
-import { ClassificationControllerResult } from "../types";
+import { ClassificationControllerResult } from "@rrrcn/common-types/services/api/classifications/common-response";
 
 export const maxentCV = async (
   config: MaxentConfig

@@ -1,11 +1,12 @@
 import {
   DataExtractionConfig,
   ScriptConfig,
-} from "@rrrcn/common/src/types/services/analytics_config_types";
+} from "@rrrcn/common-types/services/api/common-body";
 import { karatauOldAllParams } from "./RF-configs-NEOPHRON";
 
 import { karatauOldFalcoAllParams } from "./RF-configs-FALCO";
-import { getDateIntervals } from "@rrrcn/common/src/utils/dates";
+
+import { getDateIntervals } from "../../../../../helpers/src/dates";
 const ndviEviDates = {
   aprils_2005_2010: getDateIntervals([[2005, 2010]], [[3, 3]], [[1, "end"]]),
   marches_2005_2010: getDateIntervals([[2005, 2010]], [[4, 4]], [[1, "end"]]),

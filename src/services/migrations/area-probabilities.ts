@@ -1,5 +1,5 @@
-import { MigrationPath } from "../../controllers/migrations/types";
 import * as turf from "@turf/turf";
+import { MigrationPath } from "@rrrcn/common-types/services/api/migrations/generate-tracks/config";
 import { sum } from "lodash";
 export type GetAreaMigrationProbabilitiesArgs = {
   area: GeoJSON.BBox;

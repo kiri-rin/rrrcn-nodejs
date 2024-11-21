@@ -13,6 +13,7 @@ import {
   findBestDeviations,
 } from "../../services/population-extrapolation/find_best";
 import type { EstimatePopulationRandomGenerationResult } from "./estimate-population-random-points";
+import { PopulationRandomGenerationConfigType } from "../../../../common-types/services/api/population-estimation/configs";
 
 export type CrossValidationPopulationEstimationResult = {
   processed: EstimatePopulationRandomGenerationResult[];

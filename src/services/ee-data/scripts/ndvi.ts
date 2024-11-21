@@ -1,14 +1,11 @@
 import { AnalyticsScript, AnalyticsScriptResult } from "../index";
 import { EEFeatureCollection, EEImage } from "../../../types";
-import {
-  dateIntervalsToConfig,
-  DatesConfig,
-} from "@rrrcn/common/src/utils/dates";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 
 export const ndviEviScript = ({
   regions,
-  datesConfig = dateIntervalsToConfig([]),
+  datesConfig = {},
   bands = ["NDVI", "EVI"],
 }: {
   regions: EEFeatureCollection;

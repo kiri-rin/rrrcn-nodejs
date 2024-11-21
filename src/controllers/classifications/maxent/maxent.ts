@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "fs/promises";
 import { printMaxentCharts } from "../../../services/maxent/charts";
 import { importGeometries } from "../../../utils/import-geometries";
-import { MaxentConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import {
   downloadClassifiedImage,
   getAllPoints,
@@ -15,7 +14,8 @@ import {
   ClassificationGeojsonBuffer,
   ClassificationGeojsonSplit,
   ClassificationGeojsonTypes,
-} from "../types";
+} from "@rrrcn/common-types/services/api/classifications/common-response";
+import { MaxentConfig } from "@rrrcn/common-types/services/api/classifications/maxent";
 
 export const maxent = async (
   config: MaxentConfig

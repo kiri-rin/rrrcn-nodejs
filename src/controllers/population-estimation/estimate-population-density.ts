@@ -1,7 +1,3 @@
-import {
-  PopulationDensityType,
-  PopulationDistanceConfigType,
-} from "@rrrcn/common/src/types/services/analytics_config_types";
 import axios from "axios";
 import fs, { writeFileSync } from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
@@ -9,6 +5,10 @@ import FormData from "form-data";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "../../utils/points";
+import {
+  PopulationDensityType,
+  PopulationDistanceConfigType,
+} from "../../../../common-types/services/api/population-estimation/configs";
 const apiRService = axios.create({
   baseURL: process.env.R_BASE_URL || "http://localhost:8000",
 });

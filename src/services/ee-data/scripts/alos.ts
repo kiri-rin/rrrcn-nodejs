@@ -1,14 +1,11 @@
-import {
-  dateIntervalsToConfig,
-  DatesConfig,
-} from "@rrrcn/common/src/utils/dates";
 import { EEFeatureCollection, EEImage } from "../../../types";
 import { AnalyticsScriptResult } from "../index";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 
 export const alosScript = ({
   regions,
-  datesConfig = dateIntervalsToConfig([]),
+  datesConfig = {},
 }: {
   regions: EEFeatureCollection;
   datesConfig?: DatesConfig;

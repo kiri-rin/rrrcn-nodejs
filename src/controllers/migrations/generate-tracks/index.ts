@@ -4,10 +4,9 @@ import {
   GenerateTracksResponse,
   IdType,
   IndexedArea,
-  MigrationGenerationConfigType,
   NextAreaToIndex,
   TrackPoint,
-} from "../types";
+} from "@rrrcn/common-types/services/api/migrations/generate-tracks/response";
 import {
   Directions,
   findNeighbourAreaIndex,
@@ -32,6 +31,7 @@ import { elevationScript } from "../../../services/ee-data/scripts/elevation";
 import { evaluateFeatures } from "../../../utils/gee-api";
 import { getFeatures } from "../../../utils/ee-image";
 import { reduceRegionsFromImageOrCollection } from "../../../utils/io";
+import { MigrationGenerationConfigType } from "@rrrcn/common-types/services/api/migrations/generate-tracks/config";
 
 export const generateMigrationTracks = async ({
   migrations,

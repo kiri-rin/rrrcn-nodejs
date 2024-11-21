@@ -1,10 +1,10 @@
-import { PopulationRandomGenerationConfigType } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { mkdir, writeFile } from "fs/promises";
 import { estimatePopulationService } from "../../services/population-extrapolation/estimate-population";
 import { evaluatePromisify } from "../../utils/ee-image";
 import { writeFileSync } from "fs";
 import { importGeometries } from "../../utils/import-geometries";
 import { getCsv } from "../../utils/points";
+import { PopulationRandomGenerationConfigType } from "../../../../common-types/services/api/population-estimation/configs";
 export type EstimatePopulationRandomGenerationResult = {
   total: number;
   inValidationAreaSize: number;

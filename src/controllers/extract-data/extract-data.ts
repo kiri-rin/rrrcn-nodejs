@@ -1,8 +1,7 @@
 import {
   DataExtractionConfig,
   ScriptConfig,
-  scriptKey,
-} from "@rrrcn/common/src/types/services/analytics_config_types";
+} from "@rrrcn/common-types/services/api/common-body";
 import { importGeometries } from "../../utils/import-geometries";
 import {
   reduceRegionsFromImageOrCollection,
@@ -10,9 +9,7 @@ import {
 } from "../../utils/io";
 import { EEFeature } from "../../types";
 import allScripts from "../../services/ee-data";
-import { getParamsImage } from "../classifications/random-forest/utils";
 import { mkdir } from "fs/promises";
-import { evaluatePromisify } from "../../utils/ee-image";
 export const setDefaultsToScriptsConfig = (
   config: Omit<DataExtractionConfig, "points">
 ) =>

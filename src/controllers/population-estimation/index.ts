@@ -1,10 +1,10 @@
-import { PopulationConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
 import { estimatePopulationRandomGeneration } from "./estimate-population-random-points";
 import { estimatePopulationDistance } from "./estimate-population-distance";
 import { estimatePopulationDensity } from "./estimate-population-density";
 import { crossValidationPopulationEstimation } from "./cross-validation-estimate-population";
+import { Configs } from "../../../../common-types/services/api/population-estimation/configs";
 
-export const populationEstimation = async (config: PopulationConfig) => {
+export const populationEstimation = async (config: Configs) => {
   switch (config.type) {
     case "random-points":
       return await (config.config.crossValidation

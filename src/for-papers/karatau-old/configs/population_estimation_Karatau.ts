@@ -1,7 +1,5 @@
-import {
-  populationEstimationType,
-  PopulationRandomGenerationConfigType,
-} from "@rrrcn/common/src/types/services/analytics_config_types";
+import { populationEstimationType } from "@rrrcn/common-types/services/api/common-body";
+import { PopulationRandomGenerationConfigType } from "../../../../../common-types/services/api/population-estimation/configs";
 
 export const populationEstimationKaratauThiessens: PopulationRandomGenerationConfigType =
   {

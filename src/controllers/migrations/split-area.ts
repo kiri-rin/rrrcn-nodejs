@@ -1,7 +1,8 @@
 import { evaluatePromisify } from "../../utils/ee-image";
 import { EEFeature } from "../../types";
 import { getAreaMigrationProbabilities } from "../../services/migrations/area-probabilities";
-import { MigrationPath } from "./types";
+
+import { MigrationPath } from "@rrrcn/common-types/services/api/migrations/generate-tracks/config";
 
 export type SplitMigrationAreaConfigType = {
   migrations: MigrationPath[];

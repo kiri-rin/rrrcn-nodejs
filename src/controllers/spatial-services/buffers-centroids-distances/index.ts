@@ -1,4 +1,4 @@
-import { GeometriesImportConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
+import { GeometriesImportConfig } from "@rrrcn/common-types/services/api/common-body";
 import { importGeometriesGeojson } from "../../../utils/import-geometries-geojson";
 import {
   buffersCentroidsDistancesService,

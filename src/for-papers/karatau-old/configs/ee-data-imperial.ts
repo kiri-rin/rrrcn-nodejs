@@ -1,5 +1,6 @@
-import { DataExtractionConfig } from "@rrrcn/common/src/types/services/analytics_config_types";
-import { getDateIntervals } from "@rrrcn/common/src/utils/dates";
+import { DataExtractionConfig } from "@rrrcn/common-types/services/api/common-body";
+
+import { getDateIntervals } from "../../../../../helpers/src/dates";
 
 export const imperialDataConfig: DataExtractionConfig = {
   points: {

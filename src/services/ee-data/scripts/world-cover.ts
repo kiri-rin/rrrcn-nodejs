@@ -1,10 +1,10 @@
 import { EEFeatureCollection } from "../../../types";
 import { mergeDateIntervalsFilters } from "../../../utils/ee-image-collection";
-import { DatesConfig } from "@rrrcn/common/src/utils/dates";
 import { AnalyticsScriptParams, AnalyticsScriptResult } from "../index";
 import fs from "fs/promises";
 import { JSCSVTable } from "../../../utils/points";
 import { parse } from "csv-parse/sync";
+import { DatesConfig } from "@rrrcn/common-types/services/api/common-body";
 
 export const worldCoverTargetsKeys = {
   Tree_cover: 10,

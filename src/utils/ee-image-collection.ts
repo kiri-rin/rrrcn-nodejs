@@ -1,5 +1,6 @@
 import { EEImageCollection } from "../types";
-import { DateInterval } from "@rrrcn/common/src/utils/dates";
+
+import { DateInterval } from "@rrrcn/common-types/services/api/common-body";
 
 export const mergeDateIntervalsFilters = (
   collection: EEImageCollection,

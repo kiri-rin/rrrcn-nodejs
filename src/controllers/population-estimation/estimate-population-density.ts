@@ -9,7 +9,7 @@ import FormData from "form-data";
 import { parse } from "csv-parse/sync";
 import shp from "shpjs";
 import { JSCSVTable } from "../../utils/points";
-import {stringify} from "csv-stringify/lib/sync";
+import {stringify} from "csv-stringify/sync";
 const apiRService = axios.create({
   baseURL: process.env.R_BASE_URL || "http://localhost:8000",
 });

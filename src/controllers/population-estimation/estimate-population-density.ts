@@ -37,6 +37,7 @@ export const estimatePopulationDensity = async (
   const maxDensity = averageDensity * (1 + 1.64 * averageDensityError);
   const res = {
     n:totalNumber,
+    AreaOfHabitats:config.totalArea,
     minDensity,
     maxDensity,
     averageDensity,
@@ -89,6 +90,7 @@ export const getCsv=(res:{
   averageNumber:number,
   minNumber:number,
   maxNumber:number,
+  AreaOfHabitats:number,
 })=>{
 const keys=[
   "minDensity",
@@ -99,6 +101,7 @@ const keys=[
   "minNumber",
   "maxNumber",
   "n",
+  "Area of habitats",
 ]
 const values=[
   res.minDensity,
@@ -109,6 +112,7 @@ const values=[
   res.minNumber,
   res.maxNumber,
   res.n,
+  res.AreaOfHabitats,
 ]
   return stringify([keys,values])
 }
